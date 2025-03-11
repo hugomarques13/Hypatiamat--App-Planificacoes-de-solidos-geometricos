@@ -1,10 +1,15 @@
-import GameScene from './scenes/GameScene.js'
+// import GameScene from './scenes/GameScene.js'
+import MenuScene from './scenes/MenuScene.js'
 
 const config = {
-  type: Phaser.WEBGL,
-  width: 800,
-  height: 600,
-  scene: [GameScene]
-}
+    type: Phaser.AUTO,
+    width: 1024,
+    height: 600,
+    scene: MenuScene,
+    scale: {
+        mode: Phaser.Scale.NONE,
+        autoCenter: Phaser.Scale.CENTER_BOTH 
+    }
+};
 
-new Phaser.Game(config)
+const game = new Phaser.Game(config);

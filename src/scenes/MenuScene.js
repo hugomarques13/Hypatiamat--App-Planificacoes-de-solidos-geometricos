@@ -1,0 +1,47 @@
+export default class MenuScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'MenuScene' });
+    }
+
+    preload() {
+        this.load.image('background', 'assets/background.png');
+        this.load.image('titulo', 'assets/titulo.png');
+        this.load.image('bt_opcao1', 'assets/bt_opcao1.png');
+        this.load.image('bt_opcao2', 'assets/bt_opcao2.png');
+        this.load.image('bt_screenback', 'assets/bt_screenback.png');
+        this.load.image('bt_info', 'assets/bt_info.png');
+        this.load.image('bt_creditos', 'assets/bt_creditos.png');
+    }
+
+    create() {
+        this.add.image(512, 300, 'background').setScale(0.8);
+        this.add.image(512, 60, 'titulo').setScale(0.65);
+        
+        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive();
+        
+        let btn1 = this.add.image(512, 250, 'bt_opcao1').setScale(0.45).setInteractive();
+        let btn2 = this.add.image(512, 475, 'bt_opcao2').setScale(0.45).setInteractive();
+        
+        let btnInfo = this.add.image(965, 475, 'bt_info').setScale(0.7).setInteractive();
+        let btnCredits = this.add.image(965, 555, 'bt_creditos').setScale(0.7).setInteractive();
+
+        this.addHoverEffect(btnBack);
+        this.addHoverEffect(btn1);
+        this.addHoverEffect(btn2);
+        this.addHoverEffect(btnInfo);
+        this.addHoverEffect(btnCredits);
+    
+    }
+
+    // Função para adicionar efeito de hover
+    addHoverEffect(button) {
+        button.on('pointerover', () => {
+            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+    });
+
+        button.on('pointerout', () => {
+            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+    });
+    }
+}
+

@@ -25,6 +25,11 @@ export default class MenuScene extends Phaser.Scene {
         let btnInfo = this.add.image(965, 475, 'bt_info').setScale(0.7).setInteractive();
         let btnCredits = this.add.image(965, 555, 'bt_creditos').setScale(0.7).setInteractive();
 
+        btn1.on('pointerup', () => {
+            this.scene.start('SelectingSolids');
+        });
+
+
         this.addHoverEffect(btnBack);
         this.addHoverEffect(btn1);
         this.addHoverEffect(btn2);

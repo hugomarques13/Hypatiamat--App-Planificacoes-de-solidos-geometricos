@@ -6,6 +6,7 @@ export default class SelectingSolids extends Phaser.Scene {
     preload() {
         this.load.image('background', 'assets/background.png');
         this.load.image('titulo', 'assets/titulo.png');
+        this.load.image('texto', 'assets/texto.png');
         this.load.image('bt_cubo', 'assets/bt_cubo.png');
         this.load.image('bt_paralelepipedos', 'assets/bt_paralelepipedos.png');
         this.load.image('bt_prismas', 'assets/bt_prismas.png');
@@ -18,6 +19,7 @@ export default class SelectingSolids extends Phaser.Scene {
     create() {
         this.add.image(512, 300, 'background').setScale(0.8);
         this.add.image(512, 60, 'titulo').setScale(0.65);
+        this.add.image(512,175, 'texto').setScale(1.2);
         
         let btnCubo = this.add.image(110, 350, 'bt_cubo').setScale(0.65).setInteractive();
         let btnParalelepipedos = this.add.image(280, 350, 'bt_paralelepipedos').setScale(0.65).setInteractive();

@@ -10,6 +10,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('bt_opcao2', 'assets/bt_opcao2.png');
         this.load.image('bt_screenback', 'assets/bt_screenback.png');
         this.load.image('bt_info', 'assets/bt_info.png');
+        this.load.image('info', 'assets/info.png');
         this.load.image('bt_creditos', 'assets/bt_creditos.png');
     }
 
@@ -23,13 +24,26 @@ export default class MenuScene extends Phaser.Scene {
         let btn2 = this.add.image(512, 475, 'bt_opcao2').setScale(0.45).setInteractive();
         
         let btnInfo = this.add.image(965, 475, 'bt_info').setScale(0.7).setInteractive();
+        let infoImage = this.add.image(900,275, 'info').setVisible(false);
+
         let btnCredits = this.add.image(965, 555, 'bt_creditos').setScale(0.7).setInteractive();
 
         btn1.on('pointerup', () => {
             this.scene.start('SelectingSolids');
         });
 
+        btnInfo.on('pointerup', () => {
+            infoImage.setScale(0.9);
+            infoImage.setVisible(true);
+        });
 
+        this.input.on('pointerdown', (pointer) => {
+            if(!infoImage.getBounds().contains(pointer.x,pointer.y)) {
+                infoImage.setVisible(false);
+            }
+        });
+
+        // this.addHoverEffect(btnFullScreen);
         this.addHoverEffect(btnBack);
         this.addHoverEffect(btn1);
         this.addHoverEffect(btn2);

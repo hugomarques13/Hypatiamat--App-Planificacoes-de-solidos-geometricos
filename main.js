@@ -1,6 +1,6 @@
-import GameScene from './scenes/GameScene.js'
-import MenuScene from './scenes/MenuScene.js'
-import SelectingSolids from './scenes/SelectingSolids.js'
+import GameScene from './src/scenes/GameScene.js'
+import MenuScene from './src/scenes/MenuScene.js'
+import SelectingSolids from './src/scenes/SelectingSolids.js'
 
 const config = {
     type: Phaser.AUTO,

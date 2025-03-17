@@ -67,39 +67,42 @@ export default class GameScene extends Phaser.Scene {
   }
 
   unfoldCube() {
-      this.isUnfolded = true; // Mark as unfolded
+      // Reset the cube group to its original position and rotation so its facing the screen
+      this.cubeGroup.position.set(0, 0, 0);
+      this.cubeGroup.rotation.set(0, 0, 0);
+
+      this.isUnfolded = true;
       this.disableMouseControls(); // Lock camera
 
       let positions = [
-        { x: 0, y: -1, z: 0 },  // Front
-        { x: 0, y: 1, z: 0 },   // Back
-        { x: -1, y: 0, z: 0 },  // Left
-        { x: 1, y: 0, z: 0 },   // Right
-        { x: 2, y: 0, z: 0 },   // Top
-        { x: 0, y: 0, z: 0 }    // Bottom
+          { x: 0, y: -1, z: 0 },  // Front
+          { x: 0, y: 1, z: 0 },   // Back
+          { x: -1, y: 0, z: 0 },  // Left
+          { x: 1, y: 0, z: 0 },   // Right
+          { x: 2, y: 0, z: 0 },   // Top
+          { x: 0, y: 0, z: 0 }    // Bottom
       ];
 
       let targetQuaternion = this.camera.quaternion.clone(); // Capture camera rotation
 
       for (let i = 0; i < this.faces.length; i++) {
-        // Animate position
-        gsap.to(this.faces[i].position, {
-          x: positions[i].x,
-          y: positions[i].y,
-          z: positions[i].z,
-          duration: 1,
-          ease: "power2.out"
-        });
+          gsap.to(this.faces[i].position, {
+              x: positions[i].x,
+              y: positions[i].y,
+              z: positions[i].z,
+              duration: 1,
+              ease: "power2.out"
+          });
 
-        // Directly apply the camera's rotation to each face
-        this.faces[i].quaternion.copy(targetQuaternion);
+          // Directly apply the camera rotation to each face
+          this.faces[i].quaternion.copy(targetQuaternion);
       }
   }
 
 
 
+
   reassembleCube() {
-    this.cubeGroup.visible = true;  // Show the cube again
     this.isUnfolded = false;        // Unlock camera movement
     this.enableMouseControls(); // Lock camera
 

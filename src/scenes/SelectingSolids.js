@@ -35,7 +35,7 @@ export default class SelectingSolids extends Phaser.Scene {
         });
 
         btnCubo.on('pointerup', () => {
-            this.scene.start('GameScene');
+            this.scene.start('Cubo');
         });
 
         this.addHoverEffect(btnCubo);

@@ -1,13 +1,20 @@
-export default class GameScene extends Phaser.Scene {
+export default class Cubo extends Phaser.Scene {
   constructor() {
-    super({ key: "GameScene" })
+    super({ key: "Cubo" })
     this.unfoldProgress = 0
     this.isSliding = false
     this.unfoldPlans = {}
     this.currentPlan = "plan1"
   }
 
+  preload() {
+  this.load.image('background', 'assets/background.png');
+  }
+
   create() {
+
+    this.add.image(512, 300, 'background').setScale(0.8);
+
     // --- THREE Setup ---
     this.threeCanvas = document.createElement("canvas")
     this.threeCanvas.style.position = "absolute"
@@ -15,7 +22,11 @@ export default class GameScene extends Phaser.Scene {
     this.threeCanvas.style.left = "0"
     document.body.appendChild(this.threeCanvas)
 
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.threeCanvas })
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.threeCanvas,
+      alpha:true
+    });
+
     this.renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.scene3D = new THREE.Scene()

@@ -9,17 +9,26 @@ export default class Cubo extends Phaser.Scene {
 
   preload() {
   this.load.image('background', 'assets/background.png');
+  this.load.image('bt_home', 'assets/bt_home.png');
   }
 
   create() {
 
     this.add.image(512, 300, 'background').setScale(0.8);
+    let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive().setDepth(1000);
+    this.addHoverEffect(btnHome);
+
+    btnHome.on('pointerup', () => {
+            this.cleanupDOM();
+            this.scene.start('MenuScene');
+    });
 
     // --- THREE Setup ---
     this.threeCanvas = document.createElement("canvas")
     this.threeCanvas.style.position = "absolute"
     this.threeCanvas.style.top = "0"
     this.threeCanvas.style.left = "0"
+    this.threeCanvas.style.zIndex = "0"
     document.body.appendChild(this.threeCanvas)
 
     this.renderer = new THREE.WebGLRenderer({
@@ -36,6 +45,10 @@ export default class Cubo extends Phaser.Scene {
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
+
+    this.unfoldProgress = 0;
+    this.isSliding = false;
+    this.currentPlan = "plan1";
 
     this.materials = [
       new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide }),
@@ -192,7 +205,8 @@ export default class Cubo extends Phaser.Scene {
   }
 
   createUnfoldSlider() {
-    const sliderContainer = document.createElement("div")
+    this.unfoldSliderContainer = document.createElement("div");
+    const sliderContainer = this.unfoldSliderContainer;
     sliderContainer.style.position = "absolute"
     sliderContainer.style.top = "10px"
     sliderContainer.style.right = "10px"
@@ -227,7 +241,8 @@ export default class Cubo extends Phaser.Scene {
   }
 
   createPlanSlider() {
-    const sliderContainer = document.createElement("div")
+    this.planSliderContainer = document.createElement("div");
+    const sliderContainer = this.planSliderContainer;
     sliderContainer.style.position = "absolute"
     sliderContainer.style.top = "80px"
     sliderContainer.style.right = "10px"
@@ -316,5 +331,41 @@ export default class Cubo extends Phaser.Scene {
     this.camera.position.set(x, y, z)
     this.camera.lookAt(0, 0, 0)
     this.renderer.render(this.scene3D, this.camera)
+  }
+
+  cleanupDOM() {
+  // Remove Three.js canvas
+  if (this.threeCanvas?.parentNode) {
+    this.threeCanvas.remove();
+    this.threeCanvas = null;
+  }
+
+  // Remove sliders
+  if (this.unfoldSliderContainer?.parentNode) {
+    this.unfoldSliderContainer.remove();
+    this.unfoldSliderContainer = null;
+  }
+
+  if (this.planSliderContainer?.parentNode) {
+    this.planSliderContainer.remove();
+    this.planSliderContainer = null;
+  }
+
+  // Mouse listeners
+  window.removeEventListener("mousedown", this.onMouseDown);
+  window.removeEventListener("mouseup", this.onMouseUp);
+  window.removeEventListener("mousemove", this.onMouseMove);
+  window.removeEventListener("wheel", this.onMouseWheel);
+  }
+
+  // Função para adicionar efeito de hover
+    addHoverEffect(button) {
+        button.on('pointerover', () => {
+            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+    });
+
+        button.on('pointerout', () => {
+            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+    });
   }
 }

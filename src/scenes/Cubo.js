@@ -194,6 +194,30 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
+      plan9: {
+        parents: {
+          top: 'front',
+          front: 'right',
+          back: 'left',
+          left: null,
+          right: null
+        },
+        rotations: {
+          front: new THREE.Euler(0, Math.PI, 0),
+          back: new THREE.Euler(0, -Math.PI, 0),
+          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
+          top: new THREE.Euler(Math.PI, -Math.PI, -Math.PI/2),
+        },
+        transforms: {
+          bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
+          front:  { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
+          back:   { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
+          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
+          top:    { pivot: [0.5, 0.5, 0], position: [d, 0, d], rotation: [Math.PI / 2, 0, Math.PI / 2]}
+        }
+      },
     }
   }
 

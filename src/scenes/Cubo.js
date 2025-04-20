@@ -41,7 +41,7 @@ export default class Cubo extends Phaser.Scene {
     this.scene3D = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-    this.orbit = { radius: 5, theta: 0, phi: Math.PI / 2 }
+    this.orbit = { radius: 4, theta: Math.PI / 8 , phi: Math.PI / 2.5 }
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
@@ -51,12 +51,12 @@ export default class Cubo extends Phaser.Scene {
     this.currentPlan = "plan1";
 
     this.materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide }),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide }),
-      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide }),
-      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide }),
-      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide }),
-      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide })
+      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Red
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide ,transparent: true, opacity: 1}), // Green
+      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Blue
+      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Yellow
+      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Pink
+      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide , transparent: true, opacity: 1}) // Cyan
     ]
 
     this.faceGroups = {}

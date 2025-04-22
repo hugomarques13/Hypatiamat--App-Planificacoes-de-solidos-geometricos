@@ -9,6 +9,7 @@ export default class MenuScene extends Phaser.Scene {
         this.load.image('bt_opcao1', 'assets/bt_opcao1.png');
         this.load.image('bt_opcao2', 'assets/bt_opcao2.png');
         this.load.image('bt_screenback', 'assets/bt_screenback.png');
+        this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
         this.load.image('bt_info', 'assets/bt_info.png');
         this.load.image('info', 'assets/info.png');
         this.load.image('bt_creditos', 'assets/bt_creditos.png');
@@ -19,8 +20,9 @@ export default class MenuScene extends Phaser.Scene {
     create() {
         this.add.image(512, 300, 'background').setScale(0.8);
         this.add.image(512, 60, 'titulo').setScale(0.65);
-        
-        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive();
+
+        let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
+        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
         
         let btn1 = this.add.image(512, 250, 'bt_opcao1').setScale(0.45).setInteractive();
         let btn2 = this.add.image(512, 475, 'bt_opcao2').setScale(0.45).setInteractive();
@@ -51,7 +53,7 @@ export default class MenuScene extends Phaser.Scene {
             btn2.setVisible(true);
         });
 
-        // this.addHoverEffect(btnFullScreen);
+        this.addHoverEffect(btnFullScreen);
         this.addHoverEffect(btnBack);
         this.addHoverEffect(btn1);
         this.addHoverEffect(btn2);

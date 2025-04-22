@@ -15,7 +15,7 @@ export default class Cubo extends Phaser.Scene {
   create() {
 
     this.add.image(512, 300, 'background').setScale(0.8);
-    let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive().setDepth(1000);
+    let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     this.addHoverEffect(btnHome);
 
     btnHome.on('pointerup', () => {
@@ -29,6 +29,7 @@ export default class Cubo extends Phaser.Scene {
     this.threeCanvas.style.top = "0"
     this.threeCanvas.style.left = "0"
     this.threeCanvas.style.zIndex = "0"
+    this.threeCanvas.style.pointerEvents = "none";
     document.body.appendChild(this.threeCanvas)
 
     this.renderer = new THREE.WebGLRenderer({

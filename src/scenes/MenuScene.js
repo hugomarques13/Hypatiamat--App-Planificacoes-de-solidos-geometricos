@@ -53,6 +53,22 @@ export default class MenuScene extends Phaser.Scene {
             btn2.setVisible(true);
         });
 
+        btnFullScreen.on('pointerup', function ()
+        {
+
+            if (this.scale.isFullscreen)
+            {
+
+                this.scale.stopFullscreen();
+            }
+            else
+            {
+
+                this.scale.startFullscreen();
+            }
+
+        }, this);
+
         this.addHoverEffect(btnFullScreen);
         this.addHoverEffect(btnBack);
         this.addHoverEffect(btn1);

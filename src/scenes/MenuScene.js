@@ -21,40 +21,46 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(512, 300, 'background').setScale(0.8);
         this.add.image(512, 60, 'titulo').setScale(0.65);
 
-        // Create buttons
-        this.btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
-        this.btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
+        // Fullscreen button setup
+        let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
+        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
         
         let btn1 = this.add.image(512, 250, 'bt_opcao1').setScale(0.45).setInteractive();
         let btn2 = this.add.image(512, 475, 'bt_opcao2').setScale(0.45).setInteractive();
+        
         let btnInfo = this.add.image(965, 475, 'bt_info').setScale(0.7).setInteractive();
         let btnCredits = this.add.image(965, 555, 'bt_creditos').setScale(0.7).setInteractive();
         let creditosImg = this.add.image(512,360, 'creditos-img').setScale(0.65).setVisible(false);
         let btnFechar = this.add.image(725, 150, 'bt_fechar').setScale(0.8).setInteractive().setVisible(false);
 
-        // Initialize fullscreen state
-        this.updateFullscreenButtons();
-
         // Fullscreen toggle function
         const toggleFullscreen = () => {
             if (this.scale.isFullscreen) {
                 this.scale.stopFullscreen();
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
             } else {
                 this.scale.startFullscreen();
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
             }
         };
 
         // Set up fullscreen button events
-        this.btnFullScreen.on('pointerup', toggleFullscreen);
-        this.btnBack.on('pointerup', toggleFullscreen);
+        btnFullScreen.on('pointerup', toggleFullscreen);
+        btnBack.on('pointerup', toggleFullscreen);
 
-        // Listen for fullscreen changes (both from Phaser and browser)
-        this.scale.on('fullscreenchange', this.updateFullscreenButtons, this);
+        // Listen for fullscreen change events
+        this.scale.on('fullscreenchange', () => {
+            if (this.scale.isFullscreen) {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+            } else {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            }
+        });
 
-        // Also listen for resize events in case fullscreen was toggled via F11
-        this.scale.on('resize', this.updateFullscreenButtons, this);
-
-        // Other button handlers
         btn1.on('pointerup', () => {
             this.scene.start('SelectingSolids');
         });
@@ -73,27 +79,13 @@ export default class MenuScene extends Phaser.Scene {
             btn2.setVisible(true);
         });
 
-        // Add hover effects to all buttons
-        this.addHoverEffect(this.btnFullScreen);
-        this.addHoverEffect(this.btnBack);
+        this.addHoverEffect(btnFullScreen);
+        this.addHoverEffect(btnBack);
         this.addHoverEffect(btn1);
         this.addHoverEffect(btn2);
         this.addHoverEffect(btnInfo);
         this.addHoverEffect(btnCredits);
         this.addHoverEffect(btnFechar);
-    }
-
-    // Update fullscreen button visibility based on current state
-    updateFullscreenButtons() {
-        const isFullscreen = this.scale.isFullscreen;
-        this.btnFullScreen.setVisible(!isFullscreen);
-        this.btnBack.setVisible(isFullscreen);
-    }
-
-    // Clean up event listeners when scene is shutdown
-    shutdown() {
-        this.scale.off('fullscreenchange', this.updateFullscreenButtons, this);
-        this.scale.off('resize', this.updateFullscreenButtons, this);
     }
 
     // Função para adicionar efeito de hover

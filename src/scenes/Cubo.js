@@ -8,15 +8,14 @@ export default class Cubo extends Phaser.Scene {
   }
 
   preload() {
-  this.load.image('background', 'assets/background.png');
-  this.load.image('bt_home', 'assets/bt_home.png');
-  this.load.image('bt_screenback', 'assets/bt_screenback.png');
-  this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
-  this.load.image('bt_info', 'assets/bt_info.png');
+    this.load.image('background', 'assets/background.png');
+    this.load.image('bt_home', 'assets/bt_home.png');
+    this.load.image('bt_screenback', 'assets/bt_screenback.png');
+    this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
+    this.load.image('bt_info', 'assets/bt_info.png');
   }
 
   create() {
-
     this.add.image(512, 300, 'background').setScale(0.8);
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
@@ -29,8 +28,8 @@ export default class Cubo extends Phaser.Scene {
     this.addHoverEffect(btnInfo);
 
     btnHome.on('pointerup', () => {
-            this.cleanupDOM();
-            this.scene.start('MenuScene');
+      this.cleanupDOM();
+      this.scene.start('MenuScene');
     });
 
     // --- THREE Setup ---
@@ -44,7 +43,7 @@ export default class Cubo extends Phaser.Scene {
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.threeCanvas,
-      alpha:true
+      alpha: true
     });
 
     this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -52,7 +51,7 @@ export default class Cubo extends Phaser.Scene {
     this.scene3D = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-    this.orbit = { radius: 4, theta: Math.PI / 8 , phi: Math.PI / 2.5 }
+    this.orbit = { radius: 4, theta: Math.PI / 8, phi: Math.PI / 2.5 }
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
@@ -61,13 +60,14 @@ export default class Cubo extends Phaser.Scene {
     this.isSliding = false;
     this.currentPlan = "plan1";
 
+    // Materials with transparency enabled
     this.materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Red
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide ,transparent: true, opacity: 1}), // Green
-      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Blue
-      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Yellow
-      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide , transparent: true, opacity: 1}), // Pink
-      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide , transparent: true, opacity: 1}) // Cyan
+      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Red
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Green
+      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Blue
+      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Yellow
+      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Pink
+      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 1 })  // Cyan
     ]
 
     this.faceGroups = {}
@@ -205,6 +205,78 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
+      plan6: {
+        parents: {
+          top: 'right',
+          front: 'left',
+          back: null,
+          left: null,
+          right: null
+        },
+        rotations: {
+          front: new THREE.Euler(0, -Math.PI, 0),
+          back: new THREE.Euler(-Math.PI / 2, Math.PI, 0),
+          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
+          top: new THREE.Euler(Math.PI, 0, 0)
+        },
+        transforms: {
+          bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
+          front:  { pivot: [-0.5, -0.5, 0], position: [d, d, -d], rotation: [0, -Math.PI/2, 0] },
+          back:   { pivot: [0, 0.5, 0], position: [0, 0, -d], rotation: [0, Math.PI, 0] },
+          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
+          top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
+        }
+      },
+      plan7: {
+        parents: {
+          top: 'right',
+          front: 'top',
+          back: null,
+          left: null,
+          right: null
+        },
+        rotations: {
+          front: new THREE.Euler(0, 0, 0),
+          back: new THREE.Euler(-Math.PI / 2, Math.PI, 0),
+          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
+          top: new THREE.Euler(Math.PI, 0, 0)
+        },
+        transforms: {
+          bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
+          front:  { pivot: [-0.5, 0.5, 0], position: [d, -d, d], rotation: [Math.PI/2, Math.PI/2, -Math.PI/2] },
+          back:   { pivot: [0, 0.5, 0], position: [0, 0, -d], rotation: [0, Math.PI, 0] },
+          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
+          top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
+        }
+      },
+      plan8: {
+        parents: {
+          top: 'right',
+          front: 'left',
+          back: 'right',
+          left: null,
+          right: null
+        },
+        rotations: {
+          front: new THREE.Euler(0, -Math.PI, 0),
+          back: new THREE.Euler(0, -Math.PI, 0),
+          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
+          top: new THREE.Euler(Math.PI, 0, 0)
+        },
+        transforms: {
+          bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
+          front:  { pivot: [-0.5, -0.5, 0], position: [d, d, -d], rotation: [0, -Math.PI/2, 0] },
+          back:   { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
+          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
+          top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
+        }
+      },
       plan9: {
         parents: {
           top: 'front',
@@ -281,28 +353,36 @@ export default class Cubo extends Phaser.Scene {
   }
 
   createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
-    const pivot = new THREE.Vector3(...pivotArr)
-    const position = new THREE.Vector3(...positionArr)
-    const rotation = new THREE.Euler(...rotationArr)
+      const pivot = new THREE.Vector3(...pivotArr);
+      const position = new THREE.Vector3(...positionArr);
+      const rotation = new THREE.Euler(...rotationArr);
 
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
-    mesh.position.copy(pivot)
+      // Create the face mesh
+      const geometry = new THREE.PlaneGeometry(1, 1);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(pivot);
 
-    const group = new THREE.Group()
-    group.add(mesh)
+      // Create edges for the face
+      const edges = new THREE.EdgesGeometry(geometry);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 5 });
+      const line = new THREE.LineSegments(edges, lineMaterial);
+      mesh.add(line);
 
-    const rotatedPivot = pivot.clone().applyEuler(rotation)
-    const adjustedPosition = position.sub(rotatedPivot)
+      const group = new THREE.Group();
+      group.add(mesh);
 
-    group.position.copy(adjustedPosition)
-    group.rotation.copy(rotation)
+      const rotatedPivot = pivot.clone().applyEuler(rotation);
+      const adjustedPosition = position.sub(rotatedPivot);
 
-    this.originalRotations[name] = {
-      quaternion: new THREE.Quaternion().setFromEuler(rotation)
-    }
+      group.position.copy(adjustedPosition);
+      group.rotation.copy(rotation);
 
-    this.faceGroups[name] = group
-    return group
+      this.originalRotations[name] = {
+          quaternion: new THREE.Quaternion().setFromEuler(rotation)
+      };
+
+      this.faceGroups[name] = group;
+      return group;
   }
 
   buildFaceGroupsForPlan(planName) {
@@ -477,15 +557,93 @@ export default class Cubo extends Phaser.Scene {
     window.addEventListener("wheel", this.onMouseWheel)
   }
 
-  update() {
-    const { radius, theta, phi } = this.orbit
-    const x = radius * Math.sin(phi) * Math.sin(theta)
-    const y = radius * Math.cos(phi)
-    const z = radius * Math.sin(phi) * Math.cos(theta)
+  checkFaceVisibility() {
+      const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+      const faceData = {};
+      
+      // First collect all face data
+      faces.forEach(face => {
+          if (this.faceGroups[face]) {
+              const position = new THREE.Vector3();
+              this.faceGroups[face].getWorldPosition(position);
+              
+              const normal = new THREE.Vector3(0, 0, 1);
+              normal.applyQuaternion(this.faceGroups[face].quaternion);
+              
+              // Calculate camera direction to face
+              const cameraToFace = new THREE.Vector3().subVectors(position, this.camera.position).normalize();
+              
+              faceData[face] = {
+                  position: position,
+                  normal: normal,
+                  cameraToFace: cameraToFace,
+                  index: faces.indexOf(face)
+              };
+          }
+      });
 
-    this.camera.position.set(x, y, z)
-    this.camera.lookAt(0, 0, 0)
-    this.renderer.render(this.scene3D, this.camera)
+      // Reset all opacities to 1 (opaque)
+      faces.forEach(face => {
+          if (faceData[face]) {
+              this.materials[faceData[face].index].opacity = 1;
+          }
+      });
+
+      if (this.unfoldProgress < 0.95) {
+
+        // Check each face against all others
+        for (const face1 in faceData) {
+            const data1 = faceData[face1];
+            
+            // First check if face is facing away from camera
+            const faceToCameraDot = data1.normal.dot(data1.cameraToFace);
+            if (faceToCameraDot < 0) {
+                this.materials[data1.index].opacity = 0.6;
+                continue;
+            }
+
+            // Then check if other faces are in front of this one
+            for (const face2 in faceData) {
+                if (face1 === face2) continue;
+                
+                const data2 = faceData[face2];
+                const face1ToFace2 = new THREE.Vector3().subVectors(data2.position, data1.position).normalize();
+                
+                // If face2 is in front of face1 (relative to face1's normal)
+                if (face1ToFace2.dot(data1.normal) > 0.3) {
+                    // And if face2 is between camera and face1
+                    const face2ToFace1 = new THREE.Vector3().subVectors(data1.position, data2.position).normalize();
+                    const face2ToCamera = new THREE.Vector3().subVectors(this.camera.position, data2.position).normalize();
+                    
+                    if (face2ToFace1.dot(face2ToCamera) > 0.5) {
+                        this.materials[data1.index].opacity = 0.6;
+                        break;
+                    }
+                }
+            }
+        } 
+      } else {
+        faces.forEach(face => {
+            if (faceData[face]) {
+                this.materials[faceData[face].index].opacity = 1;
+            }
+        });
+      }
+  }
+
+  update() {
+    const { radius, theta, phi } = this.orbit;
+    const x = radius * Math.sin(phi) * Math.sin(theta);
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.cos(theta);
+
+    this.camera.position.set(x, y, z);
+    this.camera.lookAt(0, 0, 0);
+    
+    // Update face visibility before rendering
+    this.checkFaceVisibility();
+    
+    this.renderer.render(this.scene3D, this.camera);
   }
 
   cleanupDOM() {

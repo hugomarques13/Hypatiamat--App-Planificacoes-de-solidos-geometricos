@@ -21,6 +21,7 @@ export default class MenuScene extends Phaser.Scene {
         this.add.image(512, 300, 'background').setScale(0.8);
         this.add.image(512, 60, 'titulo').setScale(0.65);
 
+        // Fullscreen button setup
         let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
         let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
         
@@ -28,17 +29,43 @@ export default class MenuScene extends Phaser.Scene {
         let btn2 = this.add.image(512, 475, 'bt_opcao2').setScale(0.45).setInteractive();
         
         let btnInfo = this.add.image(965, 475, 'bt_info').setScale(0.7).setInteractive();
-
         let btnCredits = this.add.image(965, 555, 'bt_creditos').setScale(0.7).setInteractive();
         let creditosImg = this.add.image(512,360, 'creditos-img').setScale(0.65).setVisible(false);
         let btnFechar = this.add.image(725, 150, 'bt_fechar').setScale(0.8).setInteractive().setVisible(false);
+
+        // Fullscreen toggle function
+        const toggleFullscreen = () => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            } else {
+                this.scale.startFullscreen();
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+            }
+        };
+
+        // Set up fullscreen button events
+        btnFullScreen.on('pointerup', toggleFullscreen);
+        btnBack.on('pointerup', toggleFullscreen);
+
+        // Listen for fullscreen change events
+        this.scale.on('fullscreenchange', () => {
+            if (this.scale.isFullscreen) {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+            } else {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            }
+        });
 
         btn1.on('pointerup', () => {
             this.scene.start('SelectingSolids');
         });
 
         btnCredits.on('pointerup', () => {
-            // infoImage.setScale(0.9);
             creditosImg.setVisible(true);
             btnFechar.setVisible(true);
             btn1.setVisible(false);
@@ -46,28 +73,11 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         btnFechar.on('pointerup', () => {
-            // infoImage.setScale(0.9);
             creditosImg.setVisible(false);
             btnFechar.setVisible(false);
             btn1.setVisible(true);
             btn2.setVisible(true);
         });
-
-        btnFullScreen.on('pointerup', function ()
-        {
-
-            if (this.scale.isFullscreen)
-            {
-
-                this.scale.stopFullscreen();
-            }
-            else
-            {
-
-                this.scale.startFullscreen();
-            }
-
-        }, this);
 
         this.addHoverEffect(btnFullScreen);
         this.addHoverEffect(btnBack);
@@ -81,12 +91,11 @@ export default class MenuScene extends Phaser.Scene {
     // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
-    });
+            button.setScale(button.scaleX * 1.1);
+        });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
-    });
+            button.setScale(button.scaleX / 1.1);
+        });
     }
 }
-

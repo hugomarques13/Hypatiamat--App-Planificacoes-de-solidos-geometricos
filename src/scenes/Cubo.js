@@ -4,7 +4,7 @@ export default class Cubo extends Phaser.Scene {
     this.unfoldProgress = 0
     this.isSliding = false
     this.unfoldPlans = {}
-    this.currentPlan = "plan1"
+    this.currentPlan = "1"
   }
 
   preload() {
@@ -59,7 +59,7 @@ export default class Cubo extends Phaser.Scene {
 
     this.unfoldProgress = 0;
     this.isSliding = false;
-    this.currentPlan = "plan1";
+    this.currentPlan = "1";
 
     // Materials with transparency enabled
     this.materials = [
@@ -81,7 +81,14 @@ export default class Cubo extends Phaser.Scene {
     this.createPlanSlider()
     this.initMouseControls()
 
-    window.addEventListener('resize', () => this.onWindowResize());
+    window.addEventListener("resize", () => {
+      // Wait briefly so layout settles on mobile
+      setTimeout(() => this.onWindowResize(), 100);
+    });
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => this.onWindowResize(), 150); // mobile orientation fix
+    });
     this.onWindowResize(); // Call once on startup just in case
   }
 
@@ -89,7 +96,7 @@ export default class Cubo extends Phaser.Scene {
     const d = 0.5
 
     this.unfoldPlans = {
-      plan1: {
+      1: {
         parents: {
           top: 'right',
           front: null,
@@ -113,7 +120,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan2: {
+      2: {
         parents: {
           top: 'right',
           front: null,
@@ -137,7 +144,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan3: {
+      3: {
         parents: {
           top: 'right',
           front: null,
@@ -161,7 +168,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan4: {
+      4: {
         parents: {
           top: 'right',
           front: null,
@@ -185,7 +192,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan5: {
+      5: {
         parents: {
           top: 'right',
           front: 'right',
@@ -209,7 +216,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-       plan6: {
+       6: {
         parents: {
           top: 'right',
           front: null,
@@ -233,7 +240,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan7:{
+      7:{
         parents: {
           top: 'right',
           front: 'right',
@@ -257,7 +264,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan8:{
+      8:{
         parents: {
           top: 'right',
           front: 'top',
@@ -281,7 +288,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
       },
-      plan9: {
+      9: {
         parents: {
           top: 'front',
           front: 'right',
@@ -305,7 +312,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0.5, 0.5, 0], position: [d, 0, d], rotation: [Math.PI / 2, 0, Math.PI / 2]}
         }
       },
-      plan10: {
+      10: {
         parents: {
           top: 'front',
           front: 'right',
@@ -329,7 +336,7 @@ export default class Cubo extends Phaser.Scene {
           top:    { pivot: [0.5, 0.5, 0], position: [d, 0, d], rotation: [Math.PI / 2, 0, Math.PI / 2]}
         }
       },
-      plan11: {
+      11: {
         parents: {
           top: 'front',
           front: 'right',
@@ -458,7 +465,7 @@ export default class Cubo extends Phaser.Scene {
     document.body.appendChild(sliderContainer);
 
     const sliderLabel = document.createElement("div");
-    sliderLabel.innerText = "Cube Unfold Progress";
+    sliderLabel.innerText = "Abrir Cubo";
     sliderLabel.style.color = "white";
     sliderLabel.style.marginBottom = "10px";
     sliderContainer.appendChild(sliderLabel);
@@ -513,7 +520,7 @@ export default class Cubo extends Phaser.Scene {
     const updatePlan = () => {
       const index = parseInt(slider.value);
       this.currentPlan = this.planKeys[index];
-      label.innerText = `Plan: ${this.currentPlan}`;
+      label.innerText = `Planificação: ${this.currentPlan}`;
       this.buildFaceGroupsForPlan(this.currentPlan);
       this.updateCubeTransforms();
     };
@@ -715,21 +722,25 @@ export default class Cubo extends Phaser.Scene {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // === Camera update (FOV fixed, adjust orbit radius) ===
+    // === Camera update: Keep FOV fixed, adjust orbit to maintain visual size ===
     if (this.camera) {
-      this.camera.fov = 75;
+      this.camera.fov = 75; // Keep this constant for consistency
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
     }
 
-    this.orbit.radius = 4 * (600 / height); // inverse height scaling keeps cube same size
+    // Adjust the orbit distance (z distance) to compensate for screen height
+    const baseHeight = 600; // Your reference height
+    this.orbit.radius = 4 * (baseHeight / height); // Smaller screens = larger radius
 
-    // === Resize the renderer ===
+    // === Resize renderer ===
     if (this.renderer) {
       this.renderer.setSize(width, height);
+      this.renderer.domElement.style.width = `${width}px`;   // Force canvas redraw
+      this.renderer.domElement.style.height = `${height}px`;
     }
 
-    // === Update edge line resolution ===
+    // === Update edge line material resolution ===
     if (this.faceGroups) {
       for (const group of Object.values(this.faceGroups)) {
         for (const child of group.children) {
@@ -740,10 +751,11 @@ export default class Cubo extends Phaser.Scene {
       }
     }
 
-    // === Reposition and resize sliders ===
-    const rightOffset = this.getCanvasOffsetRight(10);
+    // === Reposition and scale sliders to stay within canvas ===
     const canvas = this.sys.game.canvas;
     const rect = canvas.getBoundingClientRect();
+
+    const rightOffset = window.innerWidth - rect.right + 10;
     const topOffset = rect.top + 45;
 
     const sliderWidth = Math.min(width * 0.2, 220);
@@ -763,9 +775,6 @@ export default class Cubo extends Phaser.Scene {
       this.planSliderContainer.style.padding = sliderPadding;
     }
   }
-
-
-
 
   update() {
     const { radius, theta, phi } = this.orbit;

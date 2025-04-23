@@ -551,10 +551,40 @@ export default class Cubo extends Phaser.Scene {
       this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius))
     }
 
+    // Touch support
+    this.onTouchStart = (event) => {
+      if (this.isSliding || event.touches.length !== 1) return
+      this.isMouseDown = true
+      this.lastMouseX = event.touches[0].clientX
+      this.lastMouseY = event.touches[0].clientY
+    }
+
+    this.onTouchMove = (event) => {
+      if (!this.isMouseDown || this.isSliding || event.touches.length !== 1) return
+      const touch = event.touches[0]
+      const deltaX = touch.clientX - this.lastMouseX
+      const deltaY = touch.clientY - this.lastMouseY
+
+      this.orbit.theta -= deltaX * 0.01
+      this.orbit.phi -= deltaY * 0.01
+      this.orbit.phi = Math.max(0.01, Math.min(Math.PI - 0.01, this.orbit.phi))
+
+      this.lastMouseX = touch.clientX
+      this.lastMouseY = touch.clientY
+    }
+
+    this.onTouchEnd = () => {
+      this.isMouseDown = false
+    }
+
     window.addEventListener("mousedown", this.onMouseDown)
     window.addEventListener("mouseup", this.onMouseUp)
     window.addEventListener("mousemove", this.onMouseMove)
     window.addEventListener("wheel", this.onMouseWheel)
+
+    window.addEventListener("touchstart", this.onTouchStart, { passive: false })
+    window.addEventListener("touchmove", this.onTouchMove, { passive: false })
+    window.addEventListener("touchend", this.onTouchEnd)
   }
 
   checkFaceVisibility() {
@@ -669,6 +699,10 @@ export default class Cubo extends Phaser.Scene {
   window.removeEventListener("mouseup", this.onMouseUp);
   window.removeEventListener("mousemove", this.onMouseMove);
   window.removeEventListener("wheel", this.onMouseWheel);
+
+  window.removeEventListener("touchstart", this.onTouchStart)
+  window.removeEventListener("touchmove", this.onTouchMove)
+  window.removeEventListener("touchend", this.onTouchEnd)
   }
 
   // Função para adicionar efeito de hover

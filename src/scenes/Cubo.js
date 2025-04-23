@@ -466,7 +466,10 @@ export default class Cubo extends Phaser.Scene {
     slider.style.width = "100%"
 
     slider.addEventListener("mousedown", () => this.isSliding = true)
+    slider.addEventListener("touchstart", () => this.isSliding = true)
+
     document.addEventListener("mouseup", () => this.isSliding = false)
+    document.addEventListener("touchend", () => this.isSliding = false)
     slider.addEventListener("input", (e) => {
       this.unfoldProgress = parseFloat(e.target.value)
       this.updateCubeTransforms()
@@ -511,7 +514,10 @@ export default class Cubo extends Phaser.Scene {
     }
     
     slider.addEventListener("mousedown", () => this.isSliding = true)
+    slider.addEventListener("touchstart", () => this.isSliding = true)
+
     document.addEventListener("mouseup", () => this.isSliding = false)
+    document.addEventListener("touchend", () => this.isSliding = false)
     slider.addEventListener("input", updatePlan)
     updatePlan()
     sliderContainer.appendChild(slider)

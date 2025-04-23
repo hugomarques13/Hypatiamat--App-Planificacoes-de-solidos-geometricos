@@ -362,17 +362,21 @@ export default class Cubo extends Phaser.Scene {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.copy(pivot);
 
-      // Create edges for the face
+      // Create edges using native geometry and line material
       const edges = new THREE.EdgesGeometry(geometry);
-      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 5 });
+      const lineMaterial = new THREE.LineBasicMaterial({
+          color: 0x000000,
+          toneMapped: false // ensures black stays black in tone-mapped scenes
+      });
       const line = new THREE.LineSegments(edges, lineMaterial);
       mesh.add(line);
 
       const group = new THREE.Group();
       group.add(mesh);
 
+      // Adjust the group's position based on rotated pivot
       const rotatedPivot = pivot.clone().applyEuler(rotation);
-      const adjustedPosition = position.sub(rotatedPivot);
+      const adjustedPosition = position.clone().sub(rotatedPivot);
 
       group.position.copy(adjustedPosition);
       group.rotation.copy(rotation);
@@ -384,6 +388,7 @@ export default class Cubo extends Phaser.Scene {
       this.faceGroups[name] = group;
       return group;
   }
+
 
   buildFaceGroupsForPlan(planName) {
     for (const key in this.faceGroups) {

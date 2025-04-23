@@ -353,6 +353,16 @@ export default class Cubo extends Phaser.Scene {
   }
 
   createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+      // BOOST PIXEL RATIO — You can tweak the multiplier (1.5 is a good balance)
+      const pixelRatioBoost = 1.5;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio * pixelRatioBoost, 2));
+
+      // Set canvas size
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
       const pivot = new THREE.Vector3(...pivotArr);
       const position = new THREE.Vector3(...positionArr);
       const rotation = new THREE.Euler(...rotationArr);

@@ -80,6 +80,9 @@ export default class Cubo extends Phaser.Scene {
     this.createUnfoldSlider()
     this.createPlanSlider()
     this.initMouseControls()
+
+    window.addEventListener('resize', () => this.onWindowResize());
+    this.onWindowResize(); // Call once on startup just in case
   }
 
   initUnfoldPlans() {
@@ -445,85 +448,83 @@ export default class Cubo extends Phaser.Scene {
   createUnfoldSlider() {
     this.unfoldSliderContainer = document.createElement("div");
     const sliderContainer = this.unfoldSliderContainer;
-    sliderContainer.style.position = "absolute"
-    sliderContainer.style.top = "10px"
-    sliderContainer.style.right = "10px"
-    sliderContainer.style.width = "200px"
-    sliderContainer.style.padding = "10px"
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)"
-    sliderContainer.style.borderRadius = "5px"
-    document.body.appendChild(sliderContainer)
+    sliderContainer.style.position = "absolute";
+    sliderContainer.style.top = "40px";
+    sliderContainer.style.right = "10px";
+    sliderContainer.style.width = "180px";
+    sliderContainer.style.padding = "10px";
+    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
+    sliderContainer.style.borderRadius = "5px";
+    document.body.appendChild(sliderContainer);
 
-    const sliderLabel = document.createElement("div")
-    sliderLabel.innerText = "Cube Unfold Progress"
-    sliderLabel.style.color = "white"
-    sliderLabel.style.marginBottom = "10px"
-    sliderContainer.appendChild(sliderLabel)
+    const sliderLabel = document.createElement("div");
+    sliderLabel.innerText = "Cube Unfold Progress";
+    sliderLabel.style.color = "white";
+    sliderLabel.style.marginBottom = "10px";
+    sliderContainer.appendChild(sliderLabel);
 
-    const slider = document.createElement("input")
-    slider.type = "range"
-    slider.min = "0"
-    slider.max = "1"
-    slider.step = "0.01"
-    slider.value = "0"
-    slider.style.width = "100%"
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = "1";
+    slider.step = "0.01";
+    slider.value = "0";
+    slider.style.width = "100%";
 
-    slider.addEventListener("mousedown", () => this.isSliding = true)
-    slider.addEventListener("touchstart", () => this.isSliding = true)
-
-    document.addEventListener("mouseup", () => this.isSliding = false)
-    document.addEventListener("touchend", () => this.isSliding = false)
+    slider.addEventListener("mousedown", () => this.isSliding = true);
+    slider.addEventListener("touchstart", () => this.isSliding = true);
+    document.addEventListener("mouseup", () => this.isSliding = false);
+    document.addEventListener("touchend", () => this.isSliding = false);
     slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value)
-      this.updateCubeTransforms()
-    })
+      this.unfoldProgress = parseFloat(e.target.value);
+      this.updateCubeTransforms();
+    });
 
-    sliderContainer.appendChild(slider)
+    sliderContainer.appendChild(slider);
   }
 
   createPlanSlider() {
     this.planSliderContainer = document.createElement("div");
     const sliderContainer = this.planSliderContainer;
-    sliderContainer.style.position = "absolute"
-    sliderContainer.style.top = "80px"
-    sliderContainer.style.right = "10px"
-    sliderContainer.style.width = "200px"
-    sliderContainer.style.padding = "10px"
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)"
-    sliderContainer.style.borderRadius = "5px"
-    document.body.appendChild(sliderContainer)
+    sliderContainer.style.position = "absolute";
+    sliderContainer.style.top = "110px";
+    sliderContainer.style.right = "10px";
+    sliderContainer.style.width = "180px";
+    sliderContainer.style.padding = "10px";
+    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
+    sliderContainer.style.borderRadius = "5px";
+    document.body.appendChild(sliderContainer);
 
-    const label = document.createElement("div")
-    label.style.color = "white"
-    label.style.marginBottom = "10px"
-    sliderContainer.appendChild(label)
+    const label = document.createElement("div");
+    label.style.color = "white";
+    label.style.marginBottom = "10px";
+    sliderContainer.appendChild(label);
 
-    this.planKeys = Object.keys(this.unfoldPlans)
+    this.planKeys = Object.keys(this.unfoldPlans);
 
-    const slider = document.createElement("input")
-    slider.type = "range"
-    slider.min = "0"
-    slider.max = `${this.planKeys.length - 1}`
-    slider.step = "1"
-    slider.value = `${this.planKeys.indexOf(this.currentPlan)}`
-    slider.style.width = "100%"
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = `${this.planKeys.length - 1}`;
+    slider.step = "1";
+    slider.value = `${this.planKeys.indexOf(this.currentPlan)}`;
+    slider.style.width = "100%";
 
     const updatePlan = () => {
-      const index = parseInt(slider.value)
-      this.currentPlan = this.planKeys[index]
-      label.innerText = `Plan: ${this.currentPlan}`
-      this.buildFaceGroupsForPlan(this.currentPlan)
-      this.updateCubeTransforms()
-    }
-    
-    slider.addEventListener("mousedown", () => this.isSliding = true)
-    slider.addEventListener("touchstart", () => this.isSliding = true)
+      const index = parseInt(slider.value);
+      this.currentPlan = this.planKeys[index];
+      label.innerText = `Plan: ${this.currentPlan}`;
+      this.buildFaceGroupsForPlan(this.currentPlan);
+      this.updateCubeTransforms();
+    };
 
-    document.addEventListener("mouseup", () => this.isSliding = false)
-    document.addEventListener("touchend", () => this.isSliding = false)
-    slider.addEventListener("input", updatePlan)
-    updatePlan()
-    sliderContainer.appendChild(slider)
+    slider.addEventListener("mousedown", () => this.isSliding = true);
+    slider.addEventListener("touchstart", () => this.isSliding = true);
+    document.addEventListener("mouseup", () => this.isSliding = false);
+    document.addEventListener("touchend", () => this.isSliding = false);
+    slider.addEventListener("input", updatePlan);
+    updatePlan();
+    sliderContainer.appendChild(slider);
   }
 
   initMouseControls() {
@@ -702,6 +703,69 @@ export default class Cubo extends Phaser.Scene {
         });
       }
   }
+
+  getCanvasOffsetRight(pixelsFromRight = 10) {
+    const canvas = this.sys.game.canvas;
+    const rect = canvas.getBoundingClientRect();
+    return window.innerWidth - rect.right + pixelsFromRight;
+  }
+
+
+  onWindowResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // === Camera update (FOV fixed, adjust orbit radius) ===
+    if (this.camera) {
+      this.camera.fov = 75;
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+    }
+
+    this.orbit.radius = 4 * (600 / height); // inverse height scaling keeps cube same size
+
+    // === Resize the renderer ===
+    if (this.renderer) {
+      this.renderer.setSize(width, height);
+    }
+
+    // === Update edge line resolution ===
+    if (this.faceGroups) {
+      for (const group of Object.values(this.faceGroups)) {
+        for (const child of group.children) {
+          if (child.material && child.material.isLineMaterial) {
+            child.material.resolution.set(width, height);
+          }
+        }
+      }
+    }
+
+    // === Reposition and resize sliders ===
+    const rightOffset = this.getCanvasOffsetRight(10);
+    const canvas = this.sys.game.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const topOffset = rect.top + 45;
+
+    const sliderWidth = Math.min(width * 0.2, 220);
+    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
+
+    if (this.unfoldSliderContainer) {
+      this.unfoldSliderContainer.style.right = `${rightOffset}px`;
+      this.unfoldSliderContainer.style.top = `${topOffset}px`;
+      this.unfoldSliderContainer.style.width = `${sliderWidth}px`;
+      this.unfoldSliderContainer.style.padding = sliderPadding;
+    }
+
+    if (this.planSliderContainer) {
+      this.planSliderContainer.style.right = `${rightOffset}px`;
+      this.planSliderContainer.style.top = `${topOffset + 70}px`;
+      this.planSliderContainer.style.width = `${sliderWidth}px`;
+      this.planSliderContainer.style.padding = sliderPadding;
+    }
+  }
+
+
+
 
   update() {
     const { radius, theta, phi } = this.orbit;

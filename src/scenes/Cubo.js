@@ -81,15 +81,18 @@ export default class Cubo extends Phaser.Scene {
     this.createPlanSlider()
     this.initMouseControls()
 
+    
+    this.lastResizeHeight = window.innerHeight;
+
     window.addEventListener("resize", () => {
-      // Wait briefly so layout settles on mobile
       setTimeout(() => this.onWindowResize(), 100);
     });
 
     window.addEventListener("orientationchange", () => {
-      setTimeout(() => this.onWindowResize(), 150); // mobile orientation fix
+      setTimeout(() => this.onWindowResize(), 150);
     });
-    this.onWindowResize(); // Call once on startup just in case
+
+    this.onWindowResize(); // Initial layout
   }
 
   initUnfoldPlans() {
@@ -774,6 +777,16 @@ export default class Cubo extends Phaser.Scene {
       this.planSliderContainer.style.width = `${sliderWidth}px`;
       this.planSliderContainer.style.padding = sliderPadding;
     }
+
+    // Recheck layout 1 frame later to fix mobile UI shift issues
+    clearTimeout(this.resizeRetryTimeout);
+    this.resizeRetryTimeout = setTimeout(() => {
+      if (window.innerHeight !== this.lastResizeHeight) {
+        this.lastResizeHeight = window.innerHeight;
+        this.onWindowResize(); // Retry resize
+      }
+    }, 150);
+
   }
 
   update() {

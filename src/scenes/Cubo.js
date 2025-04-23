@@ -43,7 +43,8 @@ export default class Cubo extends Phaser.Scene {
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.threeCanvas,
-      alpha: true
+      alpha: true,
+      antialias: true,
     });
 
     this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -353,50 +354,37 @@ export default class Cubo extends Phaser.Scene {
   }
 
   createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
+    const pivot = new THREE.Vector3(...pivotArr);
+    const position = new THREE.Vector3(...positionArr);
+    const rotation = new THREE.Euler(...rotationArr);
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Create the face mesh
+    const geometry = new THREE.PlaneGeometry(1, 1);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(pivot);
 
-      // BOOST PIXEL RATIO — You can tweak the multiplier (1.5 is a good balance)
-      const pixelRatioBoost = 1.5;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio * pixelRatioBoost, 2));
+    // Create edge geometry and line segments
+    const edgeGeometry = new THREE.EdgesGeometry(geometry);
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+    const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+    edges.position.copy(pivot);
 
-      // Set canvas size
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    const group = new THREE.Group();
+    group.add(mesh);
+    group.add(edges); // Add edges to the group
 
-      const pivot = new THREE.Vector3(...pivotArr);
-      const position = new THREE.Vector3(...positionArr);
-      const rotation = new THREE.Euler(...rotationArr);
+    const rotatedPivot = pivot.clone().applyEuler(rotation);
+    const adjustedPosition = position.sub(rotatedPivot);
 
-      // Create the face mesh
-      const geometry = new THREE.PlaneGeometry(1, 1);
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.copy(pivot);
+    group.position.copy(adjustedPosition);
+    group.rotation.copy(rotation);
 
-      // Create edges using native geometry and line material
-      const edges = new THREE.EdgesGeometry(geometry);
-      const lineMaterial = new THREE.LineBasicMaterial({
-          color: 0x000000,
-          toneMapped: false // ensures black stays black in tone-mapped scenes
-      });
-      const line = new THREE.LineSegments(edges, lineMaterial);
-      mesh.add(line);
+    this.originalRotations[name] = {
+      quaternion: new THREE.Quaternion().setFromEuler(rotation)
+    };
 
-      const group = new THREE.Group();
-      group.add(mesh);
-
-      // Adjust the group's position based on rotated pivot
-      const rotatedPivot = pivot.clone().applyEuler(rotation);
-      const adjustedPosition = position.clone().sub(rotatedPivot);
-
-      group.position.copy(adjustedPosition);
-      group.rotation.copy(rotation);
-
-      this.originalRotations[name] = {
-          quaternion: new THREE.Quaternion().setFromEuler(rotation)
-      };
-
-      this.faceGroups[name] = group;
-      return group;
+    this.faceGroups[name] = group;
+    return group;
   }
 
 

@@ -524,73 +524,107 @@ export default class Cubo extends Phaser.Scene {
   }
 
   initMouseControls() {
-    this.isMouseDown = false
-    this.lastMouseX = 0
-    this.lastMouseY = 0
-    this.lastPinchDistance = 0
+    this.isMouseDown = false;
+    this.lastMouseX = 0;
+    this.lastMouseY = 0;
+    this.lastPinchDistance = 0;
 
-    // Touch start
+    // --- Mouse Controls ---
+    this.onMouseDown = (event) => {
+      if (this.isSliding) return;
+
+      this.isMouseDown = true;
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    };
+
+    this.onMouseMove = (event) => {
+      if (this.isSliding || !this.isMouseDown) return;
+
+      const deltaX = event.clientX - this.lastMouseX;
+      const deltaY = event.clientY - this.lastMouseY;
+
+      this.orbit.theta -= deltaX * 0.01;
+      this.orbit.phi -= deltaY * 0.01;
+      this.orbit.phi = Math.max(0.01, Math.min(Math.PI - 0.01, this.orbit.phi));
+
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    };
+
+    this.onMouseUp = () => {
+      this.isMouseDown = false;
+    };
+
+    this.onMouseWheel = (event) => {
+      if (this.isSliding) return;
+
+      this.orbit.radius += event.deltaY * 0.01;
+      this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
+    };
+
+    // --- Touch Controls ---
     this.onTouchStart = (event) => {
-      if (this.isSliding) return
+      if (this.isSliding) return;
 
       if (event.touches.length === 1) {
-        this.isMouseDown = true
-        this.lastMouseX = event.touches[0].clientX
-        this.lastMouseY = event.touches[0].clientY
+        this.isMouseDown = true;
+        this.lastMouseX = event.touches[0].clientX;
+        this.lastMouseY = event.touches[0].clientY;
       } else if (event.touches.length === 2) {
-        this.isMouseDown = false
-        this.lastPinchDistance = this.getPinchDistance(event)
+        this.isMouseDown = false;
+        this.lastPinchDistance = this.getPinchDistance(event);
       }
-    }
+    };
 
-    // Touch move
     this.onTouchMove = (event) => {
-      if (this.isSliding) return
+      if (this.isSliding) return;
 
       if (event.touches.length === 1 && this.isMouseDown) {
-        const touch = event.touches[0]
-        const deltaX = touch.clientX - this.lastMouseX
-        const deltaY = touch.clientY - this.lastMouseY
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - this.lastMouseX;
+        const deltaY = touch.clientY - this.lastMouseY;
 
-        this.orbit.theta -= deltaX * 0.01
-        this.orbit.phi -= deltaY * 0.01
-        this.orbit.phi = Math.max(0.01, Math.min(Math.PI - 0.01, this.orbit.phi))
+        this.orbit.theta -= deltaX * 0.01;
+        this.orbit.phi -= deltaY * 0.01;
+        this.orbit.phi = Math.max(0.01, Math.min(Math.PI - 0.01, this.orbit.phi));
 
-        this.lastMouseX = touch.clientX
-        this.lastMouseY = touch.clientY
+        this.lastMouseX = touch.clientX;
+        this.lastMouseY = touch.clientY;
       } else if (event.touches.length === 2) {
-        const newDistance = this.getPinchDistance(event)
-        const delta = newDistance - this.lastPinchDistance
+        const newDistance = this.getPinchDistance(event);
+        const delta = newDistance - this.lastPinchDistance;
 
-        this.orbit.radius -= delta * 0.01
-        this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius))
+        this.orbit.radius -= delta * 0.01;
+        this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
 
-        this.lastPinchDistance = newDistance
+        this.lastPinchDistance = newDistance;
       }
-    }
+    };
 
     this.onTouchEnd = () => {
-      this.isMouseDown = false
-      this.lastPinchDistance = 0
-    }
+      this.isMouseDown = false;
+      this.lastPinchDistance = 0;
+    };
 
-    // Helper for pinch distance
+    // --- Pinch Helper ---
     this.getPinchDistance = (event) => {
-      const dx = event.touches[0].clientX - event.touches[1].clientX
-      const dy = event.touches[0].clientY - event.touches[1].clientY
-      return Math.sqrt(dx * dx + dy * dy)
-    }
+      const dx = event.touches[0].clientX - event.touches[1].clientX;
+      const dy = event.touches[0].clientY - event.touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
 
-    // Add event listeners (mouse + touch)
-    window.addEventListener("mousedown", this.onMouseDown)
-    window.addEventListener("mouseup", this.onMouseUp)
-    window.addEventListener("mousemove", this.onMouseMove)
-    window.addEventListener("wheel", this.onMouseWheel)
+    // --- Event Listeners ---
+    window.addEventListener("mousedown", this.onMouseDown);
+    window.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("mousemove", this.onMouseMove);
+    window.addEventListener("wheel", this.onMouseWheel);
 
-    window.addEventListener("touchstart", this.onTouchStart, { passive: false })
-    window.addEventListener("touchmove", this.onTouchMove, { passive: false })
-    window.addEventListener("touchend", this.onTouchEnd)
+    window.addEventListener("touchstart", this.onTouchStart, { passive: false });
+    window.addEventListener("touchmove", this.onTouchMove, { passive: false });
+    window.addEventListener("touchend", this.onTouchEnd);
   }
+
 
   checkFaceVisibility() {
       const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];

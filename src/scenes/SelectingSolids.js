@@ -38,6 +38,27 @@ export default class SelectingSolids extends Phaser.Scene {
             this.scene.start('Cubo');
         });
 
+        btnParalelepipedos.on('pointerup', () => {
+            this.scene.start('Paralelepipedo');
+        });
+
+        btnPrismas.on('pointerup', () => {
+            this.scene.start('Prisma');
+        });
+
+        btnPiramides.on('pointerup', () => {
+            this.scene.start('Piramide');
+        });
+
+        btnCones.on('pointerup', () => {
+            this.scene.start('Cone');
+        });
+
+        btnCilindros.on('pointerup', () => {
+            this.scene.start('Cilindro');
+        });
+
+
         this.addHoverEffect(btnCubo);
         this.addHoverEffect(btnParalelepipedos);
         this.addHoverEffect(btnPrismas);

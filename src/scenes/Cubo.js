@@ -32,6 +32,40 @@ export default class Cubo extends Phaser.Scene {
       this.scene.start('MenuScene');
     });
 
+    const toggleFullscreen = () => {
+        if (this.scale.isFullscreen) {
+            this.scale.stopFullscreen();
+            btnFullScreen.setVisible(true);
+            btnBack.setVisible(false);
+        } else {
+            // Reattach Three.js canvas and sliders before going fullscreen
+            document.body.appendChild(this.threeCanvas);
+            if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
+            if (this.planSliderContainer) document.body.appendChild(this.planSliderContainer);
+            
+            this.scale.startFullscreen();
+            btnFullScreen.setVisible(false);
+            btnBack.setVisible(true);
+        }
+        // Force resize after fullscreen change
+        this.onWindowResize();
+    };
+
+    btnFullScreen.on('pointerup', toggleFullscreen);
+    btnBack.on('pointerup', toggleFullscreen);
+
+    this.scale.on('fullscreenchange', () => {
+      if (this.scale.isFullscreen) {
+        btnFullScreen.setVisible(false);
+        btnBack.setVisible(true);
+      } else {
+        btnFullScreen.setVisible(true);
+        btnBack.setVisible(false);
+      }
+      // Resize after fullscreen change
+      this.onWindowResize();
+    });
+
     // --- THREE Setup ---
     this.threeCanvas = document.createElement("canvas")
     this.threeCanvas.style.position = "absolute"
@@ -672,7 +706,15 @@ export default class Cubo extends Phaser.Scene {
           }
       });
 
-      if (this.unfoldProgress < 0.95) {
+      if (this.unfoldProgress == 0) {
+
+        faces.forEach(face => {
+            if (faceData[face]) {
+                this.materials[faceData[face].index].opacity = 0.6;
+            }
+        });
+
+      } else if (this.unfoldProgress < 0.95) {
 
         // Check each face against all others
         for (const face1 in faceData) {
@@ -722,8 +764,25 @@ export default class Cubo extends Phaser.Scene {
 
 
   onWindowResize() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    // Get the appropriate container for fullscreen
+    const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
+    
+    // Ensure canvas is in the right container
+    if (this.threeCanvas && this.threeCanvas.parentNode !== container) {
+        container.appendChild(this.threeCanvas);
+    }
+
+    // Ensure sliders are in the right container
+    if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
+        container.appendChild(this.unfoldSliderContainer);
+    }
+    if (this.planSliderContainer && this.planSliderContainer.parentNode !== container) {
+        container.appendChild(this.planSliderContainer);
+    }
+
+    // Rest of your existing resize logic...
+    const width = container === document.body ? window.innerWidth : container.clientWidth;
+    const height = container === document.body ? window.innerHeight : container.clientHeight;
 
     // === Camera update: Keep FOV fixed, adjust orbit to maintain visual size ===
     if (this.camera) {

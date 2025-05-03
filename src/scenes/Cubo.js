@@ -86,7 +86,7 @@ export default class Cubo extends Phaser.Scene {
     this.scene3D = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-    this.orbit = { radius: 4, theta: Math.PI / 8, phi: Math.PI / 2.5 }
+    this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 }
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
@@ -793,7 +793,7 @@ export default class Cubo extends Phaser.Scene {
 
     // Adjust the orbit distance (z distance) to compensate for screen height
     const baseHeight = 600; // Your reference height
-    this.orbit.radius = 4 * (baseHeight / height); // Smaller screens = larger radius
+    this.orbit.radius = 5 * (baseHeight / height); // Smaller screens = larger radius
 
     // === Resize renderer ===
     if (this.renderer) {

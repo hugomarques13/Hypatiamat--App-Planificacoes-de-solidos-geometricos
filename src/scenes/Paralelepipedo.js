@@ -41,7 +41,6 @@ export default class Paralelepipedo extends Phaser.Scene {
             // Reattach Three.js canvas and sliders before going fullscreen
             document.body.appendChild(this.threeCanvas);
             if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-            if (this.planSliderContainer) document.body.appendChild(this.planSliderContainer);
             
             this.scale.startFullscreen();
             btnFullScreen.setVisible(false);
@@ -112,7 +111,6 @@ export default class Paralelepipedo extends Phaser.Scene {
     this.buildFaceGroupsForPlan(this.currentPlan)
 
     this.createUnfoldSlider()
-    this.createPlanSlider()
     this.initMouseControls()
 
     
@@ -325,50 +323,6 @@ export default class Paralelepipedo extends Phaser.Scene {
     sliderContainer.appendChild(slider);
   }
 
-  createPlanSlider() {
-    this.planSliderContainer = document.createElement("div");
-    const sliderContainer = this.planSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "110px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
-
-    const label = document.createElement("div");
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    sliderContainer.appendChild(label);
-
-    this.planKeys = Object.keys(this.unfoldPlans);
-
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0";
-    slider.max = `${this.planKeys.length - 1}`;
-    slider.step = "1";
-    slider.value = `${this.planKeys.indexOf(this.currentPlan)}`;
-    slider.style.width = "100%";
-
-    const updatePlan = () => {
-      const index = parseInt(slider.value);
-      this.currentPlan = this.planKeys[index];
-      label.innerText = `Planificação: ${this.currentPlan}`;
-      this.buildFaceGroupsForPlan(this.currentPlan);
-      this.updateCubeTransforms();
-    };
-
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", updatePlan);
-    updatePlan();
-    sliderContainer.appendChild(slider);
-  }
-
   initMouseControls() {
     this.isMouseDown = false;
     this.lastMouseX = 0;
@@ -574,9 +528,6 @@ export default class Paralelepipedo extends Phaser.Scene {
     if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
         container.appendChild(this.unfoldSliderContainer);
     }
-    if (this.planSliderContainer && this.planSliderContainer.parentNode !== container) {
-        container.appendChild(this.planSliderContainer);
-    }
 
     // Rest of your existing resize logic...
     const width = container === document.body ? window.innerWidth : container.clientWidth;
@@ -628,13 +579,6 @@ export default class Paralelepipedo extends Phaser.Scene {
       this.unfoldSliderContainer.style.padding = sliderPadding;
     }
 
-    if (this.planSliderContainer) {
-      this.planSliderContainer.style.right = `${rightOffset}px`;
-      this.planSliderContainer.style.top = `${topOffset + 70}px`;
-      this.planSliderContainer.style.width = `${sliderWidth}px`;
-      this.planSliderContainer.style.padding = sliderPadding;
-    }
-
     // Recheck layout 1 frame later to fix mobile UI shift issues
     clearTimeout(this.resizeRetryTimeout);
     this.resizeRetryTimeout = setTimeout(() => {
@@ -672,11 +616,6 @@ export default class Paralelepipedo extends Phaser.Scene {
   if (this.unfoldSliderContainer?.parentNode) {
     this.unfoldSliderContainer.remove();
     this.unfoldSliderContainer = null;
-  }
-
-  if (this.planSliderContainer?.parentNode) {
-    this.planSliderContainer.remove();
-    this.planSliderContainer = null;
   }
 
   // Mouse listeners

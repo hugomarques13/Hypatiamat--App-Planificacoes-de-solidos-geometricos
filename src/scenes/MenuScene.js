@@ -61,6 +61,10 @@ export default class MenuScene extends Phaser.Scene {
             this.scene.start('SelectingSolids');
         });
 
+        btn2.on('pointerup', () => {
+            this.scene.start('QuizScene');
+        });
+
         btnCredits.on('pointerup', () => {
             creditosImg.setVisible(true);
             btnFechar.setVisible(true);

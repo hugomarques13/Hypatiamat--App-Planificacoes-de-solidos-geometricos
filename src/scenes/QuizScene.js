@@ -27,6 +27,26 @@ export default class QuizScene extends Phaser.Scene {
                 question: "Qual destas formas pode rolar?",
                 options: ["Cilindro", "Cubo", "Piramide"],
                 correct: "Cilindro"
+            },
+            {
+                question: "Qual forma corresponde a esta planificação: 1 círculo e 1 lateral curva?",
+                options: ["Cone", "Esfera", "Cilindro"],
+                correct: "Cone"
+            },
+            {
+                question: "Qual forma corresponde a uma planificação com 1 círculo apenas?",
+                options: ["Esfera", "Cone", "Cilindro"],
+                correct: "Esfera"
+            },
+            {
+                question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
+                options: ["Prisma", "Piramide", "Cubo"],
+                correct: "Prisma"
+            },
+            {
+                question: "Qual destas formas tem uma planificação com 6 retângulos?",
+                options: ["Paralelepípedo", "Cubo", "Piramide"],
+                correct: "Paralelepípedo"
             }
         ];
 
@@ -46,6 +66,7 @@ export default class QuizScene extends Phaser.Scene {
     showQuestion() {
         if (this.questionText) this.questionText.destroy();
         if (this.optionButtons) this.optionButtons.forEach(btn => btn.destroy());
+        if (this.feedbackText) this.feedbackText.destroy();
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
@@ -69,31 +90,50 @@ export default class QuizScene extends Phaser.Scene {
                 .setOrigin(0.5)
                 .setInteractive({ useHandCursor: true });
 
-            button.on('pointerup', () => this.checkAnswer(option));
+            button.on('pointerup', () => this.checkAnswer(option, button));
 
             this.optionButtons.push(button);
         });
     }
 
-    checkAnswer(selectedOption) {
+    checkAnswer(selectedOption, selectedButton) {
         const question = this.questions[this.currentQuestionIndex];
+
+        // Disable all buttons to prevent multiple clicks
+        this.optionButtons.forEach(btn => btn.disableInteractive());
 
         if (selectedOption === question.correct) {
             this.score++;
-        }
-
-        this.currentQuestionIndex++;
-
-        if (this.currentQuestionIndex < this.questions.length) {
-            this.showQuestion();
+            selectedButton.setBackgroundColor('#b6fcb6'); // Verde
+            this.showFeedback("Certo!");
         } else {
-            this.showResults();
+            selectedButton.setBackgroundColor('#fcb6b6'); // Vermelho
+            this.showFeedback(`Errado! A resposta certa é: ${question.correct}`);
         }
+
+        this.time.delayedCall(1500, () => {
+            this.currentQuestionIndex++;
+            if (this.currentQuestionIndex < this.questions.length) {
+                this.showQuestion();
+            } else {
+                this.showResults();
+            }
+        });
+    }
+
+    showFeedback(text) {
+        if (this.feedbackText) this.feedbackText.destroy();
+
+        this.feedbackText = this.add.text(512, 480, text, {
+            fontSize: '26px',
+            color: '#000'
+        }).setOrigin(0.5);
     }
 
     showResults() {
-        this.questionText.destroy();
-        this.optionButtons.forEach(btn => btn.destroy());
+        if (this.questionText) this.questionText.destroy();
+        if (this.optionButtons) this.optionButtons.forEach(btn => btn.destroy());
+        if (this.feedbackText) this.feedbackText.destroy();
 
         this.add.text(512, 250, `Pontuação final: ${this.score}/${this.questions.length}`, {
             fontSize: '32px',
@@ -110,17 +150,8 @@ export default class QuizScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true });
 
         restartBtn.on('pointerup', () => {
-            // this.cleanupDOM();
             this.scene.start('MenuScene');
         });
     }
-
-    /*
-    cleanupDOM() {
-        if (this.threeCanvas?.parentNode) {
-            this.threeCanvas.remove();
-            this.threeCanvas = null;
-        }
-    }
-    */
 }
+

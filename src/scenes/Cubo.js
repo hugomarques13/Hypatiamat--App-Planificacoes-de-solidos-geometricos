@@ -31,30 +31,22 @@ export default class Cubo extends Phaser.Scene {
       this.cleanupDOM();
       this.scene.start('MenuScene');
     });
-
+    
     const toggleFullscreen = () => {
-        if (this.scale.isFullscreen) {
-            this.scale.stopFullscreen();
-            btnFullScreen.setVisible(true);
-            btnBack.setVisible(false);
-        } else {
-            // Reattach Three.js canvas and sliders before going fullscreen
-            document.body.appendChild(this.threeCanvas);
-            if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
-            
-            this.scale.startFullscreen();
-            btnFullScreen.setVisible(false);
-            btnBack.setVisible(true);
-        }
-
-        setTimeout(() => {
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.render(this.scene3D, this.camera);
-        }, 100);
-        // Force resize after fullscreen change
-        this.onWindowResize();
+      if (this.scale.isFullscreen) {
+        this.scale.stopFullscreen();
+        btnFullScreen.setVisible(true);
+        btnBack.setVisible(false);
+      } else {
+        document.body.appendChild(this.threeCanvas);
+        if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
+        
+        this.scale.startFullscreen();
+        btnFullScreen.setVisible(false);
+        btnBack.setVisible(true);
+      }
+      this.onWindowResize();
     };
-
     btnFullScreen.on('pointerup', toggleFullscreen);
     btnBack.on('pointerup', toggleFullscreen);
 
@@ -75,7 +67,7 @@ export default class Cubo extends Phaser.Scene {
     this.threeCanvas.style.position = "absolute"
     this.threeCanvas.style.top = "0"
     this.threeCanvas.style.left = "0"
-    this.threeCanvas.style.zIndex = "0"
+    this.threeCanvas.style.zIndex = "10"
     this.threeCanvas.style.pointerEvents = "none";
     document.body.appendChild(this.threeCanvas)
 
@@ -496,6 +488,8 @@ export default class Cubo extends Phaser.Scene {
   createSliders() {
     this.slidersContainer = document.createElement("div");
     this.slidersContainer.classList.add("slider-container");
+    this.slidersContainer.style.position = 'absolute';
+    this.slidersContainer.style.zIndex = '20';
     this.slidersContainer.style.top = "40px";
     this.slidersContainer.style.right = "40px";
     document.body.appendChild(this.slidersContainer);

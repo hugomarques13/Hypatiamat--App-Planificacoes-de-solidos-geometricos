@@ -43,9 +43,7 @@ export default class Piramide extends Phaser.Scene {
             btnBack.setVisible(false);
         } else {
             document.body.appendChild(this.threeCanvas);
-            if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-            if (this.planSliderContainer) document.body.appendChild(this.planSliderContainer);
-            if (this.sidesSliderContainer) document.body.appendChild(this.sidesSliderContainer);
+            if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
             
             this.scale.startFullscreen();
             btnFullScreen.setVisible(false);
@@ -120,9 +118,7 @@ export default class Piramide extends Phaser.Scene {
     this.initUnfoldPlans()
     this.buildFaceGroupsForPlan(this.currentPlan)
 
-    this.createUnfoldSlider()
-    this.createSidesSlider()
-    this.createHeightSlider();
+    this.createSliders();
     this.initMouseControls()
 
     this.lastResizeHeight = window.innerHeight;
@@ -371,169 +367,115 @@ buildFaceGroupsForPlan(planName) {
     }
 }
 
-  createUnfoldSlider() {
-    this.unfoldSliderContainer = document.createElement("div");
-    const sliderContainer = this.unfoldSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "40px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
+createSliders() {
+    // Create main container for all sliders
+    this.slidersContainer = document.createElement("div");
+    this.slidersContainer.classList.add("slider-container");
+    document.body.appendChild(this.slidersContainer);
 
-    const sliderLabel = document.createElement("div");
-    sliderLabel.innerText = "Abrir Figura";
-    sliderLabel.style.color = "white";
-    sliderLabel.style.marginBottom = "10px";
-    sliderContainer.appendChild(sliderLabel);
-
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0";
-    slider.max = "1";
-    slider.step = "0.01";
-    slider.value = "0";
-    slider.style.width = "100%";
-
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
-      this.updatePrismTransforms();
-    });
-
-    sliderContainer.appendChild(slider);
-  }
-
-  createPlanSlider() {
-    this.planSliderContainer = document.createElement("div");
-    const sliderContainer = this.planSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "110px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
-
-    const label = document.createElement("div");
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    sliderContainer.appendChild(label);
-
-    this.planKeys = Object.keys(this.unfoldPlans);
-
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0";
-    slider.max = `${this.planKeys.length - 1}`;
-    slider.step = "1";
-    slider.value = `${this.planKeys.indexOf(this.currentPlan)}`;
-    slider.style.width = "100%";
-
-    const updatePlan = () => {
-      const index = parseInt(slider.value);
-      this.currentPlan = this.planKeys[index];
-      label.innerText = `Planificação: ${this.currentPlan}`;
-      this.buildFaceGroupsForPlan(this.currentPlan);
-      this.updatePrismTransforms();
+    // Function to update slider gradient (reusable)
+    const updateSliderBackground = (slider, value, min = 0, max = 1) => {
+        const percentage = ((value - min) / (max - min)) * 100;
+        slider.style.background = `linear-gradient(to right,
+            #fcc33c 0%,
+            #fba434 ${percentage / 2}%,
+            #e07812 ${percentage}%,
+            #ccc ${percentage}%,
+            #ccc 100%)`;
     };
 
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", updatePlan);
-    updatePlan();
-    sliderContainer.appendChild(slider);
-  }
+    // --- UNFOLD SLIDER ---
+    const unfoldLabel = document.createElement("div");
+    unfoldLabel.innerText = "Abrir Pirâmide";
+    unfoldLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(unfoldLabel);
 
-    createSidesSlider() {
-    this.sidesSliderContainer = document.createElement("div");
-    const sliderContainer = this.sidesSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "110px"; // Moved up to replace plan slider
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
+    const unfoldSlider = document.createElement("input");
+    unfoldSlider.type = "range";
+    unfoldSlider.min = "0";
+    unfoldSlider.max = "1";
+    unfoldSlider.step = "0.01";
+    unfoldSlider.value = "0";
+    unfoldSlider.classList.add("custom-slider");
+    unfoldSlider.style.marginBottom = "20px";
 
-    const label = document.createElement("div");
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    label.innerText = `Lados: ${this.sides}`;
-    sliderContainer.appendChild(label);
-
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "3";
-    slider.max = "10";
-    slider.step = "1";
-    slider.value = `${this.sides}`;
-    slider.style.width = "100%";
-
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", (e) => {
-      this.sides = parseInt(e.target.value);
-      label.innerText = `Lados: ${this.sides}`;
-      this.initUnfoldPlans();
-      this.buildFaceGroupsForPlan(this.currentPlan);
-      this.updatePrismTransforms();
+    unfoldSlider.addEventListener("input", (e) => {
+        const val = parseFloat(e.target.value);
+        this.unfoldProgress = val;
+        updateSliderBackground(unfoldSlider, val);
+        this.updatePrismTransforms();
     });
 
-    sliderContainer.appendChild(slider);
-  }
+    updateSliderBackground(unfoldSlider, 0);
+    this.slidersContainer.appendChild(unfoldSlider);
 
-  createHeightSlider() {
-    this.heightSliderContainer = document.createElement("div");
-    const sliderContainer = this.heightSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "180px"; // Position below sides slider
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
+    // --- SIDES SLIDER ---
+    const sidesLabel = document.createElement("div");
+    sidesLabel.innerText = `Lados: ${this.sides}`;
+    sidesLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(sidesLabel);
 
-    const label = document.createElement("div");
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    label.innerText = `Altura: ${this.piramideHeight.toFixed(1)}`;
-    sliderContainer.appendChild(label);
+    const sidesSlider = document.createElement("input");
+    sidesSlider.type = "range";
+    sidesSlider.min = "3";
+    sidesSlider.max = "10";
+    sidesSlider.step = "1";
+    sidesSlider.value = `${this.sides}`;
+    sidesSlider.classList.add("custom-slider");
+    sidesSlider.style.marginBottom = "20px";
 
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = this.minHeight.toString();
-    slider.max = this.maxHeight.toString();
-    slider.step = "0.1";
-    slider.value = this.piramideHeight.toString();
-    slider.style.width = "100%";
-
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", (e) => {
-      this.piramideHeight = parseFloat(e.target.value);
-      label.innerText = `Altura: ${this.piramideHeight.toFixed(1)}`;
-      this.initUnfoldPlans(); // Recalculate transforms with new height
-      this.buildFaceGroupsForPlan(this.currentPlan);
-      this.updatePrismTransforms();
+    sidesSlider.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value);
+        this.sides = val;
+        sidesLabel.innerText = `Lados: ${val}`;
+        updateSliderBackground(sidesSlider, val, 3, 10);
+        this.initUnfoldPlans();
+        this.buildFaceGroupsForPlan(this.currentPlan);
+        this.updatePrismTransforms();
     });
 
-    sliderContainer.appendChild(slider);
-  }
+    updateSliderBackground(sidesSlider, this.sides, 3, 10);
+    this.slidersContainer.appendChild(sidesSlider);
+
+    // --- HEIGHT SLIDER ---
+    const heightLabel = document.createElement("div");
+    heightLabel.innerText = `Altura: ${this.piramideHeight.toFixed(1)}`;
+    heightLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(heightLabel);
+
+    const heightSlider = document.createElement("input");
+    heightSlider.type = "range";
+    heightSlider.min = this.minHeight.toString();
+    heightSlider.max = this.maxHeight.toString();
+    heightSlider.step = "0.1";
+    heightSlider.value = this.piramideHeight.toString();
+    heightSlider.classList.add("custom-slider");
+
+    heightSlider.addEventListener("input", (e) => {
+        const val = parseFloat(e.target.value);
+        this.piramideHeight = val;
+        heightLabel.innerText = `Altura: ${val.toFixed(1)}`;
+        updateSliderBackground(heightSlider, val, this.minHeight, this.maxHeight);
+        this.initUnfoldPlans();
+        this.buildFaceGroupsForPlan(this.currentPlan);
+        this.updatePrismTransforms();
+    });
+
+    updateSliderBackground(heightSlider, this.piramideHeight, this.minHeight, this.maxHeight);
+    this.slidersContainer.appendChild(heightSlider);
+
+    // --- GLOBAL SLIDING CONTROL ---
+    const setSliding = (isSliding) => this.isSliding = isSliding;
+    
+    [unfoldSlider, sidesSlider, heightSlider].forEach(slider => {
+        slider.addEventListener("mousedown", () => setSliding(true));
+        slider.addEventListener("touchstart", () => setSliding(true));
+    });
+    
+    document.addEventListener("mouseup", () => setSliding(false));
+    document.addEventListener("touchend", () => setSliding(false));
+}
+
   initMouseControls() {
     this.isMouseDown = false;
     this.lastMouseX = 0;
@@ -736,19 +678,12 @@ checkFaceVisibility() {
     const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
     
     // Ensure canvas is in the right container
-    if (this.threeCanvas && this.threeCanvas.parentNode !== container) {
+    if (this.threeCanvas?.parentNode !== container) {
         container.appendChild(this.threeCanvas);
     }
 
-    // Ensure sliders are in the right container
-    if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
-        container.appendChild(this.unfoldSliderContainer);
-    }
-    if (this.sidesSliderContainer && this.sidesSliderContainer.parentNode !== container) {
-        container.appendChild(this.sidesSliderContainer);
-    }
-    if (this.heightSliderContainer && this.heightSliderContainer.parentNode !== container) {
-        container.appendChild(this.heightSliderContainer);
+    if (this.slidersContainer?.parentNode !== container) {
+        container.appendChild(this.slidersContainer);
     }
 
     // Rest of your existing resize logic...
@@ -756,13 +691,13 @@ checkFaceVisibility() {
     const height = container === document.body ? window.innerHeight : container.clientHeight;
 
     if (this.camera) {
-      this.camera.fov = 75;
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        
+        // Adjust orbit distance based on screen height
+        const baseHeight = 600;
+        this.orbit.radius = 8 * (baseHeight / Math.max(height, 400));
     }
-
-    const baseHeight = 600;
-    this.orbit.radius = 8 * (baseHeight / height);
 
     if (this.renderer) {
       this.renderer.setSize(width, height);
@@ -780,35 +715,48 @@ checkFaceVisibility() {
       }
     }
 
-    const canvas = this.sys.game.canvas;
-    const rect = canvas.getBoundingClientRect();
+    if (this.slidersContainer) {
+            const canvas = this.sys.game.canvas;
+            const rect = canvas.getBoundingClientRect();
+            
+            // Calculate responsive dimensions
+            const rightOffset = window.innerWidth - rect.right + 10;
+            const topOffset = rect.top + 45;
+            
+            // Dynamic sizing based on window width
+            const baseWidth = 220;
+            const minWidth = 180;
+            const maxWidth = 300;
+            
+            let sliderWidth = Math.min(
+                Math.max(width * 0.2, minWidth), 
+                maxWidth
+            );
+            
+            // Adjust font size based on width
+            const baseFontSize = 16;
+            const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
+            
+            // Calculate responsive padding
+            const paddingVertical = Math.max(height * 0.015, 10);
+            const paddingHorizontal = Math.max(width * 0.02, 12);
+            
+            Object.assign(this.slidersContainer.style, {
+                right: `${rightOffset}px`,
+                top: `${topOffset}px`,
+                width: `${sliderWidth}px`,
+                padding: `${paddingVertical}px ${paddingHorizontal}px`,
+                fontSize: `${fontSize}px`,
+                borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+            });
 
-    const rightOffset = window.innerWidth - rect.right + 10;
-    const topOffset = rect.top + 45;
-
-    const sliderWidth = Math.min(width * 0.2, 220);
-    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
-
-    if (this.unfoldSliderContainer) {
-      this.unfoldSliderContainer.style.right = `${rightOffset}px`;
-      this.unfoldSliderContainer.style.top = `${topOffset}px`;
-      this.unfoldSliderContainer.style.width = `${sliderWidth}px`;
-      this.unfoldSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.sidesSliderContainer) {
-      this.sidesSliderContainer.style.right = `${rightOffset}px`;
-      this.sidesSliderContainer.style.top = `${topOffset + 70}px`;
-      this.sidesSliderContainer.style.width = `${sliderWidth}px`;
-      this.sidesSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.heightSliderContainer) {
-      this.heightSliderContainer.style.right = `${rightOffset}px`;
-      this.heightSliderContainer.style.top = `${topOffset + 140}px`;
-      this.heightSliderContainer.style.width = `${sliderWidth}px`;
-      this.heightSliderContainer.style.padding = sliderPadding;
-    }
+            // Update all slider thumbs
+            const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
+            sliders.forEach(slider => {
+                const thumbSize = Math.max(sliderWidth * 0.11, 20);
+                slider.style.setProperty('--thumb-size', `${thumbSize}px`);
+            });
+        }
 
     clearTimeout(this.resizeRetryTimeout);
     this.resizeRetryTimeout = setTimeout(() => {
@@ -841,20 +789,9 @@ checkFaceVisibility() {
       this.threeCanvas = null;
     }
 
-    // Remove sliders
-    if (this.unfoldSliderContainer?.parentNode) {
-      this.unfoldSliderContainer.remove();
-      this.unfoldSliderContainer = null;
-    }
-
-    if (this.sidesSliderContainer?.parentNode) {
-      this.sidesSliderContainer.remove();
-      this.sidesSliderContainer = null;
-    }
-
-    if (this.heightSliderContainer?.parentNode) {
-      this.heightSliderContainer.remove();
-      this.heightSliderContainer = null;
+    if (this.slidersContainer?.parentNode) {
+        this.slidersContainer.remove();
+        this.slidersContainer = null;
     }
 
     // Mouse listeners

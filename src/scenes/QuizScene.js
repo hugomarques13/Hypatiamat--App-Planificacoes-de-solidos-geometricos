@@ -59,19 +59,20 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.image(512, 300, 'background').setScale(0.8);
+        // Add background with persistent flag
+        const bg = this.add.image(512, 300, 'background').setScale(0.8);
+        bg.keepInScene = true;
+        
         this.showQuestion();
     }
 
     showQuestion() {
-        // Limpa elementos anteriores
-        if (this.questionText) this.questionText.destroy();
-        if (this.optionButtons) this.optionButtons.forEach(btn => btn.destroy());
-        if (this.feedbackText) this.feedbackText.destroy();
+        // Clear previous elements
+        this.clearScene();
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
-        // Mostra a pergunta
+        // Show question text
         this.questionText = this.add.text(512, 150, questionObj.question, {
             fontSize: '28px',
             color: '#000',
@@ -79,7 +80,7 @@ export default class QuizScene extends Phaser.Scene {
             wordWrap: { width: 800 }
         }).setOrigin(0.5);
 
-        // Cria botões de opção
+        // Create option buttons
         this.optionButtons = [];
         questionObj.options.forEach((option, index) => {
             const button = this.add.text(512, 250 + index * 60, option, {
@@ -89,10 +90,10 @@ export default class QuizScene extends Phaser.Scene {
                 padding: { x: 20, y: 10 },
                 align: 'center'
             })
-                .setOrigin(0.5)
-                .setInteractive({ useHandCursor: true });
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerup', () => this.checkAnswer(option, button));
 
-            button.on('pointerup', () => this.checkAnswer(option, button));
             this.optionButtons.push(button);
         });
     }
@@ -100,21 +101,21 @@ export default class QuizScene extends Phaser.Scene {
     checkAnswer(selectedOption, button) {
         const questionObj = this.questions[this.currentQuestionIndex];
         
-        // Destaca visualmente as respostas
+        // Highlight answers
         this.optionButtons.forEach(btn => {
             if (btn.text === questionObj.correct) {
-                btn.setBackgroundColor('#00ff00'); // Resposta correta (verde)
+                btn.setBackgroundColor('#00ff00'); // Correct (green)
             } else if (btn.text === selectedOption && selectedOption !== questionObj.correct) {
-                btn.setBackgroundColor('#ff0000'); // Resposta errada (vermelho)
+                btn.setBackgroundColor('#ff0000'); // Wrong (red)
             }
         });
 
-        // Atualiza pontuação
+        // Update score
         if (selectedOption === questionObj.correct) {
             this.score++;
         }
 
-        // Próxima pergunta ou tela final
+        // Next question or show results
         this.time.delayedCall(1000, () => {
             this.currentQuestionIndex++;
             if (this.currentQuestionIndex < this.questions.length) {
@@ -126,19 +127,18 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     showFinalScore() {
-        // Limpa a cena
-        this.questionText?.destroy();
-        this.optionButtons?.forEach(btn => btn.destroy());
-        
-        // Mostra resultados
+        // Clear all interactive objects
+        this.clearScene();
+
+        // Show final score
         this.add.text(512, 200, `Fim do Quiz!\nAcertaste ${this.score} de ${this.questions.length}!`, {
             fontSize: '32px',
             color: '#000',
             align: 'center'
         }).setOrigin(0.5);
 
-        // Botão para reiniciar
-        const restartButton = this.add.text(512, 300, 'Jogar Novamente', {
+        // Restart button
+        this.add.text(512, 300, 'Jogar Novamente', {
             fontSize: '24px',
             backgroundColor: '#4CAF50',
             color: '#fff',
@@ -147,13 +147,11 @@ export default class QuizScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive()
         .on('pointerup', () => {
-            this.score = 0;
-            this.currentQuestionIndex = 0;
-            this.showQuestion();
+            this.resetQuiz();
         });
 
-        // Botão para voltar ao menu
-        const menuButton = this.add.text(512, 370, 'Voltar ao Menu', {
+        // Return to menu button
+        this.add.text(512, 370, 'Voltar ao Menu', {
             fontSize: '24px',
             backgroundColor: '#2196F3',
             color: '#fff',
@@ -162,7 +160,29 @@ export default class QuizScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive()
         .on('pointerup', () => {
-            this.scene.start('MenuScene'); 
+            this.returnToMenu();
         });
+    }
+
+    clearScene() {
+        // Destroy all non-persistent objects
+        this.children.each(child => {
+            if (!child.keepInScene) {
+                child.destroy();
+            }
+        });
+    }
+
+    resetQuiz() {
+        this.score = 0;
+        this.currentQuestionIndex = 0;
+        this.clearScene();
+        this.showQuestion();
+    }
+
+    returnToMenu() {
+        // Proper scene transition
+        this.scene.stop('QuizScene');
+        this.scene.start('MenuScene');
     }
 }

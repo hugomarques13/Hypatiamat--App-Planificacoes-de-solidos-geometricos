@@ -62,6 +62,7 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         btn2.on('pointerup', () => {
+            this.scene.stop('MenuScene');   // <- Para garantir que o Menu é parado
             this.scene.start('QuizScene');
         });
 
@@ -98,4 +99,5 @@ export default class MenuScene extends Phaser.Scene {
             button.setScale(button.scaleX / 1.1);
         });
     }
+    
 }

@@ -34,7 +34,7 @@ export default class QuizScene extends Phaser.Scene {
                 correct: "Cone"
             },
             {
-                question: "Quantas planificações tem um cubp?",
+                question: "Quantas planificações tem um cubo?",
                 options: ["6", "11", "8"],
                 correct: "11"
             },
@@ -49,10 +49,12 @@ export default class QuizScene extends Phaser.Scene {
                 correct: "Paralelepípedo"
             }
         ];
+    }
 
+    init() {
+        // Reinicia variáveis quando a cena começa (útil se voltaste do menu)
         this.currentQuestionIndex = 0;
         this.score = 0;
-        this.timer = null;
     }
 
     preload() {
@@ -62,6 +64,7 @@ export default class QuizScene extends Phaser.Scene {
     create() {
         this.add.image(512, 300, 'background').setScale(0.8);
         this.uiGroup = this.add.group();
+
         this.showQuestion();
     }
 
@@ -84,19 +87,23 @@ export default class QuizScene extends Phaser.Scene {
                 fontSize: '24px',
                 backgroundColor: '#fff',
                 color: '#000',
-                padding: { x: 20, y: 10 }
+                padding: { x: 20, y: 10 },
+                align: 'center'
             })
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true })
-            .on('pointerup', () => this.checkAnswer(option));
+            .on('pointerup', () => this.checkAnswer(option, button));
 
             this.optionButtons.push(button);
             this.uiGroup.add(button);
         });
     }
 
-    checkAnswer(selectedOption) {
+    checkAnswer(selectedOption, button) {
         const questionObj = this.questions[this.currentQuestionIndex];
+
+        // Bloqueia cliques após uma resposta
+        this.optionButtons.forEach(btn => btn.disableInteractive());
 
         this.optionButtons.forEach(btn => {
             if (btn.text === questionObj.correct) {
@@ -110,8 +117,7 @@ export default class QuizScene extends Phaser.Scene {
             this.score++;
         }
 
-        // Guarda referência ao delayedCall para poder cancelar se sair da cena
-        this.timer = this.time.delayedCall(1000, () => {
+        this.time.delayedCall(1000, () => {
             this.currentQuestionIndex++;
             if (this.currentQuestionIndex < this.questions.length) {
                 this.showQuestion();
@@ -155,19 +161,13 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     resetQuiz() {
-        if (this.timer) this.timer.remove(); // Cancela qualquer timer ativo
-        this.score = 0;
         this.currentQuestionIndex = 0;
+        this.score = 0;
         this.showQuestion();
     }
 
     returnToMenu() {
-        if (this.timer) this.timer.remove(); // Cancela qualquer timer ativo
         this.scene.stop('QuizScene');
         this.scene.start('MenuScene');
-    }
-
-    shutdown() {
-        if (this.timer) this.timer.remove(); // Cancela qualquer timer ao sair da cena
     }
 }

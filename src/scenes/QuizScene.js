@@ -10,7 +10,7 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual destas formas tem uma base circular e um vértice?",
-                options: ["Cone", "Cubo", "Paralelepípedo"],
+                options: ["Cubo", "Cone", "Paralelepípedo"],
                 correct: "Cone"
             },
             {
@@ -20,12 +20,12 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Quantas arestas tem um cubo?",
-                options: ["12", "6", "8"],
+                options: ["8", "6", "12"],
                 correct: "12"
             },
             {
                 question: "Qual destas formas pode rolar?",
-                options: ["Cilindro", "Cubo", "Piramide"],
+                options: ["Cubo", "Cilindro", "Piramide"],
                 correct: "Cilindro"
             },
             {
@@ -35,12 +35,12 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual forma corresponde a uma planificação com 1 círculo apenas?",
-                options: ["Esfera", "Cone", "Cilindro"],
+                options: ["Cone", "Esfera", "Cilindro"],
                 correct: "Esfera"
             },
             {
                 question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
-                options: ["Prisma", "Piramide", "Cubo"],
+                options: ["Cubo", "Piramide", "Prisma"],
                 correct: "Prisma"
             },
             {
@@ -131,25 +131,38 @@ export default class QuizScene extends Phaser.Scene {
         this.optionButtons?.forEach(btn => btn.destroy());
         
         // Mostra resultados
-        this.add.text(512, 250, `Fim do Quiz!\nAcertaste ${this.score} de ${this.questions.length}!`, {
+        this.add.text(512, 200, `Fim do Quiz!\nAcertaste ${this.score} de ${this.questions.length}!`, {
             fontSize: '32px',
             color: '#000',
             align: 'center'
         }).setOrigin(0.5);
 
         // Botão para reiniciar
-        const restartButton = this.add.text(512, 350, 'Jogar Novamente', {
+        const restartButton = this.add.text(512, 300, 'Jogar Novamente', {
             fontSize: '24px',
-            backgroundColor: '#fff',
-            color: '#000',
+            backgroundColor: '#4CAF50',
+            color: '#fff',
             padding: { x: 20, y: 10 }
         })
-            .setOrigin(0.5)
-            .setInteractive()
-            .on('pointerup', () => {
-                this.score = 0;
-                this.currentQuestionIndex = 0;
-                this.showQuestion();
-            });
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerup', () => {
+            this.score = 0;
+            this.currentQuestionIndex = 0;
+            this.showQuestion();
+        });
+
+        // Botão para voltar ao menu
+        const menuButton = this.add.text(512, 370, 'Voltar ao Menu', {
+            fontSize: '24px',
+            backgroundColor: '#2196F3',
+            color: '#fff',
+            padding: { x: 20, y: 10 }
+        })
+        .setOrigin(0.5)
+        .setInteractive()
+        .on('pointerup', () => {
+            this.scene.start('MenuScene'); 
+        });
     }
 }

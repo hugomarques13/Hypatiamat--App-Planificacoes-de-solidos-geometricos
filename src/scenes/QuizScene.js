@@ -15,7 +15,7 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual destas formas tem duas bases circulares?",
-                options: ["Cilindro", "Piramide", "Prisma"],
+                options: ["Cilindro", "Pirâmide", "Prisma"],
                 correct: "Cilindro"
             },
             {
@@ -25,7 +25,7 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual destas formas pode rolar?",
-                options: ["Cubo", "Cilindro", "Piramide"],
+                options: ["Cubo", "Cilindro", "Pirâmide"],
                 correct: "Cilindro"
             },
             {
@@ -40,12 +40,12 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
-                options: ["Cubo", "Piramide", "Prisma"],
+                options: ["Cubo", "Pirâmide", "Prisma"],
                 correct: "Prisma"
             },
             {
                 question: "Qual destas formas tem uma planificação com 6 retângulos?",
-                options: ["Paralelepípedo", "Cubo", "Piramide"],
+                options: ["Paralelepípedo", "Cubo", "Pirâmide"],
                 correct: "Paralelepípedo"
             }
         ];

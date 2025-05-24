@@ -64,12 +64,14 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     showQuestion() {
+        // Limpa elementos anteriores
         if (this.questionText) this.questionText.destroy();
         if (this.optionButtons) this.optionButtons.forEach(btn => btn.destroy());
         if (this.feedbackText) this.feedbackText.destroy();
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
+        // Mostra a pergunta
         this.questionText = this.add.text(512, 150, questionObj.question, {
             fontSize: '28px',
             color: '#000',
@@ -77,8 +79,8 @@ export default class QuizScene extends Phaser.Scene {
             wordWrap: { width: 800 }
         }).setOrigin(0.5);
 
+        // Cria botões de opção
         this.optionButtons = [];
-
         questionObj.options.forEach((option, index) => {
             const button = this.add.text(512, 250 + index * 60, option, {
                 fontSize: '24px',
@@ -91,67 +93,63 @@ export default class QuizScene extends Phaser.Scene {
                 .setInteractive({ useHandCursor: true });
 
             button.on('pointerup', () => this.checkAnswer(option, button));
-
             this.optionButtons.push(button);
         });
     }
 
-    checkAnswer(selectedOption, selectedButton) {
-        const question = this.questions[this.currentQuestionIndex];
+    checkAnswer(selectedOption, button) {
+        const questionObj = this.questions[this.currentQuestionIndex];
+        
+        // Destaca visualmente as respostas
+        this.optionButtons.forEach(btn => {
+            if (btn.text === questionObj.correct) {
+                btn.setBackgroundColor('#00ff00'); // Resposta correta (verde)
+            } else if (btn.text === selectedOption && selectedOption !== questionObj.correct) {
+                btn.setBackgroundColor('#ff0000'); // Resposta errada (vermelho)
+            }
+        });
 
-        // Disable all buttons to prevent multiple clicks
-        this.optionButtons.forEach(btn => btn.disableInteractive());
-
-        if (selectedOption === question.correct) {
+        // Atualiza pontuação
+        if (selectedOption === questionObj.correct) {
             this.score++;
-            selectedButton.setBackgroundColor('#b6fcb6'); // Verde
-            this.showFeedback("Certo!");
-        } else {
-            selectedButton.setBackgroundColor('#fcb6b6'); // Vermelho
-            this.showFeedback(`Errado! A resposta certa é: ${question.correct}`);
         }
 
-        this.time.delayedCall(1500, () => {
+        // Próxima pergunta ou tela final
+        this.time.delayedCall(1000, () => {
             this.currentQuestionIndex++;
             if (this.currentQuestionIndex < this.questions.length) {
                 this.showQuestion();
             } else {
-                this.showResults();
+                this.showFinalScore();
             }
         });
     }
 
-    showFeedback(text) {
-        if (this.feedbackText) this.feedbackText.destroy();
-
-        this.feedbackText = this.add.text(512, 480, text, {
-            fontSize: '26px',
-            color: '#000'
-        }).setOrigin(0.5);
-    }
-
-    showResults() {
-        if (this.questionText) this.questionText.destroy();
-        if (this.optionButtons) this.optionButtons.forEach(btn => btn.destroy());
-        if (this.feedbackText) this.feedbackText.destroy();
-
-        this.add.text(512, 250, `Pontuação final: ${this.score}/${this.questions.length}`, {
+    showFinalScore() {
+        // Limpa a cena
+        this.questionText?.destroy();
+        this.optionButtons?.forEach(btn => btn.destroy());
+        
+        // Mostra resultados
+        this.add.text(512, 250, `Fim do Quiz!\nAcertaste ${this.score} de ${this.questions.length}!`, {
             fontSize: '32px',
-            color: '#000'
+            color: '#000',
+            align: 'center'
         }).setOrigin(0.5);
 
-        const restartBtn = this.add.text(512, 350, "Voltar ao Menu", {
-            fontSize: '26px',
+        // Botão para reiniciar
+        const restartButton = this.add.text(512, 350, 'Jogar Novamente', {
+            fontSize: '24px',
             backgroundColor: '#fff',
             color: '#000',
             padding: { x: 20, y: 10 }
         })
             .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true });
-
-        restartBtn.on('pointerup', () => {
-            this.scene.start('MenuScene');
-        });
+            .setInteractive()
+            .on('pointerup', () => {
+                this.score = 0;
+                this.currentQuestionIndex = 0;
+                this.showQuestion();
+            });
     }
 }
-

@@ -288,19 +288,11 @@ export default class Paralelepipedo extends Phaser.Scene {
   createUnfoldSlider() {
     this.unfoldSliderContainer = document.createElement("div");
     const sliderContainer = this.unfoldSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "40px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
+    sliderContainer.classList.add("slider-container");
 
     const sliderLabel = document.createElement("div");
     sliderLabel.innerText = "Abrir Figura";
-    sliderLabel.style.color = "white";
-    sliderLabel.style.marginBottom = "10px";
+    sliderLabel.classList.add("slider-label");
     sliderContainer.appendChild(sliderLabel);
 
     const slider = document.createElement("input");
@@ -309,19 +301,37 @@ export default class Paralelepipedo extends Phaser.Scene {
     slider.max = "1";
     slider.step = "0.01";
     slider.value = "0";
-    slider.style.width = "100%";
+    slider.classList.add("custom-slider");
+
+    function updateSliderBackground(value) {
+      const percentage = value * 100;
+      slider.style.background = `linear-gradient(to right,
+        #fcc33c 0%,
+        #fba434 ${percentage / 2}%,
+        #e07812 ${percentage}%,
+        #ccc ${percentage}%,
+        #ccc 100%)`;
+    }
 
     slider.addEventListener("mousedown", () => this.isSliding = true);
     slider.addEventListener("touchstart", () => this.isSliding = true);
     document.addEventListener("mouseup", () => this.isSliding = false);
     document.addEventListener("touchend", () => this.isSliding = false);
+
     slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
+      const val = parseFloat(e.target.value);
+      this.unfoldProgress = val;
+      updateSliderBackground(val);
       this.updateCubeTransforms();
     });
 
+    updateSliderBackground(0);
+
     sliderContainer.appendChild(slider);
+    document.body.appendChild(sliderContainer);
   }
+
+
 
   initMouseControls() {
     this.isMouseDown = false;

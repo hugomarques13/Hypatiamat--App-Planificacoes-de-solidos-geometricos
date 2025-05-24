@@ -21,3 +21,9 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
+
+game.events.on('ready', () => {
+  game.canvas.style.borderRadius = '20px';
+  game.canvas.style.overflow = 'hidden';
+  document.body.style.backgroundColor = 'white'; // ou transparent
+});

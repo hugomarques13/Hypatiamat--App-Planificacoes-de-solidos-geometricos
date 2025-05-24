@@ -110,7 +110,17 @@ export default class QuizScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true });
 
         restartBtn.on('pointerup', () => {
+            // this.cleanupDOM();
             this.scene.start('MenuScene');
         });
     }
+
+    /*
+    cleanupDOM() {
+        if (this.threeCanvas?.parentNode) {
+            this.threeCanvas.remove();
+            this.threeCanvas = null;
+        }
+    }
+    */
 }

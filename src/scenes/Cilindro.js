@@ -47,9 +47,7 @@ export default class Cilindro extends Phaser.Scene {
         btnBack.setVisible(false);
       } else {
         document.body.appendChild(this.threeCanvas);
-        if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-        if (this.heightSliderContainer) document.body.appendChild(this.heightSliderContainer);
-        if (this.radiusSliderContainer) document.body.appendChild(this.radiusSliderContainer);
+        if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
         
         this.scale.startFullscreen();
         btnFullScreen.setVisible(false);

@@ -40,8 +40,7 @@ export default class Cubo extends Phaser.Scene {
         } else {
             // Reattach Three.js canvas and sliders before going fullscreen
             document.body.appendChild(this.threeCanvas);
-            if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-            if (this.planSliderContainer) document.body.appendChild(this.planSliderContainer);
+            if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
             
             this.scale.startFullscreen();
             btnFullScreen.setVisible(false);

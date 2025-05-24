@@ -111,8 +111,7 @@ export default class Cubo extends Phaser.Scene {
     this.initUnfoldPlans()
     this.buildFaceGroupsForPlan(this.currentPlan)
 
-    this.createUnfoldSlider()
-    this.createPlanSlider()
+    this.createSliders()
     this.initMouseControls()
 
     
@@ -489,87 +488,94 @@ export default class Cubo extends Phaser.Scene {
     }
   }
 
-  createUnfoldSlider() {
-    this.unfoldSliderContainer = document.createElement("div");
-    const sliderContainer = this.unfoldSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "40px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
+  createSliders() {
+    this.slidersContainer = document.createElement("div");
+    this.slidersContainer.classList.add("slider-container");
+    this.slidersContainer.style.top = "40px";
+    this.slidersContainer.style.right = "40px";
+    document.body.appendChild(this.slidersContainer);
 
-    const sliderLabel = document.createElement("div");
-    sliderLabel.innerText = "Abrir Cubo";
-    sliderLabel.style.color = "white";
-    sliderLabel.style.marginBottom = "10px";
-    sliderContainer.appendChild(sliderLabel);
+    const unfoldLabel = document.createElement("div");
+    unfoldLabel.innerText = "Abrir Cubo";
+    unfoldLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(unfoldLabel);
 
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0";
-    slider.max = "1";
-    slider.step = "0.01";
-    slider.value = "0";
-    slider.style.width = "100%";
+    const unfoldSlider = document.createElement("input");
+    unfoldSlider.type = "range";
+    unfoldSlider.min = "0";
+    unfoldSlider.max = "1";
+    unfoldSlider.step = "0.01";
+    unfoldSlider.value = "0";
+    unfoldSlider.classList.add("custom-slider");
+    unfoldSlider.style.marginBottom = "20px";
 
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
+    function updateUnfoldSliderBackground(value) {
+      const percentage = value * 100;
+      unfoldSlider.style.background = `linear-gradient(to right,
+        #fcc33c 0%,
+        #fba434 ${percentage / 2}%,
+        #e07812 ${percentage}%,
+        #ccc ${percentage}%,
+        #ccc 100%)`;
+    }
+
+    unfoldSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.unfoldProgress = val;
+      updateUnfoldSliderBackground(val);
       this.updateCubeTransforms();
     });
 
-    sliderContainer.appendChild(slider);
-  }
+    updateUnfoldSliderBackground(0);
+    this.slidersContainer.appendChild(unfoldSlider);
 
-  createPlanSlider() {
-    this.planSliderContainer = document.createElement("div");
-    const sliderContainer = this.planSliderContainer;
-    sliderContainer.style.position = "absolute";
-    sliderContainer.style.top = "110px";
-    sliderContainer.style.right = "10px";
-    sliderContainer.style.width = "180px";
-    sliderContainer.style.padding = "10px";
-    sliderContainer.style.backgroundColor = "rgba(0,0,0,0.5)";
-    sliderContainer.style.borderRadius = "5px";
-    document.body.appendChild(sliderContainer);
-
-    const label = document.createElement("div");
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    sliderContainer.appendChild(label);
+    const planLabel = document.createElement("div");
+    planLabel.innerText = "Planificação";
+    planLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(planLabel);
 
     this.planKeys = Object.keys(this.unfoldPlans);
+    const planSlider = document.createElement("input");
+    planSlider.type = "range";
+    planSlider.min = "0";
+    planSlider.max = `${this.planKeys.length - 1}`;
+    planSlider.step = "1";
+    planSlider.value = `${this.planKeys.indexOf(this.currentPlan)}`;
+    planSlider.classList.add("custom-slider");
 
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0";
-    slider.max = `${this.planKeys.length - 1}`;
-    slider.step = "1";
-    slider.value = `${this.planKeys.indexOf(this.currentPlan)}`;
-    slider.style.width = "100%";
+    function updatePlanSliderBackground(value) {
+      const max = parseInt(planSlider.max);
+      const percentage = (value / max) * 100;
+      planSlider.style.background = `linear-gradient(to right,
+        #fcc33c 0%,
+        #fba434 ${percentage / 2}%,
+        #e07812 ${percentage}%,
+        #ccc ${percentage}%,
+        #ccc 100%)`;
+    }
 
     const updatePlan = () => {
-      const index = parseInt(slider.value);
+      const index = parseInt(planSlider.value);
       this.currentPlan = this.planKeys[index];
-      label.innerText = `Planificação: ${this.currentPlan}`;
+      planLabel.innerText = `Planificação: ${this.currentPlan}`;
       this.buildFaceGroupsForPlan(this.currentPlan);
       this.updateCubeTransforms();
+      updatePlanSliderBackground(index);
     };
 
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-    slider.addEventListener("input", updatePlan);
+    planSlider.addEventListener("input", updatePlan);
     updatePlan();
-    sliderContainer.appendChild(slider);
+    this.slidersContainer.appendChild(planSlider);
+
+    const setSliding = (isSliding) => this.isSliding = isSliding;
+    [unfoldSlider, planSlider].forEach(slider => {
+      slider.addEventListener("mousedown", () => setSliding(true));
+      slider.addEventListener("touchstart", () => setSliding(true));
+    });
+    document.addEventListener("mouseup", () => setSliding(false));
+    document.addEventListener("touchend", () => setSliding(false));
   }
+
 
   initMouseControls() {
     this.isMouseDown = false;
@@ -870,15 +876,9 @@ export default class Cubo extends Phaser.Scene {
     this.threeCanvas = null;
   }
 
-  // Remove sliders
-  if (this.unfoldSliderContainer?.parentNode) {
-    this.unfoldSliderContainer.remove();
-    this.unfoldSliderContainer = null;
-  }
-
-  if (this.planSliderContainer?.parentNode) {
-    this.planSliderContainer.remove();
-    this.planSliderContainer = null;
+  if (this.slidersContainer?.parentNode) {
+    this.slidersContainer.remove();
+    this.slidersContainer = null;
   }
 
   // Mouse listeners

@@ -542,54 +542,83 @@ updateUnfoldAnimation() {
     const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
     
     // Ensure canvas is in the right container
-    if (this.threeCanvas && this.threeCanvas.parentNode !== container) {
-      container.appendChild(this.threeCanvas);
+    if (this.threeCanvas?.parentNode !== container) {
+        container.appendChild(this.threeCanvas);
     }
 
-    // Ensure sliders are in the right container
-    if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
-      container.appendChild(this.unfoldSliderContainer);
-    }
-    if (this.heightSliderContainer && this.heightSliderContainer.parentNode !== container) {
-      container.appendChild(this.heightSliderContainer);
-    }
-    if (this.radiusSliderContainer && this.radiusSliderContainer.parentNode !== container) {
-      container.appendChild(this.radiusSliderContainer);
+    if (this.slidersContainer?.parentNode !== container) {
+        container.appendChild(this.slidersContainer);
     }
 
     const width = container === document.body ? window.innerWidth : container.clientWidth;
     const height = container === document.body ? window.innerHeight : container.clientHeight;
 
     if (this.camera) {
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        
+        // Adjust orbit distance based on screen height
+        const baseHeight = 600; // Reference height
+        this.orbit.radius = 6 * (baseHeight / Math.max(height, 400)); // Prevent extreme zoom
     }
 
     if (this.renderer) {
-      this.renderer.setSize(width, height);
-      this.renderer.domElement.style.width = `${width}px`;
-      this.renderer.domElement.style.height = `${height}px`;
+        this.renderer.setSize(width, height);
+        this.renderer.domElement.style.width = `${width}px`;
+        this.renderer.domElement.style.height = `${height}px`;
     }
-
-    // Position sliders correctly
-    const canvas = this.sys.game.canvas;
-    const rect = canvas.getBoundingClientRect();
-    const rightOffset = window.innerWidth - rect.right + 10;
-    const topOffset = rect.top + 45;
-    const sliderWidth = Math.min(width * 0.2, 220);
-    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
 
     if (this.slidersContainer) {
-      const canvas = this.sys.game.canvas;
-      const rect = canvas.getBoundingClientRect();
-      const rightOffset = window.innerWidth - rect.right + 10;
-      const topOffset = rect.top + 45;
-      const sliderWidth = Math.min(width * 0.2, 220);
-      
-      this.slidersContainer.style.right = `${rightOffset}px`;
-      this.slidersContainer.style.top = `${topOffset}px`;
-      this.slidersContainer.style.width = `${sliderWidth}px`;
+        const canvas = this.sys.game.canvas;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Calculate responsive dimensions
+        const rightOffset = window.innerWidth - rect.right + 10;
+        const topOffset = rect.top + 45;
+        
+        // Dynamic sizing based on window width
+        const baseWidth = 220; // Default width
+        const minWidth = 180;  // Minimum width
+        const maxWidth = 300;   // Maximum width
+        
+        // Calculate width based on window size (20% of width but within min/max bounds)
+        let sliderWidth = Math.min(
+            Math.max(width * 0.2, minWidth), 
+            maxWidth
+        );
+        
+        // Adjust font size based on width
+        const baseFontSize = 16;
+        const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
+        
+        // Calculate responsive padding
+        const paddingVertical = Math.max(height * 0.015, 10);
+        const paddingHorizontal = Math.max(width * 0.02, 12);
+        
+        Object.assign(this.slidersContainer.style, {
+            right: `${rightOffset}px`,
+            top: `${topOffset}px`,
+            width: `${sliderWidth}px`,
+            padding: `${paddingVertical}px ${paddingHorizontal}px`,
+            fontSize: `${fontSize}px`,
+            borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+        });
+
+        // Update all slider thumbs
+        const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
+        sliders.forEach(slider => {
+            const thumbSize = Math.max(sliderWidth * 0.11, 20);
+            slider.style.setProperty('--thumb-size', `${thumbSize}px`);
+        });
     }
+
+    clearTimeout(this.resizeRetryTimeout);
+    this.resizeRetryTimeout = setTimeout(() => {
+        if (window.innerHeight !== this.lastResizeHeight) {
+            this.lastResizeHeight = window.innerHeight;
+            this.onWindowResize(); // Retry resize if needed
+        }
+    }, 150);
   }
 
   update() {

@@ -51,6 +51,7 @@
       outline: none;
       transition: opacity 0.2s;
       cursor: pointer;
+      --thumb-size: 24px;
     }
     .custom-slider:hover {
       opacity: 0.85;
@@ -61,8 +62,8 @@
     .custom-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 24px;
-      height: 24px;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
       border-radius: 50%;
       background: #fff;
       cursor: pointer;
@@ -75,8 +76,8 @@
       box-shadow: 0 0 14px rgba(251, 164, 52, 1);
     }
     .custom-slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
       border-radius: 50%;
       background: #fff;
       cursor: pointer;

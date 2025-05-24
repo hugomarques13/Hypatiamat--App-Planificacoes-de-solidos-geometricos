@@ -46,6 +46,11 @@ export default class Cubo extends Phaser.Scene {
             btnFullScreen.setVisible(false);
             btnBack.setVisible(true);
         }
+
+        setTimeout(() => {
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.render(this.scene3D, this.camera);
+        }, 100);
         // Force resize after fullscreen change
         this.onWindowResize();
     };
@@ -81,6 +86,7 @@ export default class Cubo extends Phaser.Scene {
     });
 
     this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setClearColor(0xffffff, 0)
 
     this.scene3D = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -778,11 +784,8 @@ export default class Cubo extends Phaser.Scene {
     }
 
     // Ensure sliders are in the right container
-    if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
-        container.appendChild(this.unfoldSliderContainer);
-    }
-    if (this.planSliderContainer && this.planSliderContainer.parentNode !== container) {
-        container.appendChild(this.planSliderContainer);
+    if (this.slidersContainer?.parentNode !== container) {
+        container.appendChild(this.slidersContainer);
     }
 
     // Rest of your existing resize logic...
@@ -802,6 +805,7 @@ export default class Cubo extends Phaser.Scene {
 
     // === Resize renderer ===
     if (this.renderer) {
+      this.renderer.setClearColor(0xffffff, 0);
       this.renderer.setSize(width, height);
       this.renderer.domElement.style.width = `${width}px`;   // Force canvas redraw
       this.renderer.domElement.style.height = `${height}px`;
@@ -818,28 +822,47 @@ export default class Cubo extends Phaser.Scene {
       }
     }
 
-    // === Reposition and scale sliders to stay within canvas ===
-    const canvas = this.sys.game.canvas;
-    const rect = canvas.getBoundingClientRect();
+  if (this.slidersContainer) {
+        const canvas = this.sys.game.canvas;
+        const rect = canvas.getBoundingClientRect();
+        
+        // Calculate responsive dimensions
+        const rightOffset = window.innerWidth - rect.right + 10;
+        const topOffset = rect.top + 45;
+        
+        // Dynamic sizing based on window width
+        const baseWidth = 220;
+        const minWidth = 180;
+        const maxWidth = 300;
+        
+        let sliderWidth = Math.min(
+            Math.max(width * 0.2, minWidth), 
+            maxWidth
+        );
+        
+        // Adjust font size based on width
+        const baseFontSize = 16;
+        const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
+        
+        // Calculate responsive padding
+        const paddingVertical = Math.max(height * 0.015, 10);
+        const paddingHorizontal = Math.max(width * 0.02, 12);
+        
+        Object.assign(this.slidersContainer.style, {
+            right: `${rightOffset}px`,
+            top: `${topOffset}px`,
+            width: `${sliderWidth}px`,
+            padding: `${paddingVertical}px ${paddingHorizontal}px`,
+            fontSize: `${fontSize}px`,
+            borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+        });
 
-    const rightOffset = window.innerWidth - rect.right + 10;
-    const topOffset = rect.top + 45;
-
-    const sliderWidth = Math.min(width * 0.2, 220);
-    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
-
-    if (this.unfoldSliderContainer) {
-      this.unfoldSliderContainer.style.right = `${rightOffset}px`;
-      this.unfoldSliderContainer.style.top = `${topOffset}px`;
-      this.unfoldSliderContainer.style.width = `${sliderWidth}px`;
-      this.unfoldSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.planSliderContainer) {
-      this.planSliderContainer.style.right = `${rightOffset}px`;
-      this.planSliderContainer.style.top = `${topOffset + 70}px`;
-      this.planSliderContainer.style.width = `${sliderWidth}px`;
-      this.planSliderContainer.style.padding = sliderPadding;
+        // Update all slider thumbs
+        const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
+        sliders.forEach(slider => {
+            const thumbSize = Math.max(sliderWidth * 0.11, 20);
+            slider.style.setProperty('--thumb-size', `${thumbSize}px`);
+        });
     }
 
     // Recheck layout 1 frame later to fix mobile UI shift issues

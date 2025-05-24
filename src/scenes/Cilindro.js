@@ -121,9 +121,7 @@ export default class Cilindro extends Phaser.Scene {
     this.scene3D.add(this.cylinderGroup);
 
     this.createCilindroGeometry();
-    this.createUnfoldSlider();
-    this.createHeightSlider();
-    this.createRadiusSlider();
+    this.createSliders();
     this.onWindowResize();
 
     window.addEventListener('resize', () => this.onWindowResize());
@@ -340,132 +338,114 @@ updateUnfoldAnimation() {
     this.materials.bottom.opacity = opacity;
   }
 
-  createUnfoldSlider() {
-    this.unfoldSliderContainer = document.createElement("div");
-    Object.assign(this.unfoldSliderContainer.style, {
-      position: "absolute",
-      top: "40px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.unfoldSliderContainer);
+  createSliders() {
+    // Criar container principal para todos os sliders
+    this.slidersContainer = document.createElement("div");
+    this.slidersContainer.classList.add("slider-container");
+    this.slidersContainer.style.top = "40px";
+    this.slidersContainer.style.right = "40px";
+    document.body.appendChild(this.slidersContainer);
 
-    const label = document.createElement("div");
-    label.innerText = "Abrir Cilindro";
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.unfoldSliderContainer.appendChild(label);
+    // Função para criar gradiente do slider (reutilizável)
+    const updateSliderBackground = (slider, value, min = 0, max = 1) => {
+      const percentage = ((value - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right,
+        #fcc33c 0%,
+        #fba434 ${percentage / 2}%,
+        #e07812 ${percentage}%,
+        #ccc ${percentage}%,
+        #ccc 100%)`;
+    };
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: "0",
-      max: "1",
-      step: "0.01",
-      value: "0"
-    });
-    slider.style.width = "100%";
+    // --- SLIDER DE ABERTURA DO CILINDRO ---
+    const unfoldLabel = document.createElement("div");
+    unfoldLabel.innerText = "Abrir Cilindro";
+    unfoldLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(unfoldLabel);
 
-    slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
+    const unfoldSlider = document.createElement("input");
+    unfoldSlider.type = "range";
+    unfoldSlider.min = "0";
+    unfoldSlider.max = "1";
+    unfoldSlider.step = "0.01";
+    unfoldSlider.value = "0";
+    unfoldSlider.classList.add("custom-slider");
+    unfoldSlider.style.marginBottom = "20px";
+
+    unfoldSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.unfoldProgress = val;
+      updateSliderBackground(unfoldSlider, val);
       this.updateUnfoldAnimation();
     });
 
-    this.unfoldSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-  }
+    updateSliderBackground(unfoldSlider, 0);
+    this.slidersContainer.appendChild(unfoldSlider);
 
-  createHeightSlider() {
-    this.heightSliderContainer = document.createElement("div");
-    Object.assign(this.heightSliderContainer.style, {
-      position: "absolute",
-      top: "110px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.heightSliderContainer);
+    // --- SLIDER DE ALTURA ---
+    const heightLabel = document.createElement("div");
+    heightLabel.innerText = `Altura: ${this.cylinderHeight.toFixed(1)}`;
+    heightLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(heightLabel);
 
-    const label = document.createElement("div");
-    label.innerText = `Altura: ${this.cylinderHeight.toFixed(1)}`;
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.heightSliderContainer.appendChild(label);
+    const heightSlider = document.createElement("input");
+    heightSlider.type = "range";
+    heightSlider.min = this.minHeight.toString();
+    heightSlider.max = this.maxHeight.toString();
+    heightSlider.step = "0.1";
+    heightSlider.value = this.cylinderHeight.toString();
+    heightSlider.classList.add("custom-slider");
+    heightSlider.style.marginBottom = "20px";
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: this.minHeight.toString(),
-      max: this.maxHeight.toString(),
-      step: "0.1",
-      value: this.cylinderHeight.toString()
-    });
-    slider.style.width = "100%";
-
-    slider.addEventListener("input", (e) => {
-      this.cylinderHeight = parseFloat(e.target.value);
-      label.innerText = `Altura: ${this.cylinderHeight.toFixed(1)}`;
+    heightSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.cylinderHeight = val;
+      heightLabel.innerText = `Altura: ${val.toFixed(1)}`;
+      updateSliderBackground(heightSlider, val, this.minHeight, this.maxHeight);
       this.createCilindroGeometry();
       this.updateUnfoldAnimation();
     });
 
-    this.heightSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-  }
+    updateSliderBackground(heightSlider, this.cylinderHeight, this.minHeight, this.maxHeight);
+    this.slidersContainer.appendChild(heightSlider);
 
-  createRadiusSlider() {
-    this.radiusSliderContainer = document.createElement("div");
-    Object.assign(this.radiusSliderContainer.style, {
-      position: "absolute",
-      top: "180px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.radiusSliderContainer);
+    // --- SLIDER DE RAIO ---
+    const radiusLabel = document.createElement("div");
+    radiusLabel.innerText = `Raio: ${this.radius.toFixed(1)}`;
+    radiusLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(radiusLabel);
 
-    const label = document.createElement("div");
-    label.innerText = `Raio: ${this.radius.toFixed(1)}`;
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.radiusSliderContainer.appendChild(label);
+    const radiusSlider = document.createElement("input");
+    radiusSlider.type = "range";
+    radiusSlider.min = this.minRadius.toString();
+    radiusSlider.max = this.maxRadius.toString();
+    radiusSlider.step = "0.1";
+    radiusSlider.value = this.radius.toString();
+    radiusSlider.classList.add("custom-slider");
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: this.minRadius.toString(),
-      max: this.maxRadius.toString(),
-      step: "0.1",
-      value: this.radius.toString()
-    });
-    slider.style.width = "100%";
-
-    slider.addEventListener("input", (e) => {
-      this.radius = parseFloat(e.target.value);
-      label.innerText = `Raio: ${this.radius.toFixed(1)}`;
+    radiusSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.radius = val;
+      radiusLabel.innerText = `Raio: ${val.toFixed(1)}`;
+      updateSliderBackground(radiusSlider, val, this.minRadius, this.maxRadius);
       this.createCilindroGeometry();
       this.updateUnfoldAnimation();
     });
 
-    this.radiusSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-  }
+    updateSliderBackground(radiusSlider, this.radius, this.minRadius, this.maxRadius);
+    this.slidersContainer.appendChild(radiusSlider);
+
+    // --- CONTROLE DE SLIDING GLOBAL ---
+    const setSliding = (isSliding) => this.isSliding = isSliding;
+    
+    [unfoldSlider, heightSlider, radiusSlider].forEach(slider => {
+      slider.addEventListener("mousedown", () => setSliding(true));
+      slider.addEventListener("touchstart", () => setSliding(true));
+    });
+    
+    document.addEventListener("mouseup", () => setSliding(false));
+    document.addEventListener("touchend", () => setSliding(false));
+}
 
   initMouseControls() {
     this.isMouseDown = false;
@@ -599,25 +579,16 @@ updateUnfoldAnimation() {
     const sliderWidth = Math.min(width * 0.2, 220);
     const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
 
-    if (this.unfoldSliderContainer) {
-      this.unfoldSliderContainer.style.right = `${rightOffset}px`;
-      this.unfoldSliderContainer.style.top = `${topOffset}px`;
-      this.unfoldSliderContainer.style.width = `${sliderWidth}px`;
-      this.unfoldSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.heightSliderContainer) {
-      this.heightSliderContainer.style.right = `${rightOffset}px`;
-      this.heightSliderContainer.style.top = `${topOffset + 70}px`;
-      this.heightSliderContainer.style.width = `${sliderWidth}px`;
-      this.heightSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.radiusSliderContainer) {
-      this.radiusSliderContainer.style.right = `${rightOffset}px`;
-      this.radiusSliderContainer.style.top = `${topOffset + 140}px`;
-      this.radiusSliderContainer.style.width = `${sliderWidth}px`;
-      this.radiusSliderContainer.style.padding = sliderPadding;
+    if (this.slidersContainer) {
+      const canvas = this.sys.game.canvas;
+      const rect = canvas.getBoundingClientRect();
+      const rightOffset = window.innerWidth - rect.right + 10;
+      const topOffset = rect.top + 45;
+      const sliderWidth = Math.min(width * 0.2, 220);
+      
+      this.slidersContainer.style.right = `${rightOffset}px`;
+      this.slidersContainer.style.top = `${topOffset}px`;
+      this.slidersContainer.style.width = `${sliderWidth}px`;
     }
   }
 
@@ -631,27 +602,24 @@ updateUnfoldAnimation() {
     this.renderer.render(this.scene3D, this.camera);
   }
 
+  resetToDefaults() {
+    this.unfoldProgress = 0;
+    this.cylinderHeight = 2; // valor inicial
+    this.radius = 1; // valor inicial
+    this.isSliding = false;
+  }
+
   cleanupDOM() {
+    this.resetToDefaults();
     // Remove Three.js canvas
     if (this.threeCanvas?.parentNode) {
       this.threeCanvas.remove();
       this.threeCanvas = null;
     }
 
-    // Remove sliders
-    if (this.unfoldSliderContainer?.parentNode) {
-      this.unfoldSliderContainer.remove();
-      this.unfoldSliderContainer = null;
-    }
-
-    if (this.heightSliderContainer?.parentNode) {
-      this.heightSliderContainer.remove();
-      this.heightSliderContainer = null;
-    }
-
-    if (this.radiusSliderContainer?.parentNode) {
-      this.radiusSliderContainer.remove();
-      this.radiusSliderContainer = null;
+    if (this.slidersContainer?.parentNode) {
+      this.slidersContainer.remove();
+      this.slidersContainer = null;
     }
 
     // Remove event listeners

@@ -527,121 +527,56 @@ export default class Paralelepipedo extends Phaser.Scene {
 
 
   onWindowResize() {
-    // Get the appropriate container for fullscreen
-    const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
-    
-    // Ensure canvas is in the right container
-    if (this.threeCanvas?.parentNode !== container) {
-        container.appendChild(this.threeCanvas);
-    }
+  // Obter o container apropriado (fullscreen ou body)
+  const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
 
-    // Ensure sliders are in the right container
-    if (this.unfoldSliderContainer?.parentNode !== container) {
-        container.appendChild(this.unfoldSliderContainer);
-    }
+  // Garantir que o canvas e os sliders estão no container correto
+  if (this.threeCanvas?.parentNode !== container) {
+    container.appendChild(this.threeCanvas);
+  }
+  if (this.unfoldSliderContainer?.parentNode !== container) {
+    container.appendChild(this.unfoldSliderContainer);
+  }
 
+  // Obter as dimensões do container
+  const width = container.clientWidth;
+  const height = container.clientHeight;
 
-    // Rest of your existing resize logic...
-    const width = container === document.body ? window.innerWidth : container.clientWidth;
-    const height = container === document.body ? window.innerHeight : container.clientHeight;
+  // Atualizar a câmera
+  if (this.camera) {
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+  }
 
-    // === Camera update: Keep FOV fixed, adjust orbit to maintain visual size ===
-    if (this.camera) {
-        this.camera.fov = 75; // Fixed FOV
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-        
-        // Adjust orbit distance based on screen height
-        const baseHeight = 600; // Reference height
-        this.orbit.radius = 6 * (baseHeight / Math.max(height, 400)); // Prevent extreme zoom
-    }
+  // Atualizar o renderizador
+  if (this.renderer) {
+    this.renderer.setSize(width, height);
+    this.renderer.domElement.style.width = `${width}px`;
+    this.renderer.domElement.style.height = `${height}px`;
+  }
 
-    // Adjust the orbit distance (z distance) to compensate for screen height
-    const baseHeight = 600; // Your reference height
-    this.orbit.radius = 6 * (baseHeight / height); // Smaller screens = larger radius
-
-    // === Resize renderer ===
-    if (this.renderer) {
-        this.renderer.setSize(width, height);
-        this.renderer.domElement.style.width = `${width}px`;
-        this.renderer.domElement.style.height = `${height}px`;
-    }
-
-    // === Update edge line material resolution ===
-    if (this.faceGroups) {
-      for (const group of Object.values(this.faceGroups)) {
-        for (const child of group.children) {
-          if (child.material && child.material.isLineMaterial) {
-            child.material.resolution.set(width, height);
-          }
-        }
-      }
-    }
-
-    // === Reposition and scale sliders to stay within canvas ===
-    const canvas = this.sys.game.canvas;
-    const rect = canvas.getBoundingClientRect();
-
-    const rightOffset = window.innerWidth - rect.right + 10;
-    const topOffset = rect.top + 45;
-
+  // Reposicionar e redimensionar os sliders
+  if (this.unfoldSliderContainer) {
     const sliderWidth = Math.min(width * 0.2, 220);
     const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
 
-    if (this.unfoldSliderContainer) {
-        const canvas = this.sys.game.canvas;
-        const rect = canvas.getBoundingClientRect();
-        
-        // Calculate responsive dimensions
-        const rightOffset = window.innerWidth - rect.right + 10;
-        const topOffset = rect.top + 45;
-        
-        // Dynamic sizing based on window width
-        const baseWidth = 220; // Default width
-        const minWidth = 180;  // Minimum width
-        const maxWidth = 300;   // Maximum width
-        
-        // Calculate width (20% of width but within bounds)
-        const sliderWidth = Math.min(
-            Math.max(width * 0.2, minWidth), 
-            maxWidth
-        );
-        
-        // Adjust font size proportionally
-        const baseFontSize = 16;
-        const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
-        
-        // Calculate responsive padding
-        const paddingVertical = Math.max(height * 0.015, 10);
-        const paddingHorizontal = Math.max(width * 0.02, 12);
-        
-        Object.assign(this.unfoldSliderContainer.style, {
-            right: `${rightOffset}px`,
-            top: `${topOffset}px`,
-            width: `${sliderWidth}px`,
-            padding: `${paddingVertical}px ${paddingHorizontal}px`,
-            fontSize: `${fontSize}px`,
-            borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
-        });
-
-        // Update slider thumb size
-        const slider = this.unfoldSliderContainer.querySelector('.custom-slider');
-        if (slider) {
-            const thumbSize = Math.max(sliderWidth * 0.11, 20);
-            slider.style.setProperty('--thumb-size', `${thumbSize}px`);
-        }
-    }
-
-    // Recheck layout 1 frame later to fix mobile UI shift issues
-    clearTimeout(this.resizeRetryTimeout);
-    this.resizeRetryTimeout = setTimeout(() => {
-      if (window.innerHeight !== this.lastResizeHeight) {
-        this.lastResizeHeight = window.innerHeight;
-        this.onWindowResize(); // Retry resize
-      }
-    }, 150);
-
+    Object.assign(this.unfoldSliderContainer.style, {
+      right: "10px", // Distância fixa da borda direita
+      top: "45px",   // Distância fixa do topo
+      width: `${sliderWidth}px`,
+      padding: sliderPadding,
+    });
   }
+
+  // Forçar uma verificação de redimensionamento adicional para corrigir problemas em dispositivos móveis
+  clearTimeout(this.resizeRetryTimeout);
+  this.resizeRetryTimeout = setTimeout(() => {
+    if (window.innerHeight !== this.lastResizeHeight) {
+      this.lastResizeHeight = window.innerHeight;
+      this.onWindowResize(); // Tentar novamente
+    }
+  }, 150);
+}
 
   update() {
     const { radius, theta, phi } = this.orbit;

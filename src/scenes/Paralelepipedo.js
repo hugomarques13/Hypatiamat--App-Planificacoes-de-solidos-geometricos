@@ -289,6 +289,7 @@ export default class Paralelepipedo extends Phaser.Scene {
     this.unfoldSliderContainer = document.createElement("div");
     const sliderContainer = this.unfoldSliderContainer;
     sliderContainer.classList.add("slider-container");
+    
 
     const sliderLabel = document.createElement("div");
     sliderLabel.innerText = "Abrir Figura";

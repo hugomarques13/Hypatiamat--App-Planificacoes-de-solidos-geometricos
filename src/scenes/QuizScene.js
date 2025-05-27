@@ -121,7 +121,7 @@ export default class QuizScene extends Phaser.Scene {
                 .setScale(0.20)
                 .setInteractive({ useHandCursor: true });
 
-            const optionText = this.add.text(512, y, option, {
+            const optionText = this.add.text(512, y - 4, option, {
                 fontSize: '18px',
                 fontFamily: 'Snap ITC',
                 color: '#fff',
@@ -190,9 +190,9 @@ export default class QuizScene extends Phaser.Scene {
 
         const centerX = 512;
 
-        const scoreBox = this.add.image(centerX, 280, 'caixatexto').setScale(0.6).setOrigin(0.5);
+        const scoreBox = this.add.image(centerX, 240, 'caixatexto').setScale(0.6).setOrigin(0.5);
 
-        const scoreText = this.add.text(centerX, 280,
+        const scoreText = this.add.text(centerX, 240 + 7,
             `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
             {
                 fontSize: '26px',
@@ -204,7 +204,7 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);
 
-        const voltarBtn = this.add.image(centerX, 420, 'bt_voltar')
+        const voltarBtn = this.add.image(centerX, 350, 'bt_voltar')
             .setScale(0.34)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {

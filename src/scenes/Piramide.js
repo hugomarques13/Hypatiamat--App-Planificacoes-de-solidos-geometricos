@@ -152,8 +152,8 @@ initUnfoldPlans() {
     const baseRadius = 1;
     const angleStep = (2 * Math.PI) / this.sides;
     const n = this.sides;
-    const baseSideLength = 2 * baseRadius * Math.sin(Math.PI / n);
-    
+    const mc = baseRadius * Math.cos(Math.PI / n); // Apothem
+
     this.unfoldPlans = {
         1: {
             parents: { bottom: null },
@@ -162,7 +162,7 @@ initUnfoldPlans() {
                 bottom: {
                     pivot: [0, 0, 0],
                     position: [0, 0, 0],
-                    rotation: [Math.PI/2, 0, 0] 
+                    rotation: [Math.PI/2, 0, 0]
                 }
             }
         }
@@ -171,37 +171,36 @@ initUnfoldPlans() {
     for (let i = 0; i < n; i++) {
         const internalAngle = (((n - 2) * Math.PI) / n) * i;
         const baseInternalAngle = ((n - 2) * Math.PI) / n;
-        const yRotation = internalAngle + baseInternalAngle/2; // Your exact Y formula
-        
+        const yRotation = internalAngle + baseInternalAngle/2;
+
         // Position calculations
         const angle = angleStep * i;
         const x1 = baseRadius * Math.cos(angle);
         const z1 = baseRadius * Math.sin(angle);
         const x2 = baseRadius * Math.cos(angle + angleStep);
         const z2 = baseRadius * Math.sin(angle + angleStep);
-
         const midX = (x1 + x2) / 2;
         const midZ = (z1 + z2) / 2;
 
-        const alpha = Math.atan(this.piramideHeight/(Math.sqrt(((midX)^2)+((midZ)^2))));
-
-        console.log("base: ", Math.sqrt(((midX)^2)+((midZ)^2)));
+        // Calculate the correct X angle
+        const theta = Math.atan(this.piramideHeight / mc);
+        const xAngle = (Math.PI/2 - theta) * (i % 2 === 0 ? -1 : 1);
 
         this.unfoldPlans[1].transforms[`side${i}`] = {
             pivot: [0, 0, 0],
             position: [midX, 0, midZ],
             rotation: [
-                alpha * (i % 2 === 0 ? -1 : 1),  // Only this controls the "standing up"
-                yRotation,   // Only this controls the "around the pyramid"
-                0,       // No Z rotation in folded state
+                xAngle, // Corrected X rotation
+                yRotation,
+                0,
                 'YZX'
             ]
         };
-        // Unfolded rotation remains unchanged
+
         this.unfoldPlans[1].rotations[`side${i}`] = new THREE.Euler(
-            Math.PI/2 + (i % 2 === 0 ? 0 : -Math.PI) , // Rotate to stand upright
-            0, // No rotation around Y axis
-            (i % 2 === 0 ? angle - baseInternalAngle/2 : -(angle - baseInternalAngle/2) + Math.PI) // Alternate rotation for odd/even sides
+            Math.PI/2 + (i % 2 === 0 ? 0 : -Math.PI),
+            0,
+            (i % 2 === 0 ? angle - baseInternalAngle/2 : -(angle - baseInternalAngle/2) + Math.PI)
         );
     }
 }
@@ -354,26 +353,6 @@ buildFaceGroupsForPlan(planName) {
           group.quaternion.copy(currentQuat)
       }
   }
-
-  debugFacePositions() {
-    if (this.faceGroups.top && this.faceGroups.bottom && this.faceGroups.side0) {
-        const topPos = new THREE.Vector3();
-        this.faceGroups.top.getWorldPosition(topPos);
-        
-        const bottomPos = new THREE.Vector3();
-        this.faceGroups.bottom.getWorldPosition(bottomPos);
-        
-        const side0Pos = new THREE.Vector3();
-        this.faceGroups.side0.getWorldPosition(side0Pos);
-        
-        console.log('--- Face Positions ---');
-        console.log('Top:', topPos);
-        console.log('Bottom:', bottomPos);
-        console.log('Side0:', side0Pos);
-        console.log('Unfold Progress:', this.unfoldProgress);
-        console.log('Current Plan:', this.currentPlan);
-    }
-}
 
 createSliders() {
     // Create main container for all sliders
@@ -606,9 +585,8 @@ checkFaceVisibility() {
         
         // Find material index - top is 1, bottom is 0, sides start from 2
         let materialIndex;
-        if (face === 'top') materialIndex = 1;
-        else if (face === 'bottom') materialIndex = 0;
-        else materialIndex = 2 + parseInt(face.replace('side', '')); // side0 = 2, side1 = 3, etc.
+        if (face === 'bottom') materialIndex = 0;
+        else materialIndex = 1 + parseInt(face.replace('side', '')); // side0 = 2, side1 = 3, etc.
         
         faceData[face] = {
             position: position,

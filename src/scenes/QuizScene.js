@@ -28,22 +28,52 @@ export default class QuizScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-        // Perguntas
+        // Perguntas atualizadas
         this.questions = [
             {
-                question: 'Quantas faces tem um cubo?',
-                options: ['4', '6', '8'],
-                correctAnswer: '6'
+                question: "Qual destas formas tem 6 faces quadradas?",
+                options: ["Cubo", "Cilindro", "Cone"],
+                correctAnswer: "Cubo"
             },
             {
-                question: 'Qual destes é um sólido?',
-                options: ['Círculo', 'Esfera', 'Quadrado'],
-                correctAnswer: 'Esfera'
+                question: "Qual destas formas tem uma base circular e um vértice?",
+                options: ["Cubo", "Cone", "Paralelepípedo"],
+                correctAnswer: "Cone"
             },
             {
-                question: 'Um cilindro tem bases de forma...',
-                options: ['Quadrada', 'Triangular', 'Circular'],
-                correctAnswer: 'Circular'
+                question: "Qual destas formas tem duas bases circulares?",
+                options: ["Cilindro", "Pirâmide", "Prisma"],
+                correctAnswer: "Cilindro"
+            },
+            {
+                question: "Quantas arestas tem um cubo?",
+                options: ["8", "6", "12"],
+                correctAnswer: "12"
+            },
+            {
+                question: "Qual destas formas pode rolar?",
+                options: ["Cubo", "Cilindro", "Pirâmide"],
+                correctAnswer: "Cilindro"
+            },
+            {
+                question: "Qual forma corresponde a esta planificação: 1 círculo e 1 lateral curva?",
+                options: ["Cone", "Cubo", "Cilindro"],
+                correctAnswer: "Cone"
+            },
+            {
+                question: "Quantas planificações tem um cubo?",
+                options: ["6", "11", "8"],
+                correctAnswer: "11"
+            },
+            {
+                question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
+                options: ["Cubo", "Pirâmide", "Prisma"],
+                correctAnswer: "Prisma"
+            },
+            {
+                question: "Qual destas formas tem uma planificação com 6 retângulos?",
+                options: ["Paralelepípedo", "Cubo", "Pirâmide"],
+                correctAnswer: "Paralelepípedo"
             }
         ];
 
@@ -68,26 +98,37 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(questionBox);
         this.uiGroup.add(questionText);
 
-        // Opções
+        // Opções - Configurações melhoradas para legibilidade
         this.optionButtons = [];
+        const optionSpacing = 100; // Mais espaço entre opções
+        const startY = 220; // Posição inicial mais alta
+        const buttonScale = 0.6; // Botões um pouco maiores
+        const fontSize = '24px'; // Fonte maior
 
         questionObj.options.forEach((option, index) => {
-            const y = 250 + index * 100;
+            const y = startY + index * optionSpacing;
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
-                .setScale(0.7)
+                .setScale(buttonScale)
                 .setInteractive({ useHandCursor: true });
 
             const optionText = this.add.text(512, y, option, {
-                fontSize: '22px',
+                fontSize: fontSize,
                 fontFamily: 'Snap ITC',
                 color: '#000',
                 align: 'center',
-                wordWrap: { width: 400 }
+                wordWrap: { width: 450 } // Largura maior para o texto
             }).setOrigin(0.5);
 
-            optionBg.on('pointerover', () => optionBg.setScale(0.75));
-            optionBg.on('pointerout', () => optionBg.setScale(0.7));
+            // Efeitos de hover mais suaves
+            optionBg.on('pointerover', () => {
+                optionBg.setScale(buttonScale * 1.05);
+                optionText.setStyle({ fontSize: '26px' }); // Texto cresce no hover
+            });
+            optionBg.on('pointerout', () => {
+                optionBg.setScale(buttonScale);
+                optionText.setStyle({ fontSize: fontSize });
+            });
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
@@ -95,13 +136,15 @@ export default class QuizScene extends Phaser.Scene {
             this.uiGroup.add(optionText);
         });
 
-        // Progresso (ex: 2/3)
+        // Progresso (ex: 2/9) - Melhor posicionado
         if (this.progressoText) this.progressoText.destroy();
 
-        this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
-            fontSize: '24px',
+        this.progressoText = this.add.text(512, 550, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
+            fontSize: '28px',
             fontFamily: 'Snap ITC',
-            color: '#000'
+            color: '#000',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            padding: { x: 20, y: 10 }
         }).setOrigin(0.5);
     }
 
@@ -109,21 +152,29 @@ export default class QuizScene extends Phaser.Scene {
         const correct = this.questions[this.currentQuestionIndex].correctAnswer;
 
         if (selected === correct) {
-            bg.setTint(0x8BC34A);
+            bg.setTint(0x8BC34A); // Verde para resposta correta
+            text.setStyle({ color: '#fff' }); // Texto branco para melhor contraste
         } else {
-            bg.setTint(0xF44336);
+            bg.setTint(0xF44336); // Vermelho para resposta errada
+            text.setStyle({ color: '#fff' });
 
+            // Destacar a resposta correta
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {
                     opt.bg.setTint(0x8BC34A);
+                    opt.text.setStyle({ color: '#fff' });
                 }
             });
         }
 
+        // Desativar interação após resposta
         this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
-        this.time.delayedCall(1000, () => {
-            this.optionButtons.forEach(opt => opt.bg.clearTint());
+        this.time.delayedCall(1500, () => {
+            this.optionButtons.forEach(opt => {
+                opt.bg.clearTint();
+                opt.text.setStyle({ color: '#000' });
+            });
             this.nextQuestion();
         });
     }

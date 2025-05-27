@@ -154,13 +154,6 @@ initUnfoldPlans() {
     const n = this.sides;
     const baseSideLength = 2 * baseRadius * Math.sin(Math.PI / n);
     
-    // Distance from center to midpoint of any side
-    const mc = baseRadius * Math.cos(Math.PI / n);
-    const slantHeight = Math.sqrt(
-        Math.pow(this.piramideHeight, 2) + 
-        Math.pow(mc, 2)
-    );
-
     this.unfoldPlans = {
         1: {
             parents: { bottom: null },
@@ -176,6 +169,11 @@ initUnfoldPlans() {
     };
 
     for (let i = 0; i < n; i++) {
+        const internalAngle = (((n - 2) * Math.PI) / n) * i;
+        const baseInternalAngle = ((n - 2) * Math.PI) / n;
+        const yRotation = internalAngle + baseInternalAngle/2; // Your exact Y formula
+        
+        // Position calculations
         const angle = angleStep * i;
         const x1 = baseRadius * Math.cos(angle);
         const z1 = baseRadius * Math.sin(angle);
@@ -184,38 +182,26 @@ initUnfoldPlans() {
 
         const midX = (x1 + x2) / 2;
         const midZ = (z1 + z2) / 2;
-        
-        // Folded state calculations
-        const gamma = Math.acos((baseSideLength/2)/slantHeight);
-        const delta = Math.PI - (2 * gamma);
-        
+
+        const alpha = Math.atan(this.piramideHeight/(Math.sqrt(((midX)^2)+((midZ)^2))));
+
+        console.log("base: ", Math.sqrt(((midX)^2)+((midZ)^2)));
+
         this.unfoldPlans[1].transforms[`side${i}`] = {
             pivot: [0, 0, 0],
             position: [midX, 0, midZ],
             rotation: [
-                delta * (i % 2 === 0 ? -1 : 1),  // Controls the "standing up"
-                angle + angleStep/2,             // Rotation around the pyramid
-                0,                              // No Z rotation in folded state
+                alpha * (i % 2 === 0 ? -1 : 1),  // Only this controls the "standing up"
+                yRotation,   // Only this controls the "around the pyramid"
+                0,       // No Z rotation in folded state
                 'YZX'
             ]
         };
-        
-        // Unfolded state rotation - key fix is here
-        // Calculate the proper angle for each side in the net
-        let unfoldedAngle;
-        if (i === 0) {
-            unfoldedAngle = 0;
-        } else {
-            // Each side alternates direction in the net
-            unfoldedAngle = (i % 2 === 0) 
-                ? -i * Math.PI/2  // Even sides rotate left
-                : i * Math.PI/2;  // Odd sides rotate right
-        }
-
+        // Unfolded rotation remains unchanged
         this.unfoldPlans[1].rotations[`side${i}`] = new THREE.Euler(
-            Math.PI/2,              // Stand upright
-            0,                      // No Y rotation
-            unfoldedAngle           // Rotation in the net plane
+            Math.PI/2 + (i % 2 === 0 ? 0 : -Math.PI) , // Rotate to stand upright
+            0, // No rotation around Y axis
+            (i % 2 === 0 ? angle - baseInternalAngle/2 : -(angle - baseInternalAngle/2) + Math.PI) // Alternate rotation for odd/even sides
         );
     }
 }
@@ -259,7 +245,7 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
           Math.pow(baseRadius * Math.cos(Math.PI/n), 2)
         );
 
-        console.log("piramidHeight: ", this.piramideHeight, "slantHeight: ", slantHeight, "sideLegnth: ", baseSideLength);
+        console.log("piramidHeight: ", this.piramideHeight, "slantHeight: ", slantHeight);
 
         // Create the triangular face
         const triangleShape = new THREE.Shape();

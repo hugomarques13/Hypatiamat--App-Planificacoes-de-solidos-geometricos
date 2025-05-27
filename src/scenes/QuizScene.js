@@ -83,6 +83,9 @@ export default class QuizScene extends Phaser.Scene {
         this.btnVoltar.on('pointerup', () => {
             this.scene.start('MenuScene');
         });
+        // Hover effect para o botão de voltar atrás
+        this.btnVoltar.on('pointerover', () => this.btnVoltar.setScale(0.55));
+        this.btnVoltar.on('pointerout', () => this.btnVoltar.setScale(0.5));
 
         this.showQuestion();
     }
@@ -185,9 +188,11 @@ export default class QuizScene extends Phaser.Scene {
 
         this.btnVoltar.setVisible(false);
 
-        const scoreBox = this.add.image(512, 300, 'caixatexto').setScale(0.6).setOrigin(0.5);
+        const centerX = 512;
 
-        const scoreText = this.add.text(512, 300,
+        const scoreBox = this.add.image(centerX, 280, 'caixatexto').setScale(0.6).setOrigin(0.5);
+
+        const scoreText = this.add.text(centerX, 280,
             `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
             {
                 fontSize: '26px',
@@ -199,13 +204,16 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);
 
-        const voltarBtn = this.add.image(512, 450, 'bt_voltar')
+        const voltarBtn = this.add.image(centerX, 420, 'bt_voltar')
             .setScale(0.34)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {
                 this.scene.stop();
                 this.scene.start('MenuScene');
             });
+
+        voltarBtn.on('pointerover', () => voltarBtn.setScale(0.38));
+        voltarBtn.on('pointerout', () => voltarBtn.setScale(0.34));
 
         this.uiGroup.add(voltarBtn);
     }

@@ -63,6 +63,10 @@ export default class Cone extends Phaser.Scene {
       this.onWindowResize();
     };
 
+    this.coneHeight = 2;
+    this.radius = 1;
+    this.unfoldProgress = 0;
+
     btnFullScreen.on('pointerup', toggleFullscreen);
     btnBack.on('pointerup', toggleFullscreen);
 

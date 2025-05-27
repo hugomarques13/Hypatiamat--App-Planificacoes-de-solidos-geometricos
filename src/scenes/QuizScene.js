@@ -140,7 +140,7 @@ export default class QuizScene extends Phaser.Scene {
 
         if (this.progressoText) this.progressoText.destroy();
 
-        this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
+        this.progressoText = this.add.text(512, 560, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
             fontSize: '24px',
             fontFamily: 'Snap ITC',
             color: '#fff'

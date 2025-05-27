@@ -67,7 +67,7 @@ export default class QuizScene extends Phaser.Scene {
 
         this.uiGroup = this.add.group();
 
-        // Botão voltar fixo na posição (45, 555) durante as perguntas
+        // Botão voltar comum, será reposicionado e mostrado conforme o caso
         this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
             .setScale(0.5)
             .setInteractive({ useHandCursor: true });
@@ -82,17 +82,16 @@ export default class QuizScene extends Phaser.Scene {
     showQuestion() {
         this.uiGroup.clear(true, true);
 
-        // Certifica que o botão voltar está visível nas perguntas
-        this.btnVoltar.setVisible(true);
+        // Botão voltar visível nas perguntas na posição correta
+        this.btnVoltar.setPosition(45, 555).setVisible(true);
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
-        // Caixa da pergunta menos comprida e centralizada
         const questionBox = this.add.image(512, 100, 'caixatexto')
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
 
-        // Texto da pergunta, centralizado e ligeiramente mais baixo para ficar bem alinhado
+        // Texto centrado na caixa, com pequeno ajuste para ficar mais central verticalmente
         const questionText = this.add.text(512, 110, questionObj.question, {
             fontSize: '20px',
             fontFamily: 'Snap ITC',
@@ -107,7 +106,7 @@ export default class QuizScene extends Phaser.Scene {
         this.optionButtons = [];
 
         questionObj.options.forEach((option, index) => {
-            const y = 250 + index * 80;
+            const y = 250 + index * 100;  // Aumentado espaçamento vertical aqui
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
                 .setScale(0.20)
@@ -178,26 +177,26 @@ export default class QuizScene extends Phaser.Scene {
     showFinalScore() {
         this.uiGroup.clear(true, true);
 
-        // Esconder o botão voltar fixo da pergunta
+        // Esconde o botão voltar anterior (que estava nas perguntas)
         this.btnVoltar.setVisible(false);
 
-        // Caixa para a pontuação, centralizada
+        // Caixa da pontuação
         const scoreBox = this.add.image(512, 300, 'caixatexto').setScale(0.6).setOrigin(0.5);
+
         const scoreText = this.add.text(512, 300,
             `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
             {
                 fontSize: '26px',
                 fontFamily: 'Snap ITC',
                 color: '#fff',
-                align: 'center',
-                wordWrap: { width: 600 }
+                align: 'center'
             }).setOrigin(0.5);
 
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);
 
         // Botão voltar centralizado abaixo da caixa
-        const voltarBtn = this.add.image(512, 400, 'bt_voltar')
+        const voltarBtn = this.add.image(512, 450, 'bt_voltar')
             .setScale(0.34)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {

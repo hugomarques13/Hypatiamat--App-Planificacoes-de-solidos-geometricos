@@ -83,18 +83,22 @@ export default class QuizScene extends Phaser.Scene {
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
-        // Caixa da pergunta maior
+        // Caixa da pergunta menos comprida
         const questionBox = this.add.image(512, 100, 'caixatexto')
-            .setScale(0.85, 0.65)
+            .setScale(0.6, 0.65)
             .setOrigin(0.5);
 
+        // Ajuste do wordWrap para a largura da caixa
+        const wrapWidth = questionBox.displayWidth * 0.9;
+
+        // Texto da pergunta com origem vertical ajustada para ficar visualmente centrado
         const questionText = this.add.text(512, 100, questionObj.question, {
             fontSize: '20px',
             fontFamily: 'Snap ITC',
             color: '#fff',
             align: 'center',
-            wordWrap: { width: 820 }
-        }).setOrigin(0.5);
+            wordWrap: { width: wrapWidth }
+        }).setOrigin(0.5, 0.4);
 
         this.uiGroup.add(questionBox);
         this.uiGroup.add(questionText);
@@ -171,24 +175,21 @@ export default class QuizScene extends Phaser.Scene {
     showFinalScore() {
         this.uiGroup.clear(true, true);
 
-        const centerX = this.cameras.main.width / 2;
-        const centerY = this.cameras.main.height / 2;
-
-        const scoreBox = this.add.image(centerX, centerY, 'caixatexto').setScale(0.6).setOrigin(0.5);
-
-        const scoreText = this.add.text(centerX, centerY,
+        const scoreBox = this.add.image(512, 384, 'caixatexto').setScale(0.6).setOrigin(0.5);
+        const scoreText = this.add.text(512, 384,
             `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
             {
                 fontSize: '26px',
                 fontFamily: 'Snap ITC',
                 color: '#fff',
-                align: 'center'
+                align: 'center',
+                wordWrap: { width: 400 }
             }).setOrigin(0.5);
 
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);
 
-        const voltarBtn = this.add.image(centerX, centerY + 100, 'bt_voltar')
+        const voltarBtn = this.add.image(60, 40, 'bt_voltar')
             .setScale(0.34)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {

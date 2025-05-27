@@ -1,173 +1,140 @@
 export default class QuizScene extends Phaser.Scene {
     constructor() {
         super({ key: 'QuizScene' });
-
-        this.questions = [
-            {
-                question: "Qual destas formas tem 6 faces quadradas?",
-                options: ["Cubo", "Cilindro", "Cone"],
-                correct: "Cubo"
-            },
-            {
-                question: "Qual destas formas tem uma base circular e um vértice?",
-                options: ["Cubo", "Cone", "Paralelepípedo"],
-                correct: "Cone"
-            },
-            {
-                question: "Qual destas formas tem duas bases circulares?",
-                options: ["Cilindro", "Pirâmide", "Prisma"],
-                correct: "Cilindro"
-            },
-            {
-                question: "Quantas arestas tem um cubo?",
-                options: ["8", "6", "12"],
-                correct: "12"
-            },
-            {
-                question: "Qual destas formas pode rolar?",
-                options: ["Cubo", "Cilindro", "Pirâmide"],
-                correct: "Cilindro"
-            },
-            {
-                question: "Qual forma corresponde a esta planificação: 1 círculo e 1 lateral curva?",
-                options: ["Cone", "Cubo", "Cilindro"],
-                correct: "Cone"
-            },
-            {
-                question: "Quantas planificações tem um cubo?",
-                options: ["6", "11", "8"],
-                correct: "11"
-            },
-            {
-                question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
-                options: ["Cubo", "Pirâmide", "Prisma"],
-                correct: "Prisma"
-            },
-            {
-                question: "Qual destas formas tem uma planificação com 6 retângulos?",
-                options: ["Paralelepípedo", "Cubo", "Pirâmide"],
-                correct: "Paralelepípedo"
-            }
-        ];
-    }
-
-    init() {
-        // Reinicia variáveis quando a cena começa (útil se voltaste do menu)
         this.currentQuestionIndex = 0;
+        this.questions = [];
         this.score = 0;
     }
 
     preload() {
         this.load.image('background', 'assets/background.png');
+        this.load.image('caixatexto', 'assets/caixatexto.png');
+        this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
+        this.load.image('bt_voltar', 'assets/bt_voltar.png');
     }
 
     create() {
-        this.add.image(512, 300, 'background').setScale(0.8);
+        // Background
+        this.add.image(512, 384, 'background').setDepth(-1);
+
         this.uiGroup = this.add.group();
+
+        // Botão Voltar
+        this.btnVoltar = this.add.image(60, 40, 'bt_voltar')
+            .setScale(0.5)
+            .setInteractive({ useHandCursor: true });
+
+        this.btnVoltar.on('pointerup', () => {
+            this.scene.start('MenuScene');
+        });
+
+        // Perguntas
+        this.questions = [
+            {
+                question: 'Quantas faces tem um cubo?',
+                options: ['4', '6', '8'],
+                correctAnswer: '6'
+            },
+            {
+                question: 'Qual destes é um sólido?',
+                options: ['Círculo', 'Esfera', 'Quadrado'],
+                correctAnswer: 'Esfera'
+            },
+            {
+                question: 'Um cilindro tem bases de forma...',
+                options: ['Quadrada', 'Triangular', 'Circular'],
+                correctAnswer: 'Circular'
+            }
+        ];
 
         this.showQuestion();
     }
 
     showQuestion() {
-        this.clearScene();
+        this.uiGroup.clear(true, true);
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
-        const qText = this.add.text(512, 150, questionObj.question, {
+        // Fundo da pergunta
+        const questionBox = this.add.image(512, 100, 'caixatexto').setScale(0.6);
+        const questionText = this.add.text(512, 100, questionObj.question, {
             fontSize: '28px',
+            fontFamily: 'Snap ITC',
             color: '#000',
             align: 'center',
-            wordWrap: { width: 800 }
+            wordWrap: { width: 700 }
         }).setOrigin(0.5);
-        this.uiGroup.add(qText);
 
+        this.uiGroup.add(questionBox);
+        this.uiGroup.add(questionText);
+
+        // Opções
         this.optionButtons = [];
-        questionObj.options.forEach((option, index) => {
-            const button = this.add.text(512, 250 + index * 60, option, {
-                fontSize: '24px',
-                backgroundColor: '#fff',
-                color: '#000',
-                padding: { x: 20, y: 10 },
-                align: 'center'
-            })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerup', () => this.checkAnswer(option, button));
 
-            this.optionButtons.push(button);
-            this.uiGroup.add(button);
+        questionObj.options.forEach((option, index) => {
+            const y = 250 + index * 100;
+
+            const optionBg = this.add.image(512, y, 'bt_butaoVazio')
+                .setScale(0.7)
+                .setInteractive({ useHandCursor: true });
+
+            const optionText = this.add.text(512, y, option, {
+                fontSize: '22px',
+                fontFamily: 'Snap ITC',
+                color: '#000',
+                align: 'center',
+                wordWrap: { width: 400 }
+            }).setOrigin(0.5);
+
+            optionBg.on('pointerover', () => optionBg.setScale(0.75));
+            optionBg.on('pointerout', () => optionBg.setScale(0.7));
+            optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
+
+            this.optionButtons.push({ bg: optionBg, text: optionText });
+            this.uiGroup.add(optionBg);
+            this.uiGroup.add(optionText);
         });
+
+        // Progresso (ex: 2/3)
+        if (this.progressoText) this.progressoText.destroy();
+
+        this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
+            fontSize: '24px',
+            fontFamily: 'Snap ITC',
+            color: '#000'
+        }).setOrigin(0.5);
     }
 
-    checkAnswer(selectedOption, button) {
-        const questionObj = this.questions[this.currentQuestionIndex];
+    checkAnswer(selected, bg, text) {
+        const correct = this.questions[this.currentQuestionIndex].correctAnswer;
 
-        // Bloqueia cliques após uma resposta
-        this.optionButtons.forEach(btn => btn.disableInteractive());
+        if (selected === correct) {
+            bg.setTint(0x8BC34A);
+        } else {
+            bg.setTint(0xF44336);
 
-        this.optionButtons.forEach(btn => {
-            if (btn.text === questionObj.correct) {
-                btn.setBackgroundColor('#00ff00');
-            } else if (btn.text === selectedOption && selectedOption !== questionObj.correct) {
-                btn.setBackgroundColor('#ff0000');
-            }
-        });
-
-        if (selectedOption === questionObj.correct) {
-            this.score++;
+            this.optionButtons.forEach(opt => {
+                if (opt.text.text === correct) {
+                    opt.bg.setTint(0x8BC34A);
+                }
+            });
         }
 
+        this.optionButtons.forEach(opt => opt.bg.disableInteractive());
+
         this.time.delayedCall(1000, () => {
-            this.currentQuestionIndex++;
-            if (this.currentQuestionIndex < this.questions.length) {
-                this.showQuestion();
-            } else {
-                this.showFinalScore();
-            }
+            this.optionButtons.forEach(opt => opt.bg.clearTint());
+            this.nextQuestion();
         });
     }
 
-    showFinalScore() {
-        this.clearScene();
+    nextQuestion() {
+        this.currentQuestionIndex++;
 
-        const resultText = this.add.text(512, 200, `Fim do Quiz!\nAcertaste ${this.score} de ${this.questions.length}!`, {
-            fontSize: '32px',
-            color: '#000',
-            align: 'center'
-        }).setOrigin(0.5);
-        this.uiGroup.add(resultText);
-
-        const restartBtn = this.add.text(512, 300, 'Jogar Novamente', {
-            fontSize: '24px',
-            backgroundColor: '#4CAF50',
-            color: '#fff',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive()
-        .on('pointerup', () => this.resetQuiz());
-        this.uiGroup.add(restartBtn);
-
-        const menuBtn = this.add.text(512, 370, 'Voltar ao Menu', {
-            fontSize: '24px',
-            backgroundColor: '#2196F3',
-            color: '#fff',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive()
-        .on('pointerup', () => this.returnToMenu());
-        this.uiGroup.add(menuBtn);
-    }
-
-    clearScene() {
-        this.uiGroup.clear(true, true);
-    }
-
-    resetQuiz() {
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-        this.showQuestion();
-    }
-
-    returnToMenu() {
-        this.scene.stop('QuizScene');
-        this.scene.start('MenuScene');
+        if (this.currentQuestionIndex < this.questions.length) {
+            this.showQuestion();
+        } else {
+            this.scene.start('MenuScene');
+        }
     }
 }

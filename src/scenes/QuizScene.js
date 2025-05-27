@@ -98,12 +98,12 @@ export default class QuizScene extends Phaser.Scene {
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
-        const questionBox = this.add.image(512, 100, 'caixatexto')
+        const questionBox = this.add.image(512, 120, 'caixatexto')
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
 
-        const questionText = this.add.text(512, 110, questionObj.question, {
-            fontSize: '20px',
+        const questionText = this.add.text(512, 130, questionObj.question, {
+            fontSize: '22px',
             fontFamily: 'Snap ITC',
             color: '#fff',
             align: 'center',
@@ -119,19 +119,19 @@ export default class QuizScene extends Phaser.Scene {
             const y = 250 + index * 100;
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
-                .setScale(0.20)
+                .setScale(0.23)
                 .setInteractive({ useHandCursor: true });
 
             const optionText = this.add.text(512, y - 4, option, {
-                fontSize: '18px',
+                fontSize: '20px',
                 fontFamily: 'Snap ITC',
                 color: '#fff',
                 align: 'center',
                 wordWrap: { width: 350 }
             }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
 
-            optionBg.on('pointerover', () => optionBg.setScale(0.22));
-            optionBg.on('pointerout', () => optionBg.setScale(0.20));
+            
+            this.addHoverEffect(optionBg);
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });

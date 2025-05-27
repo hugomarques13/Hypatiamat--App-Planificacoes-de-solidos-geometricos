@@ -25,7 +25,7 @@ export default class Cone extends Phaser.Scene {
   create() {
     this.add.image(512, 300, 'background').setScale(0.8);
     
-    // Add navigation buttons (same as cylinder)
+    // Add navigation buttons
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
@@ -55,10 +55,7 @@ export default class Cone extends Phaser.Scene {
         btnBack.setVisible(false);
       } else {
         document.body.appendChild(this.threeCanvas);
-        if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-        if (this.heightSliderContainer) document.body.appendChild(this.heightSliderContainer);
-        if (this.radiusSliderContainer) document.body.appendChild(this.radiusSliderContainer);
-        
+        if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
         this.scale.startFullscreen();
         btnFullScreen.setVisible(false);
         btnBack.setVisible(true);
@@ -99,11 +96,9 @@ export default class Cone extends Phaser.Scene {
     this.scene3D = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-
-    // Continue with rest of your create() method
     this.initMouseControls();
 
-    // Create materials with edge lines
+    // Create materials
     this.materials = {
       lateral: new THREE.MeshBasicMaterial({ 
         color: 0xff0000, 
@@ -119,7 +114,6 @@ export default class Cone extends Phaser.Scene {
         transparent: true, 
         opacity: 0.6 
       }),
-      // Add edge materials
       lateralEdges: new THREE.LineBasicMaterial({ 
         color: 0x000000, 
         linewidth: 2,
@@ -132,23 +126,17 @@ export default class Cone extends Phaser.Scene {
       })
     };
 
-    this.isSliding = false;
-    this.coneHeight = 2;
-    this.radius = 1;
-
     this.coneGroup = new THREE.Group();
     this.scene3D.add(this.coneGroup);
 
     this.createConeGeometry();
-    this.createUnfoldSlider();
-    this.createHeightSlider();
-    this.createRadiusSlider();
+    this.createSliders();
     this.onWindowResize();
 
     window.addEventListener('resize', () => this.onWindowResize());
   }
  
-createConeGeometry() {
+  createConeGeometry() {
     const radius = this.radius;
     const height = this.coneHeight;
     const slices = this.slices;
@@ -166,15 +154,15 @@ createConeGeometry() {
     
     // Create geometry with both folded and unfolded positions
     const geometry = new THREE.BufferGeometry();
-    const vertexCount = slices + 2; // apex + base vertices (including duplicate for seam)
-    const positions = new Float32Array(vertexCount * 3 * 2); // folded and unfolded
+    const vertexCount = slices + 2;
+    const positions = new Float32Array(vertexCount * 3 * 2);
     const indices = [];
     this.vertexData = [];
 
     // Apex (V point) - index 0
-    positions[0] = radius; // x
-    positions[1] = height; // y
-    positions[2] = 0; // z
+    positions[0] = radius;
+    positions[1] = height;
+    positions[2] = 0;
     
     // Unfolded position (center of sector)
     positions[vertexCount * 3 + 0] = 0;
@@ -186,11 +174,11 @@ createConeGeometry() {
         target: new THREE.Vector3(0, slantHeight, 0)
     });
 
-    // Generate base vertices - we'll reuse these for the base circle
+    // Generate base vertices
     const baseVertices = [];
     for (let i = 0; i <= slices; i++) {
-        const angle = (i / slices) * Math.PI * 2; // Full circle
-        const idx = i + 1; // +1 because apex is index 0
+        const angle = (i / slices) * Math.PI * 2;
+        const idx = i + 1;
 
         // Folded positions (base circle)
         const x = radius * Math.cos(angle);
@@ -199,13 +187,12 @@ createConeGeometry() {
         positions[idx * 3 + 0] = x + radius;
         positions[idx * 3 + 1] = 0;
         positions[idx * 3 + 2] = z;
-        baseVertices.push(x, 0, z); // Store for base circle
+        baseVertices.push(x, 0, z);
 
         // Unfolded positions (sector)
         const unfoldedAngle = (i / slices) * sectorAngle - sectorAngle/2;
-
         const unfoldedX = -slantHeight * Math.sin(unfoldedAngle);
-        const unfoldedY = Math.abs((slantHeight * Math.cos(unfoldedAngle)) - slantHeight);
+        const unfoldedY = Math.abs(slantHeight * Math.cos(unfoldedAngle) - slantHeight);
 
         positions[(vertexCount + idx) * 3 + 0] = 0;
         positions[(vertexCount + idx) * 3 + 1] = unfoldedY;
@@ -213,13 +200,12 @@ createConeGeometry() {
 
         this.vertexData.push({
             original: new THREE.Vector3(x + radius, 0, z),
-            target: new THREE.Vector3(0, 
-                             unfoldedY, unfoldedX)
+            target: new THREE.Vector3(0, unfoldedY, unfoldedX)
         });
 
         // Create triangles
         if (i < slices) {
-            indices.push(0, idx, idx + 1); // apex -> current point -> next point
+            indices.push(0, idx, idx + 1);
         }
     }
 
@@ -229,11 +215,8 @@ createConeGeometry() {
     // --- Base Surface ---
     this.basePivot = new THREE.Group();
     const baseGeometry = new THREE.BufferGeometry();
-    
-    // Use exactly the same vertices as the lateral surface's base
     baseGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(baseVertices), 3));
     
-    // Create base circle indices (center at index 0)
     const baseIndices = [];
     const centerIndex = 0;
     for (let i = 1; i <= slices; i++) {
@@ -253,7 +236,6 @@ createConeGeometry() {
         })
     );
 
-    // Base edges (unchanged)
     const baseEdges = new THREE.EdgesGeometry(baseGeometry);
     this.baseLines = new THREE.LineSegments(
         baseEdges,
@@ -262,47 +244,36 @@ createConeGeometry() {
             linewidth: 2,
         })
     );
-    // Group setup with proper pivot point
+
     this.lateralGroup = new THREE.Group();
     this.lateralGroup.add(this.lateralMesh);
     this.lateralGroup.add(this.lateralLines);
     this.lateralPivot.add(this.lateralGroup);
     this.lateralGroup.rotation.y = -Math.PI/2;
     
-    // Base group setup - pivot at edge of base
     this.baseGroup = new THREE.Group();
     this.baseGroup.add(this.baseMesh);
     this.baseGroup.add(this.baseLines);
     this.baseGroup.rotation.y = Math.PI/2;
-    
-    // Position the base mesh so its back edge is at the origin
-    // We need to offset it by the radius along the Z-axis
     this.baseGroup.position.set(0, 0, radius);
     
-    // Add to pivot group (which will rotate around the origin)
     this.basePivot.add(this.baseGroup);
     this.coneGroup.add(this.lateralPivot);
     this.coneGroup.add(this.basePivot);
 
-    // Initial rotation (flat)
     this.basePivot.rotation.x = 0;
-
     this.updateUnfoldAnimation();
-}
+  }
 
-updateUnfoldAnimation() {
+  updateUnfoldAnimation() {
     const p = this.unfoldProgress;
     const geometry = this.lateralMesh.geometry;
     const positionAttribute = geometry.getAttribute('position');
     const positions = positionAttribute.array;
     const vertexCount = this.slices + 2;
 
-    // 1. Update vertex positions with Y locked to 0 for base vertices
     for (let i = 0; i < vertexCount; i++) {
         const foldedIdx = i * 3;
-        const isBaseVertex = i > 0; // All vertices except apex
-        
-        // Keep base vertices at Y=0 during animation
         positions[foldedIdx] = this.vertexData[i].original.x * (1 - p) + this.vertexData[i].target.x * p;
         positions[foldedIdx + 1] = this.vertexData[i].original.y * (1 - p) + this.vertexData[i].target.y * p;
         positions[foldedIdx + 2] = this.vertexData[i].original.z * (1 - p) + this.vertexData[i].target.z * p;
@@ -316,7 +287,7 @@ updateUnfoldAnimation() {
         let next = i + 1;
 
         if (i == this.slices+1) {
-          next = 0
+          next = 0;
         }
         
         circleEdges.push(
@@ -352,7 +323,6 @@ updateUnfoldAnimation() {
         this.baseGroup.add(this.baseLines);
     }
 
-
     if (p > 0.01) {
       this.lateralLines.material.visible = true;
     } else {
@@ -360,146 +330,114 @@ updateUnfoldAnimation() {
     }
 
     this.basePivot.rotation.x = Math.PI/2 * p;
-
     this.renderer.render(this.scene3D, this.camera);
-}
-updateFaceVisibility() {
-    // When fully folded or mostly folded, make faces semi-transparent
-    const opacity = this.unfoldProgress < 0.95 ? 0.6 : 1.0;
-    
-    this.materials.lateral.opacity = opacity;
-    this.materials.base.opacity = opacity;
-    
-    // Always show edges
-    this.materials.lateralEdges.visible = true;
-    this.materials.baseEdges.visible = true;
-}
+  }
 
-  createUnfoldSlider() {
-    this.unfoldSliderContainer = document.createElement("div");
-    Object.assign(this.unfoldSliderContainer.style, {
-      position: "absolute",
-      top: "40px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.unfoldSliderContainer);
+  createSliders() {
+    // Create main container for all sliders
+    this.slidersContainer = document.createElement("div");
+    this.slidersContainer.classList.add("slider-container");
+    document.body.appendChild(this.slidersContainer);
 
-    const label = document.createElement("div");
-    label.innerText = "Abrir Cone";
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.unfoldSliderContainer.appendChild(label);
+    // Function to update slider gradient
+    const updateSliderBackground = (slider, value, min = 0, max = 1) => {
+      const percentage = ((value - min) / (max - min)) * 100;
+      slider.style.background = `linear-gradient(to right,
+        #fcc33c 0%,
+        #fba434 ${percentage / 2}%,
+        #e07812 ${percentage}%,
+        #ccc ${percentage}%,
+        #ccc 100%)`;
+    };
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: "0",
-      max: "1",
-      step: "0.01",
-      value: "0"
-    });
-    slider.style.width = "100%";
+    // --- UNFOLD SLIDER ---
+    const unfoldLabel = document.createElement("div");
+    unfoldLabel.innerText = "Abrir Cone";
+    unfoldLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(unfoldLabel);
 
-    slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
+    const unfoldSlider = document.createElement("input");
+    unfoldSlider.type = "range";
+    unfoldSlider.min = "0";
+    unfoldSlider.max = "1";
+    unfoldSlider.step = "0.01";
+    unfoldSlider.value = "0";
+    unfoldSlider.classList.add("custom-slider");
+    unfoldSlider.style.marginBottom = "20px";
+
+    unfoldSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.unfoldProgress = val;
+      updateSliderBackground(unfoldSlider, val);
       this.updateUnfoldAnimation();
     });
 
-    this.unfoldSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-  }
+    updateSliderBackground(unfoldSlider, 0);
+    this.slidersContainer.appendChild(unfoldSlider);
 
-  createHeightSlider() {
-    this.heightSliderContainer = document.createElement("div");
-    Object.assign(this.heightSliderContainer.style, {
-      position: "absolute",
-      top: "110px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.heightSliderContainer);
+    // --- HEIGHT SLIDER ---
+    const heightLabel = document.createElement("div");
+    heightLabel.innerText = `Altura: ${this.coneHeight.toFixed(1)}`;
+    heightLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(heightLabel);
 
-    const label = document.createElement("div");
-    label.innerText = `Altura: ${this.coneHeight.toFixed(1)}`;
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.heightSliderContainer.appendChild(label);
+    const heightSlider = document.createElement("input");
+    heightSlider.type = "range";
+    heightSlider.min = this.minHeight.toString();
+    heightSlider.max = this.maxHeight.toString();
+    heightSlider.step = "0.1";
+    heightSlider.value = this.coneHeight.toString();
+    heightSlider.classList.add("custom-slider");
+    heightSlider.style.marginBottom = "20px";
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: this.minHeight.toString(),
-      max: this.maxHeight.toString(),
-      step: "0.1",
-      value: this.coneHeight.toString()
-    });
-    slider.style.width = "100%";
-
-    slider.addEventListener("input", (e) => {
-      this.coneHeight = parseFloat(e.target.value);
-      label.innerText = `Altura: ${this.coneHeight.toFixed(1)}`;
+    heightSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.coneHeight = val;
+      heightLabel.innerText = `Altura: ${val.toFixed(1)}`;
+      updateSliderBackground(heightSlider, val, this.minHeight, this.maxHeight);
       this.createConeGeometry();
       this.updateUnfoldAnimation();
     });
 
-    this.heightSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
-  }
+    updateSliderBackground(heightSlider, this.coneHeight, this.minHeight, this.maxHeight);
+    this.slidersContainer.appendChild(heightSlider);
 
-  createRadiusSlider() {
-    this.radiusSliderContainer = document.createElement("div");
-    Object.assign(this.radiusSliderContainer.style, {
-      position: "absolute",
-      top: "180px",
-      right: "10px",
-      width: "180px",
-      padding: "10px",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      borderRadius: "5px"
-    });
-    document.body.appendChild(this.radiusSliderContainer);
+    // --- RADIUS SLIDER ---
+    const radiusLabel = document.createElement("div");
+    radiusLabel.innerText = `Raio: ${this.radius.toFixed(1)}`;
+    radiusLabel.classList.add("slider-label");
+    this.slidersContainer.appendChild(radiusLabel);
 
-    const label = document.createElement("div");
-    label.innerText = `Raio: ${this.radius.toFixed(1)}`;
-    label.style.color = "white";
-    label.style.marginBottom = "10px";
-    this.radiusSliderContainer.appendChild(label);
+    const radiusSlider = document.createElement("input");
+    radiusSlider.type = "range";
+    radiusSlider.min = this.minRadius.toString();
+    radiusSlider.max = this.maxRadius.toString();
+    radiusSlider.step = "0.1";
+    radiusSlider.value = this.radius.toString();
+    radiusSlider.classList.add("custom-slider");
 
-    const slider = document.createElement("input");
-    Object.assign(slider, {
-      type: "range",
-      min: this.minRadius.toString(),
-      max: this.maxRadius.toString(),
-      step: "0.1",
-      value: this.radius.toString()
-    });
-    slider.style.width = "100%";
-
-    slider.addEventListener("input", (e) => {
-      this.radius = parseFloat(e.target.value);
-      label.innerText = `Raio: ${this.radius.toFixed(1)}`;
+    radiusSlider.addEventListener("input", (e) => {
+      const val = parseFloat(e.target.value);
+      this.radius = val;
+      radiusLabel.innerText = `Raio: ${val.toFixed(1)}`;
+      updateSliderBackground(radiusSlider, val, this.minRadius, this.maxRadius);
       this.createConeGeometry();
       this.updateUnfoldAnimation();
     });
 
-    this.radiusSliderContainer.appendChild(slider);
-    slider.addEventListener("mousedown", () => this.isSliding = true);
-    slider.addEventListener("touchstart", () => this.isSliding = true);
-    document.addEventListener("mouseup", () => this.isSliding = false);
-    document.addEventListener("touchend", () => this.isSliding = false);
+    updateSliderBackground(radiusSlider, this.radius, this.minRadius, this.maxRadius);
+    this.slidersContainer.appendChild(radiusSlider);
+
+    // Sliding control
+    const setSliding = (isSliding) => this.isSliding = isSliding;
+    
+    [unfoldSlider, heightSlider, radiusSlider].forEach(slider => {
+      slider.addEventListener("mousedown", () => setSliding(true));
+      slider.addEventListener("touchstart", () => setSliding(true));
+    });
+    
+    document.addEventListener("mouseup", () => setSliding(false));
+    document.addEventListener("touchend", () => setSliding(false));
   }
 
   initMouseControls() {
@@ -602,14 +540,8 @@ updateFaceVisibility() {
     }
 
     // Ensure sliders are in the right container
-    if (this.unfoldSliderContainer && this.unfoldSliderContainer.parentNode !== container) {
-      container.appendChild(this.unfoldSliderContainer);
-    }
-    if (this.heightSliderContainer && this.heightSliderContainer.parentNode !== container) {
-      container.appendChild(this.heightSliderContainer);
-    }
-    if (this.radiusSliderContainer && this.radiusSliderContainer.parentNode !== container) {
-      container.appendChild(this.radiusSliderContainer);
+    if (this.slidersContainer && this.slidersContainer.parentNode !== container) {
+      container.appendChild(this.slidersContainer);
     }
 
     const width = container === document.body ? window.innerWidth : container.clientWidth;
@@ -631,28 +563,41 @@ updateFaceVisibility() {
     const rect = canvas.getBoundingClientRect();
     const rightOffset = window.innerWidth - rect.right + 10;
     const topOffset = rect.top + 45;
-    const sliderWidth = Math.min(width * 0.2, 220);
-    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
+    
+    // Dynamic sizing based on window width
+    const baseWidth = 220;
+    const minWidth = 180;
+    const maxWidth = 300;
+    
+    let sliderWidth = Math.min(
+        Math.max(width * 0.2, minWidth), 
+        maxWidth
+    );
+    
+    // Adjust font size based on width
+    const baseFontSize = 16;
+    const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
+    
+    // Calculate responsive padding
+    const paddingVertical = Math.max(height * 0.015, 10);
+    const paddingHorizontal = Math.max(width * 0.02, 12);
 
-    if (this.unfoldSliderContainer) {
-      this.unfoldSliderContainer.style.right = `${rightOffset}px`;
-      this.unfoldSliderContainer.style.top = `${topOffset}px`;
-      this.unfoldSliderContainer.style.width = `${sliderWidth}px`;
-      this.unfoldSliderContainer.style.padding = sliderPadding;
-    }
+    if (this.slidersContainer) {
+        Object.assign(this.slidersContainer.style, {
+            right: `${rightOffset}px`,
+            top: `${topOffset}px`,
+            width: `${sliderWidth}px`,
+            padding: `${paddingVertical}px ${paddingHorizontal}px`,
+            fontSize: `${fontSize}px`,
+            borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+        });
 
-    if (this.heightSliderContainer) {
-      this.heightSliderContainer.style.right = `${rightOffset}px`;
-      this.heightSliderContainer.style.top = `${topOffset + 70}px`;
-      this.heightSliderContainer.style.width = `${sliderWidth}px`;
-      this.heightSliderContainer.style.padding = sliderPadding;
-    }
-
-    if (this.radiusSliderContainer) {
-      this.radiusSliderContainer.style.right = `${rightOffset}px`;
-      this.radiusSliderContainer.style.top = `${topOffset + 140}px`;
-      this.radiusSliderContainer.style.width = `${sliderWidth}px`;
-      this.radiusSliderContainer.style.padding = sliderPadding;
+        // Update all slider thumbs
+        const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
+        sliders.forEach(slider => {
+            const thumbSize = Math.max(sliderWidth * 0.11, 20);
+            slider.style.setProperty('--thumb-size', `${thumbSize}px`);
+        });
     }
   }
 
@@ -674,19 +619,9 @@ updateFaceVisibility() {
     }
 
     // Remove sliders
-    if (this.unfoldSliderContainer?.parentNode) {
-      this.unfoldSliderContainer.remove();
-      this.unfoldSliderContainer = null;
-    }
-
-    if (this.heightSliderContainer?.parentNode) {
-      this.heightSliderContainer.remove();
-      this.heightSliderContainer = null;
-    }
-
-    if (this.radiusSliderContainer?.parentNode) {
-      this.radiusSliderContainer.remove();
-      this.radiusSliderContainer = null;
+    if (this.slidersContainer?.parentNode) {
+      this.slidersContainer.remove();
+      this.slidersContainer = null;
     }
 
     // Remove event listeners
@@ -699,7 +634,6 @@ updateFaceVisibility() {
     window.removeEventListener("touchend", this.onTouchEnd);
   }
 
-  // Função para adicionar efeito de hover
   addHoverEffect(button) {
     button.on('pointerover', () => {
       button.setScale(button.scaleX * 1.1);

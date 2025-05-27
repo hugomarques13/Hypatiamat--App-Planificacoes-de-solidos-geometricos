@@ -77,7 +77,7 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup = this.add.group();
 
         this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
-            .setScale(0.5)
+            .setScale(0.34)
             .setInteractive({ useHandCursor: true });
 
         this.btnVoltar.on('pointerup', () => {

@@ -55,6 +55,7 @@ export default class QuizScene extends Phaser.Scene {
         ];
 
         this.shuffleArray(this.questions);
+        this.questions.forEach(q => this.shuffleArray(q.options));
     }
 
     shuffleArray(array) {

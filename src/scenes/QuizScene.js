@@ -28,22 +28,52 @@ export default class QuizScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-        // Perguntas
+        // Perguntas atualizadas
         this.questions = [
             {
-                question: 'Quantas faces tem um cubo?',
-                options: ['4', '6', '8'],
-                correctAnswer: '6'
+                question: "Qual destas formas tem 6 faces quadradas?",
+                options: ["Cubo", "Cilindro", "Cone"],
+                correctAnswer: "Cubo"
             },
             {
-                question: 'Qual destes é um sólido?',
-                options: ['Círculo', 'Esfera', 'Quadrado'],
-                correctAnswer: 'Esfera'
+                question: "Qual destas formas tem uma base circular e um vértice?",
+                options: ["Cubo", "Cone", "Paralelepípedo"],
+                correctAnswer: "Cone"
             },
             {
-                question: 'Um cilindro tem bases de forma...',
-                options: ['Quadrada', 'Triangular', 'Circular'],
-                correctAnswer: 'Circular'
+                question: "Qual destas formas tem duas bases circulares?",
+                options: ["Cilindro", "Pirâmide", "Prisma"],
+                correctAnswer: "Cilindro"
+            },
+            {
+                question: "Quantas arestas tem um cubo?",
+                options: ["8", "6", "12"],
+                correctAnswer: "12"
+            },
+            {
+                question: "Qual destas formas pode rolar?",
+                options: ["Cubo", "Cilindro", "Pirâmide"],
+                correctAnswer: "Cilindro"
+            },
+            {
+                question: "Qual forma corresponde a esta planificação: 1 círculo e 1 lateral curva?",
+                options: ["Cone", "Cubo", "Cilindro"],
+                correctAnswer: "Cone"
+            },
+            {
+                question: "Quantas planificações tem um cubo?",
+                options: ["6", "11", "8"],
+                correctAnswer: "11"
+            },
+            {
+                question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
+                options: ["Cubo", "Pirâmide", "Prisma"],
+                correctAnswer: "Prisma"
+            },
+            {
+                question: "Qual destas formas tem uma planificação com 6 retângulos?",
+                options: ["Paralelepípedo", "Cubo", "Pirâmide"],
+                correctAnswer: "Paralelepípedo"
             }
         ];
 
@@ -72,22 +102,22 @@ export default class QuizScene extends Phaser.Scene {
         this.optionButtons = [];
 
         questionObj.options.forEach((option, index) => {
-            const y = 250 + index * 100;
+            const y = 250 + index * 80;  // mais próximo entre opções
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
-                .setScale(0.7)
+                .setScale(0.5)  // escala menor que antes, diminui botão
                 .setInteractive({ useHandCursor: true });
 
             const optionText = this.add.text(512, y, option, {
-                fontSize: '22px',
+                fontSize: '20px',  // fonte um pouco menor para caber melhor
                 fontFamily: 'Snap ITC',
                 color: '#000',
                 align: 'center',
                 wordWrap: { width: 400 }
             }).setOrigin(0.5);
 
-            optionBg.on('pointerover', () => optionBg.setScale(0.75));
-            optionBg.on('pointerout', () => optionBg.setScale(0.7));
+            optionBg.on('pointerover', () => optionBg.setScale(0.55));
+            optionBg.on('pointerout', () => optionBg.setScale(0.5));
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
@@ -95,7 +125,7 @@ export default class QuizScene extends Phaser.Scene {
             this.uiGroup.add(optionText);
         });
 
-        // Progresso (ex: 2/3)
+        // Progresso (ex: 2/9)
         if (this.progressoText) this.progressoText.destroy();
 
         this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {

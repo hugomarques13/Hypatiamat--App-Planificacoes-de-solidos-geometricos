@@ -13,6 +13,7 @@ const config = {
     type: Phaser.AUTO,
     width: 1024,
     height: 600,
+    roundPixels: true,
     scene: [MenuScene, SelectingSolids,Cubo,Paralelepipedo,Prisma,Piramide,Cone, Cilindro, Quiz],
     scale: {
         mode: Phaser.Scale.FIT,

@@ -79,7 +79,7 @@ export default class QuizScene extends Phaser.Scene {
         WebFont.load({
             custom: {
                 families: ['Snap ITC'],
-                urls: ['path/para/o/teu/fichero.css'] // se usares @font-face, senão omite
+                urls: ['assets/fonts/snap.css'] // se usares @font-face, senão omite
             },
             active: () => {
                 // Quando a fonte estiver pronta, continua normalmente
@@ -112,7 +112,7 @@ export default class QuizScene extends Phaser.Scene {
         const questionBox = this.add.image(512, 120, 'caixatexto')
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
-
+            
         const questionText = this.add.text(512, 130, questionObj.question, {
             fontSize: '22px',
             fontFamily: 'Snap ITC',
@@ -142,7 +142,7 @@ export default class QuizScene extends Phaser.Scene {
             }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
 
             
-            this.addHoverEffect(optionBg);
+            this.addHoverEffect(optionBg, optionText);
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
@@ -229,13 +229,19 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(voltarBtn);
     }
 
-    addHoverEffect(button) {
+    addHoverEffect(button, text = null) {
         button.on('pointerover', () => {
             button.setScale(button.scaleX * 1.1);
+            if (text) {
+                text.setFontSize(22);
+            }
         });
 
         button.on('pointerout', () => {
             button.setScale(button.scaleX / 1.1);
+            if (text) {
+                text.setFontSize(20);
+            }
         });
     }
 }

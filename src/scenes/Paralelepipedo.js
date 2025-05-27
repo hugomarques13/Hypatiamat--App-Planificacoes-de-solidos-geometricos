@@ -1,13 +1,10 @@
 export default class Paralelepipedo extends Phaser.Scene {
   constructor() {
-    super({ key: "Paralelepipedo" });
-    this.unfoldProgress = 0;
-    this.isSliding = false;
-    this.unfoldPlans = {};
-    this.currentPlan = "1";
-    this.lastResizeHeight = window.innerHeight;
-    this.isMobile = false;
-    this.isLongTouch = false;
+    super({ key: "Paralelepipedo" })
+    this.unfoldProgress = 0
+    this.isSliding = false
+    this.unfoldPlans = {}
+    this.currentPlan = "1"
   }
 
   preload() {
@@ -19,36 +16,106 @@ export default class Paralelepipedo extends Phaser.Scene {
   }
 
   create() {
-    // Detect device type
-    this.isMobile = this.sys.game.device.os.android || 
-                   this.sys.game.device.os.iOS || 
-                   this.sys.game.device.os.windowsPhone ||
-                   (this.sys.game.device.os.tablet && this.scale.width < 1000);
+    this.add.image(512, 300, 'background').setScale(0.8);
+    let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
+    let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
+    let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
+    let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
 
-    // Responsive background setup
-    const bg = this.add.image(
-      this.cameras.main.centerX,
-      this.cameras.main.centerY,
-      'background'
-    );
-    this.resizeBackground(bg);
+    this.addHoverEffect(btnHome);
+    this.addHoverEffect(btnFullScreen);
+    this.addHoverEffect(btnBack);
+    this.addHoverEffect(btnInfo);
 
-    // Responsive buttons
-    this.createResponsiveButtons();
+    btnHome.on('pointerup', () => {
+      this.cleanupDOM();
+      this.scene.start('MenuScene');
+    });
 
-    // Three.js setup
-    this.setupThreeJS();
+    const toggleFullscreen = () => {
+        if (this.scale.isFullscreen) {
+            this.scale.stopFullscreen();
+            btnFullScreen.setVisible(true);
+            btnBack.setVisible(false);
+        } else {
+            // Reattach Three.js canvas and sliders before going fullscreen
+            document.body.appendChild(this.threeCanvas);
+            if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
+            
+            this.scale.startFullscreen();
+            btnFullScreen.setVisible(false);
+            btnBack.setVisible(true);
+        }
+        // Force resize after fullscreen change
+        this.onWindowResize();
+    };
 
-    // Unfold slider
-    this.createUnfoldSlider();
+    btnFullScreen.on('pointerup', toggleFullscreen);
+    btnBack.on('pointerup', toggleFullscreen);
 
-    // Controls
-    this.initMouseControls();
+    this.scale.on('fullscreenchange', () => {
+      if (this.scale.isFullscreen) {
+        btnFullScreen.setVisible(false);
+        btnBack.setVisible(true);
+      } else {
+        btnFullScreen.setVisible(true);
+        btnBack.setVisible(false);
+      }
+      // Resize after fullscreen change
+      this.onWindowResize();
+    });
 
-    // Initial resize
-    this.onWindowResize();
+    // --- THREE Setup ---
+    this.threeCanvas = document.createElement("canvas")
+    this.threeCanvas.style.position = "absolute"
+    this.threeCanvas.style.top = "0"
+    this.threeCanvas.style.left = "0"
+    this.threeCanvas.style.zIndex = "0"
+    this.threeCanvas.style.pointerEvents = "none";
+    document.body.appendChild(this.threeCanvas)
 
-    // Handle window resizing
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.threeCanvas,
+      alpha: true,
+      antialias: true,
+    });
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight)
+
+    this.scene3D = new THREE.Scene()
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+
+    this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 }
+
+    this.cubeGroup = new THREE.Group()
+    this.scene3D.add(this.cubeGroup)
+
+    this.unfoldProgress = 0;
+    this.isSliding = false;
+    this.currentPlan = "1";
+
+    // Materials with transparency enabled
+    this.materials = [
+      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Red
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Green
+      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Blue
+      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Yellow
+      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Pink
+      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 1 })  // Cyan
+    ]
+
+    this.faceGroups = {}
+    this.originalRotations = {}
+
+    this.initUnfoldPlans()
+    this.buildFaceGroupsForPlan(this.currentPlan)
+
+    this.createUnfoldSlider()
+    this.initMouseControls()
+
+    
+    this.lastResizeHeight = window.innerHeight;
+
     window.addEventListener("resize", () => {
       setTimeout(() => this.onWindowResize(), 100);
     });
@@ -56,176 +123,14 @@ export default class Paralelepipedo extends Phaser.Scene {
     window.addEventListener("orientationchange", () => {
       setTimeout(() => this.onWindowResize(), 150);
     });
-  }
 
-  resizeBackground(bg) {
-    const bgAspect = this.textures.get('background').getSourceImage().width / 
-                    this.textures.get('background').getSourceImage().height;
-    const screenAspect = this.cameras.main.width / this.cameras.main.height;
-    
-    if (screenAspect > bgAspect) {
-      bg.setScale(this.cameras.main.height / this.textures.get('background').getSourceImage().height);
-    } else {
-      bg.setScale(this.cameras.main.width / this.textures.get('background').getSourceImage().width);
-    }
-  }
-
-  createResponsiveButtons() {
-    const margin = this.isMobile ? 
-      Math.min(this.cameras.main.width, this.cameras.main.height) * 0.02 :
-      Math.min(this.cameras.main.width, this.cameras.main.height) * 0.03;
-    
-    const baseSize = Math.min(this.cameras.main.width, 1024);
-    const btnScale = this.isMobile ? 
-      0.5 * (baseSize / 1024) :
-      0.65 * (baseSize / 1024);
-
-    // Home button (bottom left)
-    this.btnHome = this.add.image(
-      margin,
-      this.cameras.main.height - margin,
-      'bt_home'
-    )
-      .setScale(btnScale)
-      .setInteractive({ useHandCursor: true })
-      .setDepth(1000)
-      .setOrigin(0, 1);
-
-    // Fullscreen button (top left)
-    this.btnFullScreen = this.add.image(
-      margin,
-      margin,
-      'bt_fullscreen'
-    )
-      .setScale(btnScale * (this.isMobile ? 0.45 : 0.55))
-      .setInteractive({ useHandCursor: true })
-      .setDepth(1000)
-      .setOrigin(0, 0);
-
-    // Back button (overlaps fullscreen)
-    this.btnBack = this.add.image(
-      margin,
-      margin,
-      'bt_screenback'
-    )
-      .setScale(btnScale * (this.isMobile ? 0.45 : 0.55))
-      .setInteractive({ useHandCursor: true })
-      .setVisible(false)
-      .setDepth(1000)
-      .setOrigin(0, 0);
-
-    // Info button (bottom right)
-    this.btnInfo = this.add.image(
-      this.cameras.main.width - margin,
-      this.cameras.main.height - margin,
-      'bt_info'
-    )
-      .setScale(btnScale)
-      .setInteractive({ useHandCursor: true })
-      .setDepth(1000)
-      .setOrigin(1, 1);
-
-    // Add hover effects (only for desktop)
-    if (!this.isMobile) {
-      [this.btnHome, this.btnFullScreen, this.btnBack, this.btnInfo].forEach(btn => this.addHoverEffect(btn));
-    }
-
-    // Button events
-    this.btnHome.on('pointerup', () => {
-      this.cleanupDOM();
-      this.scene.start('MenuScene');
-    });
-
-    const toggleFullscreen = () => {
-      if (this.scale.isFullscreen) {
-        this.scale.stopFullscreen();
-        this.btnFullScreen.setVisible(true);
-        this.btnBack.setVisible(false);
-      } else {
-        document.body.appendChild(this.threeCanvas);
-        if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-        this.scale.startFullscreen();
-        this.btnFullScreen.setVisible(false);
-        this.btnBack.setVisible(true);
-      }
-      this.onWindowResize();
-    };
-
-    this.btnFullScreen.on('pointerup', toggleFullscreen);
-    this.btnBack.on('pointerup', toggleFullscreen);
-
-    this.scale.on('fullscreenchange', () => {
-      if (this.scale.isFullscreen) {
-        this.btnFullScreen.setVisible(false);
-        this.btnBack.setVisible(true);
-        if (this.unfoldSliderContainer) {
-          this.unfoldSliderContainer.style.right = '20px';
-        }
-      } else {
-        this.btnFullScreen.setVisible(true);
-        this.btnBack.setVisible(false);
-      }
-      this.onWindowResize();
-    });
-  }
-
-  setupThreeJS() {
-    // Create Three.js canvas
-    this.threeCanvas = document.createElement("canvas");
-    const phaserCanvas = this.sys.game.canvas;
-    const phaserContainer = phaserCanvas.parentElement;
-
-    Object.assign(this.threeCanvas.style, {
-        position: 'absolute',
-        left: `${phaserCanvas.offsetLeft}px`,
-        top: `${phaserCanvas.offsetTop}px`,
-        width: `${phaserCanvas.width}px`,
-        height: `${phaserCanvas.height}px`,
-        zIndex: '0',
-        pointerEvents: 'none'
-    });
-    
-    phaserContainer.appendChild(this.threeCanvas);
-
-    // Initialize Three.js renderer
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.threeCanvas,
-      alpha: true,
-      antialias: true,
-    });
-
-    // Scene setup
-    this.scene3D = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 };
-
-    // Cube group
-    this.cubeGroup = new THREE.Group();
-    this.scene3D.add(this.cubeGroup);
-
-    // Materials
-    this.materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
-      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
-      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
-      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
-      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 1 })
-    ];
-
-    // Face groups and rotations
-    this.faceGroups = {};
-    this.originalRotations = {};
-
-    // Initialize unfold plans and build initial face groups
-    this.initUnfoldPlans();
-    this.buildFaceGroupsForPlan(this.currentPlan);
+    this.onWindowResize(); // Initial layout
   }
 
   initUnfoldPlans() {
-    const sideHeight = 2;
-    const squareSize = 1;
-    const d = squareSize / 2;
+    const sideHeight = 2; // Height of the side rectangles
+    const squareSize = 1; // Size of top/bottom squares
+    const d = squareSize / 2; // Half of square size for positioning
 
     this.unfoldPlans = {
       1: {
@@ -275,20 +180,24 @@ export default class Paralelepipedo extends Phaser.Scene {
             rotation: [Math.PI / 2, 0, 0] 
           }
         }
-      }
-    };
+      },
+    }
   }
 
-  createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
+
+   createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     const pivot = new THREE.Vector3(...pivotArr);
     const position = new THREE.Vector3(...positionArr);
     const rotation = new THREE.Euler(...rotationArr);
 
+    // Create the face mesh with different dimensions for sides vs top/bottom
     let width, height;
     if (name === 'top' || name === 'bottom') {
+      // Square faces for top and bottom (1:1 ratio)
       width = 1;
       height = 1;
     } else {
+      // Rectangular faces for sides (2:1 ratio)
       width = 1;
       height = 2;
     }
@@ -297,6 +206,7 @@ export default class Paralelepipedo extends Phaser.Scene {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(pivot);
 
+    // Create edge geometry and line segments
     const edgeGeometry = new THREE.EdgesGeometry(geometry);
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
     const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
@@ -320,105 +230,71 @@ export default class Paralelepipedo extends Phaser.Scene {
     return group;
   }
 
+
   buildFaceGroupsForPlan(planName) {
     for (const key in this.faceGroups) {
-      const group = this.faceGroups[key];
-      group.parent?.remove(group);
+      const group = this.faceGroups[key]
+      group.parent?.remove(group)
     }
 
-    this.faceGroups = {};
-    this.originalRotations = {};
-    this.cubeGroup.clear();
+    this.faceGroups = {}
+    this.originalRotations = {}
+    this.cubeGroup.clear()
 
-    const plan = this.unfoldPlans[planName];
-    const { transforms } = plan;
+    const plan = this.unfoldPlans[planName]
+    const { transforms } = plan
 
     for (const name in transforms) {
-      const { pivot, position, rotation } = transforms[name];
-      const index = ['front', 'back', 'left', 'right', 'top', 'bottom'].indexOf(name);
-      const group = this.createFaceGroup(name, this.materials[index], pivot, position, rotation);
-      this.cubeGroup.add(group);
+      const { pivot, position, rotation } = transforms[name]
+      const index = ['front', 'back', 'left', 'right', 'top', 'bottom'].indexOf(name)
+      const group = this.createFaceGroup(name, this.materials[index], pivot, position, rotation)
+      this.cubeGroup.add(group)
     }
 
-    this.applyParenting(planName);
+    this.applyParenting(planName)
   }
 
   applyParenting(planName) {
-    const plan = this.unfoldPlans[planName];
+    const plan = this.unfoldPlans[planName]
     for (const face in this.faceGroups) {
-      const group = this.faceGroups[face];
-      group.parent?.remove(group);
+      const group = this.faceGroups[face]
+      group.parent?.remove(group)
 
-      const parentName = plan.parents[face];
+      const parentName = plan.parents[face]
       if (parentName && this.faceGroups[parentName]) {
-        this.faceGroups[parentName].add(group);
+        this.faceGroups[parentName].add(group)
       } else {
-        this.cubeGroup.add(group);
+        this.cubeGroup.add(group)
       }
     }
   }
 
   updateCubeTransforms() {
-    const plan = this.unfoldPlans[this.currentPlan];
-    const rotations = plan.rotations;
+    const plan = this.unfoldPlans[this.currentPlan]
+    const rotations = plan.rotations
 
     for (const name in this.faceGroups) {
-      if (name === 'bottom') continue;
-      const group = this.faceGroups[name];
+      if (name === 'bottom') continue
+      const group = this.faceGroups[name]
 
-      const startQuat = this.originalRotations[name].quaternion;
-      const endQuat = new THREE.Quaternion().setFromEuler(rotations[name]);
-      const currentQuat = new THREE.Quaternion();
-      currentQuat.slerpQuaternions(startQuat, endQuat, this.unfoldProgress);
-      group.quaternion.copy(currentQuat);
+      const startQuat = this.originalRotations[name].quaternion
+      const endQuat = new THREE.Quaternion().setFromEuler(rotations[name])
+      const currentQuat = new THREE.Quaternion()
+      currentQuat.slerpQuaternions(startQuat, endQuat, this.unfoldProgress)
+      group.quaternion.copy(currentQuat)
     }
   }
 
   createUnfoldSlider() {
     this.unfoldSliderContainer = document.createElement("div");
-    this.unfoldSliderContainer.classList.add("slider-container");
-
-    // Base styles
-    const sliderStyle = {
-      position: 'absolute',
-      zIndex: '1001',
-      padding: '10px',
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      border: '1.5px solid rgba(255, 255, 255, 0.15)',
-      borderRadius: '10px',
-      boxShadow: '0 4px 12px rgba(224, 120, 18, 0.5)',
-      userSelect: 'none',
-      transition: 'all 0.3s ease'
-    };
-
-    // Mobile vs desktop positioning
-    if (this.isMobile) {
-      Object.assign(sliderStyle, {
-        bottom: '70px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '80%',
-        maxWidth: '400px'
-      });
-    } else {
-      Object.assign(sliderStyle, {
-        right: '20px',
-        top: '40px',
-        width: '200px'
-      });
-    }
-
-    Object.assign(this.unfoldSliderContainer.style, sliderStyle);
+    const sliderContainer = this.unfoldSliderContainer;
+    sliderContainer.classList.add("slider-container");
+    
 
     const sliderLabel = document.createElement("div");
     sliderLabel.innerText = "Abrir Figura";
-    sliderLabel.style.textAlign = 'center';
-    sliderLabel.style.marginBottom = '8px';
-    sliderLabel.style.fontWeight = '600';
-    sliderLabel.style.color = '#e07812';
-    sliderLabel.style.fontSize = this.isMobile ? '14px' : '16px';
-    this.unfoldSliderContainer.appendChild(sliderLabel);
+    sliderLabel.classList.add("slider-label");
+    sliderContainer.appendChild(sliderLabel);
 
     const slider = document.createElement("input");
     slider.type = "range";
@@ -427,10 +303,8 @@ export default class Paralelepipedo extends Phaser.Scene {
     slider.step = "0.01";
     slider.value = "0";
     slider.classList.add("custom-slider");
-    slider.style.width = '100%';
-    slider.style.height = this.isMobile ? '25px' : '12px';
 
-    const updateSliderBackground = (value) => {
+    function updateSliderBackground(value) {
       const percentage = value * 100;
       slider.style.background = `linear-gradient(to right,
         #fcc33c 0%,
@@ -438,7 +312,7 @@ export default class Paralelepipedo extends Phaser.Scene {
         #e07812 ${percentage}%,
         #ccc ${percentage}%,
         #ccc 100%)`;
-    };
+    }
 
     slider.addEventListener("mousedown", () => this.isSliding = true);
     slider.addEventListener("touchstart", () => this.isSliding = true);
@@ -446,26 +320,30 @@ export default class Paralelepipedo extends Phaser.Scene {
     document.addEventListener("touchend", () => this.isSliding = false);
 
     slider.addEventListener("input", (e) => {
-      this.unfoldProgress = parseFloat(e.target.value);
-      updateSliderBackground(this.unfoldProgress);
+      const val = parseFloat(e.target.value);
+      this.unfoldProgress = val;
+      updateSliderBackground(val);
       this.updateCubeTransforms();
     });
 
     updateSliderBackground(0);
-    this.unfoldSliderContainer.appendChild(slider);
-    document.body.appendChild(this.unfoldSliderContainer);
+
+    sliderContainer.appendChild(slider);
+    document.body.appendChild(sliderContainer);
   }
+
+
 
   initMouseControls() {
     this.isMouseDown = false;
     this.lastMouseX = 0;
     this.lastMouseY = 0;
     this.lastPinchDistance = 0;
-    this.touchTimer = null;
 
-    // Mouse event handlers
+    // --- Mouse Controls ---
     this.onMouseDown = (event) => {
       if (this.isSliding) return;
+
       this.isMouseDown = true;
       this.lastMouseX = event.clientX;
       this.lastMouseY = event.clientY;
@@ -491,23 +369,19 @@ export default class Paralelepipedo extends Phaser.Scene {
 
     this.onMouseWheel = (event) => {
       if (this.isSliding) return;
+
       this.orbit.radius += event.deltaY * 0.01;
       this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
     };
 
-    // Touch event handlers
+    // --- Touch Controls ---
     this.onTouchStart = (event) => {
-      event.preventDefault();
       if (this.isSliding) return;
 
       if (event.touches.length === 1) {
         this.isMouseDown = true;
         this.lastMouseX = event.touches[0].clientX;
         this.lastMouseY = event.touches[0].clientY;
-        
-        this.touchTimer = setTimeout(() => {
-          this.isLongTouch = true;
-        }, 200);
       } else if (event.touches.length === 2) {
         this.isMouseDown = false;
         this.lastPinchDistance = this.getPinchDistance(event);
@@ -515,10 +389,7 @@ export default class Paralelepipedo extends Phaser.Scene {
     };
 
     this.onTouchMove = (event) => {
-      event.preventDefault();
       if (this.isSliding) return;
-
-      if (!this.isLongTouch && event.touches.length === 1) return;
 
       if (event.touches.length === 1 && this.isMouseDown) {
         const touch = event.touches[0];
@@ -545,18 +416,16 @@ export default class Paralelepipedo extends Phaser.Scene {
     this.onTouchEnd = () => {
       this.isMouseDown = false;
       this.lastPinchDistance = 0;
-      clearTimeout(this.touchTimer);
-      this.isLongTouch = false;
     };
 
-    // Helper function
+    // --- Pinch Helper ---
     this.getPinchDistance = (event) => {
       const dx = event.touches[0].clientX - event.touches[1].clientX;
       const dy = event.touches[0].clientY - event.touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
 
-    // Add event listeners
+    // --- Event Listeners ---
     window.addEventListener("mousedown", this.onMouseDown);
     window.addEventListener("mouseup", this.onMouseUp);
     window.addEventListener("mousemove", this.onMouseMove);
@@ -567,186 +436,195 @@ export default class Paralelepipedo extends Phaser.Scene {
     window.addEventListener("touchend", this.onTouchEnd);
   }
 
+
   checkFaceVisibility() {
-    const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-    const faceData = {};
-    
-    // Collect face data
-    faces.forEach(face => {
-      if (this.faceGroups[face]) {
-        const position = new THREE.Vector3();
-        this.faceGroups[face].getWorldPosition(position);
-        
-        const normal = new THREE.Vector3(0, 0, 1);
-        normal.applyQuaternion(this.faceGroups[face].quaternion);
-        
-        const cameraToFace = new THREE.Vector3().subVectors(position, this.camera.position).normalize();
-        
-        faceData[face] = {
-          position: position,
-          normal: normal,
-          cameraToFace: cameraToFace,
-          index: faces.indexOf(face)
-        };
-      }
-    });
-
-    // Reset all opacities
-    faces.forEach(face => {
-      if (faceData[face]) {
-        this.materials[faceData[face].index].opacity = 1;
-      }
-    });
-
-    if (this.unfoldProgress == 0) {
+      const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+      const faceData = {};
+      
+      // First collect all face data
       faces.forEach(face => {
-        if (faceData[face]) {
-          this.materials[faceData[face].index].opacity = 0.6;
-        }
-      });
-    } else if (this.unfoldProgress < 0.95) {
-      for (const face1 in faceData) {
-        const data1 = faceData[face1];
-        
-        const faceToCameraDot = data1.normal.dot(data1.cameraToFace);
-        if (faceToCameraDot < 0) {
-          this.materials[data1.index].opacity = 0.6;
-          continue;
-        }
-
-        for (const face2 in faceData) {
-          if (face1 === face2) continue;
-          
-          const data2 = faceData[face2];
-          const face1ToFace2 = new THREE.Vector3().subVectors(data2.position, data1.position).normalize();
-          
-          if (face1ToFace2.dot(data1.normal) > 0.3) {
-            const face2ToFace1 = new THREE.Vector3().subVectors(data1.position, data2.position).normalize();
-            const face2ToCamera = new THREE.Vector3().subVectors(this.camera.position, data2.position).normalize();
-            
-            if (face2ToFace1.dot(face2ToCamera) > 0.5) {
-              this.materials[data1.index].opacity = 0.6;
-              break;
-            }
+          if (this.faceGroups[face]) {
+              const position = new THREE.Vector3();
+              this.faceGroups[face].getWorldPosition(position);
+              
+              const normal = new THREE.Vector3(0, 0, 1);
+              normal.applyQuaternion(this.faceGroups[face].quaternion);
+              
+              // Calculate camera direction to face
+              const cameraToFace = new THREE.Vector3().subVectors(position, this.camera.position).normalize();
+              
+              faceData[face] = {
+                  position: position,
+                  normal: normal,
+                  cameraToFace: cameraToFace,
+                  index: faces.indexOf(face)
+              };
           }
-        }
-      } 
-    } else {
-      faces.forEach(face => {
-        if (faceData[face]) {
-          this.materials[faceData[face].index].opacity = 1;
-        }
       });
-    }
+
+      // Reset all opacities to 1 (opaque)
+      faces.forEach(face => {
+          if (faceData[face]) {
+              this.materials[faceData[face].index].opacity = 1;
+          }
+      });
+
+      if (this.unfoldProgress == 0) {
+
+        faces.forEach(face => {
+            if (faceData[face]) {
+                this.materials[faceData[face].index].opacity = 0.6;
+            }
+        });
+
+      } else if (this.unfoldProgress < 0.95) {
+
+        // Check each face against all others
+        for (const face1 in faceData) {
+            const data1 = faceData[face1];
+            
+            // First check if face is facing away from camera
+            const faceToCameraDot = data1.normal.dot(data1.cameraToFace);
+            if (faceToCameraDot < 0) {
+                this.materials[data1.index].opacity = 0.6;
+                continue;
+            }
+
+            // Then check if other faces are in front of this one
+            for (const face2 in faceData) {
+                if (face1 === face2) continue;
+                
+                const data2 = faceData[face2];
+                const face1ToFace2 = new THREE.Vector3().subVectors(data2.position, data1.position).normalize();
+                
+                // If face2 is in front of face1 (relative to face1's normal)
+                if (face1ToFace2.dot(data1.normal) > 0.3) {
+                    // And if face2 is between camera and face1
+                    const face2ToFace1 = new THREE.Vector3().subVectors(data1.position, data2.position).normalize();
+                    const face2ToCamera = new THREE.Vector3().subVectors(this.camera.position, data2.position).normalize();
+                    
+                    if (face2ToFace1.dot(face2ToCamera) > 0.5) {
+                        this.materials[data1.index].opacity = 0.6;
+                        break;
+                    }
+                }
+            }
+        } 
+      } else {
+        faces.forEach(face => {
+            if (faceData[face]) {
+                this.materials[faceData[face].index].opacity = 1;
+            }
+        });
+      }
   }
 
-  onWindowResize() {
-    // Update device detection
-    const width = window.innerWidth;
-    this.isMobile = width < 768 || 
-                  this.sys.game.device.os.android || 
-                  this.sys.game.device.os.iOS || 
-                  this.sys.game.device.os.windowsPhone;
-
-    const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
-    const height = container === document.body ? window.innerHeight : container.clientHeight;
-
+  getCanvasOffsetRight(pixelsFromRight = 10) {
     const canvas = this.sys.game.canvas;
     const rect = canvas.getBoundingClientRect();
-
-    // Update Three.js
-    if (this.renderer) {
-        this.renderer.setSize(rect.width, rect.height);
-        this.renderer.domElement.style.width = `${rect.width}px`;
-        this.renderer.domElement.style.height = `${rect.height}px`;
-    }
-
-    if (this.camera) {
-        this.camera.aspect = rect.width / rect.height;
-        this.camera.updateProjectionMatrix();
-    }
-
-    // Update slider position
-    if (this.unfoldSliderContainer) {
-      if (this.isMobile) {
-        this.unfoldSliderContainer.style.left = '50%';
-        this.unfoldSliderContainer.style.right = 'auto';
-        this.unfoldSliderContainer.style.transform = 'translateX(-50%)';
-        this.unfoldSliderContainer.style.bottom = '70px';
-        this.unfoldSliderContainer.style.top = 'auto';
-        this.unfoldSliderContainer.style.width = '80%';
-      } else {
-        const rightOffset = 20;
-        this.unfoldSliderContainer.style.left = 'auto';
-        this.unfoldSliderContainer.style.right = `${(window.innerWidth - rect.right) + rightOffset}px`;
-        this.unfoldSliderContainer.style.top = `${rect.top + 40}px`;
-        this.unfoldSliderContainer.style.bottom = 'auto';
-        this.unfoldSliderContainer.style.width = '200px';
-        this.unfoldSliderContainer.style.transform = 'none';
-      }
-    }
-
-    // Adjust orbit distance based on screen height
-    const baseHeight = this.isMobile ? 400 : 600;
-    this.orbit.radius = (this.isMobile ? 5 : 6) * (baseHeight / Math.max(height, 400));
-
-    // Update edge materials
-    if (this.faceGroups) {
-      for (const group of Object.values(this.faceGroups)) {
-        for (const child of group.children) {
-          if (child.material && child.material.isLineMaterial) {
-            child.material.resolution.set(width, height);
-          }
-        }
-      }
-    }
-
-    // Handle delayed resize for mobile
-    clearTimeout(this.resizeRetryTimeout);
-    this.resizeRetryTimeout = setTimeout(() => {
-      if (window.innerHeight !== this.lastResizeHeight) {
-        this.lastResizeHeight = window.innerHeight;
-        this.onWindowResize();
-      }
-    }, 150);
+    return window.innerWidth - rect.right + pixelsFromRight;
   }
+
+
+  onWindowResize() {
+  // Obter o container apropriado (fullscreen ou body)
+  const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
+
+  // Garantir que o canvas e os sliders estão no container correto
+  if (this.threeCanvas?.parentNode !== container) {
+    container.appendChild(this.threeCanvas);
+  }
+  if (this.unfoldSliderContainer?.parentNode !== container) {
+    container.appendChild(this.unfoldSliderContainer);
+  }
+
+  // Obter as dimensões do container
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  // Atualizar a câmera
+  if (this.camera) {
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+  }
+
+  // Atualizar o renderizador
+  if (this.renderer) {
+    this.renderer.setSize(width, height);
+    this.renderer.domElement.style.width = `${width}px`;
+    this.renderer.domElement.style.height = `${height}px`;
+  }
+
+  // Reposicionar e redimensionar os sliders
+  if (this.unfoldSliderContainer) {
+    const sliderWidth = Math.min(width * 0.2, 220);
+    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
+
+    Object.assign(this.unfoldSliderContainer.style, {
+      right: "10px", // Distância fixa da borda direita
+      top: "45px",   // Distância fixa do topo
+      width: `${sliderWidth}px`,
+      padding: sliderPadding,
+    });
+  }
+
+  // Forçar uma verificação de redimensionamento adicional para corrigir problemas em dispositivos móveis
+  clearTimeout(this.resizeRetryTimeout);
+  this.resizeRetryTimeout = setTimeout(() => {
+    if (window.innerHeight !== this.lastResizeHeight) {
+      this.lastResizeHeight = window.innerHeight;
+      this.onWindowResize(); // Tentar novamente
+    }
+  }, 150);
+}
 
   update() {
     const { radius, theta, phi } = this.orbit;
-    this.camera.position.set(
-      radius * Math.sin(phi) * Math.sin(theta),
-      radius * Math.cos(phi),
-      radius * Math.sin(phi) * Math.cos(theta)
-    );
+    const x = radius * Math.sin(phi) * Math.sin(theta);
+    const y = radius * Math.cos(phi);
+    const z = radius * Math.sin(phi) * Math.cos(theta);
+
+    this.camera.position.set(x, y, z);
     this.camera.lookAt(0, 0, 0);
+    
+    // Update face visibility before rendering
     this.checkFaceVisibility();
+    
     this.renderer.render(this.scene3D, this.camera);
   }
 
   cleanupDOM() {
-    // Remove Three.js canvas
-    if (this.threeCanvas?.parentNode) {
-      this.threeCanvas.remove();
-    }
-
-    // Remove slider
-    if (this.unfoldSliderContainer?.parentNode) {
-      this.unfoldSliderContainer.remove();
-    }
-
-    // Remove event listeners
-    window.removeEventListener("mousedown", this.onMouseDown);
-    window.removeEventListener("mouseup", this.onMouseUp);
-    window.removeEventListener("mousemove", this.onMouseMove);
-    window.removeEventListener("wheel", this.onMouseWheel);
-
-    window.removeEventListener("touchstart", this.onTouchStart);
-    window.removeEventListener("touchmove", this.onTouchMove);
-    window.removeEventListener("touchend", this.onTouchEnd);
+  // Remove Three.js canvas
+  if (this.threeCanvas?.parentNode) {
+    this.threeCanvas.remove();
+    this.threeCanvas = null;
   }
 
-  addHoverEffect(button) {
-    button.on('pointerover', () => button.setScale(button.scaleX * 1.1));
-    button.on('pointerout', () => button.setScale(button.scaleX / 1.1));
+  // Remove sliders
+  if (this.unfoldSliderContainer?.parentNode) {
+    this.unfoldSliderContainer.remove();
+    this.unfoldSliderContainer = null;
+  }
+
+  // Mouse listeners
+  window.removeEventListener("mousedown", this.onMouseDown);
+  window.removeEventListener("mouseup", this.onMouseUp);
+  window.removeEventListener("mousemove", this.onMouseMove);
+  window.removeEventListener("wheel", this.onMouseWheel);
+
+  window.removeEventListener("touchstart", this.onTouchStart)
+  window.removeEventListener("touchmove", this.onTouchMove)
+  window.removeEventListener("touchend", this.onTouchEnd)
+  }
+
+  // Função para adicionar efeito de hover
+    addHoverEffect(button) {
+        button.on('pointerover', () => {
+            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+    });
+
+        button.on('pointerout', () => {
+            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+    });
   }
 }

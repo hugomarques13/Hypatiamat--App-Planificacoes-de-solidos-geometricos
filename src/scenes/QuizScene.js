@@ -84,9 +84,8 @@ export default class QuizScene extends Phaser.Scene {
         this.btnVoltar.on('pointerup', () => {
             this.scene.start('MenuScene');
         });
-        // Hover effect para o botão de voltar atrás
-        this.btnVoltar.on('pointerover', () => this.btnVoltar.setScale(0.55));
-        this.btnVoltar.on('pointerout', () => this.btnVoltar.setScale(0.5));
+
+        this.addHoverEffect(this.btnVoltar);
 
         this.showQuestion();
     }
@@ -217,5 +216,15 @@ export default class QuizScene extends Phaser.Scene {
         voltarBtn.on('pointerout', () => voltarBtn.setScale(0.34));
 
         this.uiGroup.add(voltarBtn);
+    }
+
+    addHoverEffect(button) {
+        button.on('pointerover', () => {
+            button.setScale(button.scaleX * 1.1);
+        });
+
+        button.on('pointerout', () => {
+            button.setScale(button.scaleX / 1.1);
+        });
     }
 }

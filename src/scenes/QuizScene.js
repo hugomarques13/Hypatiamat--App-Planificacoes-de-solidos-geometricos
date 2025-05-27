@@ -79,10 +79,9 @@ export default class QuizScene extends Phaser.Scene {
         WebFont.load({
             custom: {
                 families: ['Snap ITC'],
-                urls: ['assets/fonts/snap.css'] // se usares @font-face, senão omite
+                urls: ['../assets/fonts/snap.css']
             },
             active: () => {
-                // Quando a fonte estiver pronta, continua normalmente
                 this.add.image(512, 384, 'background').setDepth(-1);
 
                 this.uiGroup = this.add.group();
@@ -97,7 +96,7 @@ export default class QuizScene extends Phaser.Scene {
 
                 this.addHoverEffect(this.btnVoltar);
 
-                this.showQuestion(); // <- agora é seguro usar a fonte
+                this.showQuestion();
             }
         });
     }

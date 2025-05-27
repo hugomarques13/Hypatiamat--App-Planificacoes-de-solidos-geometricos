@@ -25,7 +25,6 @@ export default class Cilindro extends Phaser.Scene {
   create() {
     this.add.image(512, 300, 'background').setScale(0.8);
     
-    // Add navigation buttons
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
@@ -78,7 +77,6 @@ export default class Cilindro extends Phaser.Scene {
       this.onWindowResize();
     });
 
-    // THREE.js setup
     this.threeCanvas = document.createElement('canvas');
     Object.assign(this.threeCanvas.style, {
       position: 'absolute',
@@ -99,14 +97,13 @@ export default class Cilindro extends Phaser.Scene {
 
     this.initMouseControls();
 
-    // Create materials with edge lines
     this.materials = {
       lateral: new THREE.MeshBasicMaterial({ 
         color: 0xff0000, 
         side: THREE.DoubleSide, 
         transparent: true, 
         opacity: 0.6,
-        depthWrite: false,  // Important for overlapping transparency
+        depthWrite: false,
         blending: THREE.NormalBlending
       }),
       top: new THREE.MeshBasicMaterial({ 
@@ -141,21 +138,17 @@ export default class Cilindro extends Phaser.Scene {
   const angleStep = (2 * Math.PI) / slices;
   const segmentWidth = lateralWidth / slices;
 
-  // Clear existing geometry if it exists
   if (this.lateralPivot) {
     this.cylinderGroup.remove(this.lateralPivot);
     this.cylinderGroup.remove(this.topPivot);
     this.cylinderGroup.remove(this.bottomPivot);
   }
 
-  // --- Lateral Surface ---
   this.lateralPivot = new THREE.Group();
   
-  // Create lateral geometry
   const lateralGeometry = new THREE.PlaneGeometry(lateralWidth, cylinderHeight, slices, 1);
   this.lateralMesh = new THREE.Mesh(lateralGeometry, this.materials.lateral);
   
-  // Create edge lines for lateral surface
   const lateralEdges = new THREE.EdgesGeometry(lateralGeometry);
   const lateralLineMaterial = new THREE.LineBasicMaterial({ 
     color: 0x000000, 
@@ -164,19 +157,16 @@ export default class Cilindro extends Phaser.Scene {
   });
   this.lateralLines = new THREE.LineSegments(lateralEdges, lateralLineMaterial);
   
-  // Create a container group for mesh and lines
   this.lateralGroup = new THREE.Group();
   this.lateralGroup.add(this.lateralMesh);
   this.lateralGroup.add(this.lateralLines);
   
-  // Position the lateral group
   this.lateralGroup.position.x = 0;
   this.lateralPivot.add(this.lateralGroup);
   this.lateralPivot.position.set(0, 0, 0);
-  this.lateralPivot.rotation.y = -Math.PI/2; // Start folded (rolled up)
+  this.lateralPivot.rotation.y = -Math.PI/2; 
   this.cylinderGroup.add(this.lateralPivot);
 
-  // Store original and target positions for animation
   this.vertexData = [];
   const positionAttribute = lateralGeometry.getAttribute('position');
   const positions = positionAttribute.array;
@@ -188,7 +178,6 @@ export default class Cilindro extends Phaser.Scene {
     const segment = Math.floor(vertexIndex % (slices + 1));
     const row = Math.floor(vertexIndex / (slices + 1));
     
-    // Cylindrical coordinates (initial positions)
     const angle = segment * angleStep;
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
@@ -198,11 +187,9 @@ export default class Cilindro extends Phaser.Scene {
     positions[i + 1] = y;
     positions[i + 2] = z;
     
-    // Flat coordinates (target positions)
     const targetX = -radius;
     const targetZ = -(-lateralWidth/2 + (lateralStep*segment));
     
-    // Store both positions for interpolation
     this.vertexData.push({
       original: new THREE.Vector3(x, y, z),
       target: new THREE.Vector3(targetX, y, targetZ)
@@ -210,14 +197,12 @@ export default class Cilindro extends Phaser.Scene {
   }
   positionAttribute.needsUpdate = true;
 
-  // --- Top Face ---
   this.topPivot = new THREE.Group();
   this.topPivot.position.set(0, cylinderHeight / 2, -radius);
 
   const topGeometry = new THREE.CircleGeometry(radius, 64);
   this.topMesh = new THREE.Mesh(topGeometry, this.materials.top);
   
-  // Create edge lines for top face (always visible)
   const topEdges = new THREE.EdgesGeometry(topGeometry);
   const topLineMaterial = new THREE.LineBasicMaterial({ 
     color: 0x000000, 
@@ -226,7 +211,6 @@ export default class Cilindro extends Phaser.Scene {
   });
   this.topLines = new THREE.LineSegments(topEdges, topLineMaterial);
   
-  // Create container group for top face
   this.topGroup = new THREE.Group();
   this.topGroup.add(this.topMesh);
   this.topGroup.add(this.topLines);
@@ -236,14 +220,12 @@ export default class Cilindro extends Phaser.Scene {
   this.topPivot.add(this.topGroup);
   this.cylinderGroup.add(this.topPivot);
 
-  // --- Bottom Face ---
   this.bottomPivot = new THREE.Group();
   this.bottomPivot.position.set(0, -cylinderHeight / 2, -radius);
 
   const bottomGeometry = new THREE.CircleGeometry(radius, 64);
   this.bottomMesh = new THREE.Mesh(bottomGeometry, this.materials.bottom);
   
-  // Create edge lines for bottom face (always visible)
   const bottomEdges = new THREE.EdgesGeometry(bottomGeometry);
   const bottomLineMaterial = new THREE.LineBasicMaterial({ 
     color: 0x000000, 
@@ -252,7 +234,6 @@ export default class Cilindro extends Phaser.Scene {
   });
   this.bottomLines = new THREE.LineSegments(bottomEdges, bottomLineMaterial);
   
-  // Create container group for bottom face
   this.bottomGroup = new THREE.Group();
   this.bottomGroup.add(this.bottomMesh);
   this.bottomGroup.add(this.bottomLines);
@@ -269,7 +250,6 @@ updateUnfoldAnimation() {
   const positionAttribute = lateralGeometry.getAttribute('position');
   const positions = positionAttribute.array;
   
-  // Interpolate vertex positions
   for (let i = 0; i < positions.length; i += 3) {
     const vertexIndex = i / 3;
     const { original, target } = this.vertexData[vertexIndex];
@@ -279,16 +259,14 @@ updateUnfoldAnimation() {
   }
   positionAttribute.needsUpdate = true;
 
-  // Update edge lines
   this.lateralLines.geometry.dispose();
   this.lateralLines.geometry = new THREE.EdgesGeometry(lateralGeometry);
 
-  // Filter edges based on unfold progress
   const edgesGeometry = this.lateralLines.geometry;
   const positions2 = edgesGeometry.attributes.position;
   const newPositions = [];
   const width = 2 * Math.PI * this.radius;
-  const edgeTolerance = 0.01 * width; // 1% tolerance for edge detection
+  const edgeTolerance = 0.01 * width;
 
   for (let i = 0; i < positions2.count; i += 2) {
     const y1 = positions2.getY(i);
@@ -296,15 +274,12 @@ updateUnfoldAnimation() {
     const z1 = positions2.getZ(i);
     const z2 = positions2.getZ(i + 1);
 
-    // Horizontal edges (top and bottom)
     const isHorizontal = Math.abs(y1 - y2) < 0.001;
 
-    // Vertical edges at extreme left/right
     const isLeftEdge = Math.min(Math.abs(z1 + width/2), Math.abs(z2 + width/2)) < edgeTolerance;
     const isRightEdge = Math.min(Math.abs(z1 - width/2), Math.abs(z2 - width/2)) < edgeTolerance;
     const isVerticalEdge = isLeftEdge || isRightEdge;
 
-    // Keep either horizontal edges or edge verticals
     if (isHorizontal || isVerticalEdge) {
       newPositions.push(
         positions2.getX(i), positions2.getY(i), positions2.getZ(i),
@@ -312,7 +287,6 @@ updateUnfoldAnimation() {
       );
     }
 
-    // Create filtered geometry
     const filteredGeometry = new THREE.BufferGeometry();
     filteredGeometry.setAttribute(
       'position',
@@ -323,12 +297,10 @@ updateUnfoldAnimation() {
     this.lateralLines.geometry = filteredGeometry;
   }
 
-  // Always show lines (visibility controlled elsewhere)
   this.lateralLines.material.visible = true;
   this.topLines.material.visible = true;
   this.bottomLines.material.visible = true;
 
-  // Animate faces
   this.topPivot.rotation.x = -p * Math.PI / 2;
   this.bottomPivot.rotation.x = p * Math.PI / 2;
   
@@ -336,7 +308,6 @@ updateUnfoldAnimation() {
 }
   
   updateFaceVisibility() {
-    // When fully folded or mostly folded, make faces semi-transparent
     const opacity = this.unfoldProgress < 0.95 ? 0.6 : 1.0;
     
     this.materials.lateral.opacity = opacity;
@@ -345,14 +316,12 @@ updateUnfoldAnimation() {
   }
 
   createSliders() {
-    // Criar container principal para todos os sliders
     this.slidersContainer = document.createElement("div");
     this.slidersContainer.classList.add("slider-container");
     this.slidersContainer.style.top = "40px";
     this.slidersContainer.style.right = "40px";
     document.body.appendChild(this.slidersContainer);
 
-    // Função para criar gradiente do slider (reutilizável)
     const updateSliderBackground = (slider, value, min = 0, max = 1) => {
       const percentage = ((value - min) / (max - min)) * 100;
       slider.style.background = `linear-gradient(to right,
@@ -363,7 +332,6 @@ updateUnfoldAnimation() {
         #ccc 100%)`;
     };
 
-    // --- SLIDER DE ABERTURA DO CILINDRO ---
     const unfoldLabel = document.createElement("div");
     unfoldLabel.innerText = "Abrir Cilindro";
     unfoldLabel.classList.add("slider-label");
@@ -388,7 +356,6 @@ updateUnfoldAnimation() {
     updateSliderBackground(unfoldSlider, 0);
     this.slidersContainer.appendChild(unfoldSlider);
 
-    // --- SLIDER DE ALTURA ---
     const heightLabel = document.createElement("div");
     heightLabel.innerText = `Altura: ${this.cylinderHeight.toFixed(1)}`;
     heightLabel.classList.add("slider-label");
@@ -415,7 +382,6 @@ updateUnfoldAnimation() {
     updateSliderBackground(heightSlider, this.cylinderHeight, this.minHeight, this.maxHeight);
     this.slidersContainer.appendChild(heightSlider);
 
-    // --- SLIDER DE RAIO ---
     const radiusLabel = document.createElement("div");
     radiusLabel.innerText = `Raio: ${this.radius.toFixed(1)}`;
     radiusLabel.classList.add("slider-label");
@@ -441,7 +407,6 @@ updateUnfoldAnimation() {
     updateSliderBackground(radiusSlider, this.radius, this.minRadius, this.maxRadius);
     this.slidersContainer.appendChild(radiusSlider);
 
-    // --- CONTROLE DE SLIDING GLOBAL ---
     const setSliding = (isSliding) => this.isSliding = isSliding;
     
     [unfoldSlider, heightSlider, radiusSlider].forEach(slider => {
@@ -459,7 +424,6 @@ updateUnfoldAnimation() {
     this.lastMouseY = 0;
     this.lastPinchDistance = 0;
 
-    // Mouse event handlers
     this.onMouseDown = (event) => {
       if (this.isSliding) return;
       this.isMouseDown = true;
@@ -488,7 +452,6 @@ updateUnfoldAnimation() {
       this.orbit.radius = Math.max(2, Math.min(10, this.orbit.radius));
     };
 
-    // Touch event handlers
     this.onTouchStart = (event) => {
       if (this.isSliding) return;
       if (event.touches.length === 1) {
@@ -526,14 +489,12 @@ updateUnfoldAnimation() {
       this.lastPinchDistance = 0;
     };
 
-    // Helper function for pinch zoom
     this.getPinchDistance = (event) => {
       const dx = event.touches[0].clientX - event.touches[1].clientX;
       const dy = event.touches[0].clientY - event.touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
 
-    // Add event listeners
     window.addEventListener("mousedown", this.onMouseDown);
     window.addEventListener("mouseup", this.onMouseUp);
     window.addEventListener("mousemove", this.onMouseMove);
@@ -544,10 +505,8 @@ updateUnfoldAnimation() {
   }
 
   onWindowResize() {
-    // Get the appropriate container for fullscreen
     const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
     
-    // Ensure canvas is in the right container
     if (this.threeCanvas?.parentNode !== container) {
         container.appendChild(this.threeCanvas);
     }
@@ -563,9 +522,8 @@ updateUnfoldAnimation() {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         
-        // Adjust orbit distance based on screen height
-        const baseHeight = 600; // Reference height
-        this.orbit.radius = 6 * (baseHeight / Math.max(height, 400)); // Prevent extreme zoom
+        const baseHeight = 600;
+        this.orbit.radius = 6 * (baseHeight / Math.max(height, 400));
     }
 
     if (this.renderer) {
@@ -578,26 +536,21 @@ updateUnfoldAnimation() {
         const canvas = this.sys.game.canvas;
         const rect = canvas.getBoundingClientRect();
         
-        // Calculate responsive dimensions
         const rightOffset = window.innerWidth - rect.right + 10;
         const topOffset = rect.top + 45;
         
-        // Dynamic sizing based on window width
-        const baseWidth = 220; // Default width
-        const minWidth = 180;  // Minimum width
-        const maxWidth = 300;   // Maximum width
+        const baseWidth = 220;
+        const minWidth = 180;
+        const maxWidth = 300;
         
-        // Calculate width based on window size (20% of width but within min/max bounds)
         let sliderWidth = Math.min(
             Math.max(width * 0.2, minWidth), 
             maxWidth
         );
         
-        // Adjust font size based on width
         const baseFontSize = 16;
         const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
         
-        // Calculate responsive padding
         const paddingVertical = Math.max(height * 0.015, 10);
         const paddingHorizontal = Math.max(width * 0.02, 12);
         
@@ -610,7 +563,6 @@ updateUnfoldAnimation() {
             borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
         });
 
-        // Update all slider thumbs
         const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
         sliders.forEach(slider => {
             const thumbSize = Math.max(sliderWidth * 0.11, 20);
@@ -622,7 +574,7 @@ updateUnfoldAnimation() {
     this.resizeRetryTimeout = setTimeout(() => {
         if (window.innerHeight !== this.lastResizeHeight) {
             this.lastResizeHeight = window.innerHeight;
-            this.onWindowResize(); // Retry resize if needed
+            this.onWindowResize();
         }
     }, 150);
   }
@@ -639,14 +591,14 @@ updateUnfoldAnimation() {
 
   resetToDefaults() {
     this.unfoldProgress = 0;
-    this.cylinderHeight = 2; // valor inicial
-    this.radius = 1; // valor inicial
+    this.cylinderHeight = 2;
+    this.radius = 1;
     this.isSliding = false;
   }
 
   cleanupDOM() {
     this.resetToDefaults();
-    // Remove Three.js canvas
+
     if (this.threeCanvas?.parentNode) {
       this.threeCanvas.remove();
       this.threeCanvas = null;
@@ -657,7 +609,7 @@ updateUnfoldAnimation() {
       this.slidersContainer = null;
     }
 
-    // Remove event listeners
+
     window.removeEventListener("mousedown", this.onMouseDown);
     window.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("mousemove", this.onMouseMove);
@@ -667,7 +619,6 @@ updateUnfoldAnimation() {
     window.removeEventListener("touchend", this.onTouchEnd);
   }
 
-  // Função para adicionar efeito de hover
   addHoverEffect(button) {
     button.on('pointerover', () => {
       button.setScale(button.scaleX * 1.1);

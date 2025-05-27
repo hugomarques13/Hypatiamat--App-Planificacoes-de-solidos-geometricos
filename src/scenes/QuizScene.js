@@ -70,6 +70,7 @@ export default class QuizScene extends Phaser.Scene {
         this.load.image('caixatexto', 'assets/caixatexto.png');
         this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
         this.load.image('bt_voltar', 'assets/bt_voltar.png');
+        this.load.image('bt_home', 'assets/bt_home.png');
     }
 
     create() {
@@ -204,16 +205,15 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);
 
-        const voltarBtn = this.add.image(centerX, 350, 'bt_voltar')
-            .setScale(0.34)
+        const voltarBtn = this.add.image(centerX, 350, 'bt_home')
+            .setScale(0.65)
             .setInteractive({ useHandCursor: true })
             .on('pointerup', () => {
                 this.scene.stop();
                 this.scene.start('MenuScene');
             });
 
-        voltarBtn.on('pointerover', () => voltarBtn.setScale(0.38));
-        voltarBtn.on('pointerout', () => voltarBtn.setScale(0.34));
+        this.addHoverEffect(voltarBtn);
 
         this.uiGroup.add(voltarBtn);
     }

@@ -7,12 +7,16 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     preload() {
+        this.load.image('background', 'assets/background.png');
         this.load.image('caixatexto', 'assets/caixatexto.png');
         this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
         this.load.image('bt_voltar', 'assets/bt_voltar.png');
     }
 
     create() {
+        // Background
+        this.add.image(512, 384, 'background').setDepth(-1);
+
         this.uiGroup = this.add.group();
 
         // Botão Voltar
@@ -24,7 +28,7 @@ export default class QuizScene extends Phaser.Scene {
             this.scene.start('MenuScene');
         });
 
-        // Exemplo de perguntas
+        // Perguntas
         this.questions = [
             {
                 question: 'Quantas faces tem um cubo?',
@@ -54,7 +58,7 @@ export default class QuizScene extends Phaser.Scene {
         // Fundo da pergunta
         const questionBox = this.add.image(512, 100, 'caixatexto').setScale(0.6);
         const questionText = this.add.text(512, 100, questionObj.question, {
-            fontSize: '26px',
+            fontSize: '28px',
             fontFamily: 'Snap ITC',
             color: '#000',
             align: 'center',
@@ -68,7 +72,7 @@ export default class QuizScene extends Phaser.Scene {
         this.optionButtons = [];
 
         questionObj.options.forEach((option, index) => {
-            const y = 250 + index * 90;
+            const y = 250 + index * 100;
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
                 .setScale(0.7)
@@ -82,15 +86,8 @@ export default class QuizScene extends Phaser.Scene {
                 wordWrap: { width: 400 }
             }).setOrigin(0.5);
 
-            // Hover effect
-            optionBg.on('pointerover', () => {
-                optionBg.setScale(0.75);
-            });
-
-            optionBg.on('pointerout', () => {
-                optionBg.setScale(0.7);
-            });
-
+            optionBg.on('pointerover', () => optionBg.setScale(0.75));
+            optionBg.on('pointerout', () => optionBg.setScale(0.7));
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
@@ -98,10 +95,10 @@ export default class QuizScene extends Phaser.Scene {
             this.uiGroup.add(optionText);
         });
 
-        // Indicador de progresso (ex: 2/3)
+        // Progresso (ex: 2/3)
         if (this.progressoText) this.progressoText.destroy();
 
-        this.progressoText = this.add.text(512, 570, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
+        this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
             fontSize: '24px',
             fontFamily: 'Snap ITC',
             color: '#000'
@@ -112,11 +109,10 @@ export default class QuizScene extends Phaser.Scene {
         const correct = this.questions[this.currentQuestionIndex].correctAnswer;
 
         if (selected === correct) {
-            bg.setTint(0x8BC34A); // verde
+            bg.setTint(0x8BC34A);
         } else {
-            bg.setTint(0xF44336); // vermelho
+            bg.setTint(0xF44336);
 
-            // Mostrar a correta
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {
                     opt.bg.setTint(0x8BC34A);
@@ -124,14 +120,10 @@ export default class QuizScene extends Phaser.Scene {
             });
         }
 
-        // Desativar interações
-        this.optionButtons.forEach(opt => {
-            opt.bg.disableInteractive();
-        });
+        this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
         this.time.delayedCall(1000, () => {
-            bg.clearTint();
-            text.setColor('#000');
+            this.optionButtons.forEach(opt => opt.bg.clearTint());
             this.nextQuestion();
         });
     }

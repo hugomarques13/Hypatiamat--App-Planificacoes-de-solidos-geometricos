@@ -546,8 +546,8 @@ export default class Paralelepipedo extends Phaser.Scene {
   }
 
   // Obter as dimensões do container
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+const width = container === document.body ? window.innerWidth : container.clientWidth;
+    const height = container === document.body ? window.innerHeight : container.clientHeight;
 
   // Atualizar a câmera
   if (this.camera) {
@@ -562,16 +562,43 @@ export default class Paralelepipedo extends Phaser.Scene {
     this.renderer.domElement.style.height = `${height}px`;
   }
 
+  const canvas = this.sys.game.canvas;
+  const rect = canvas.getBoundingClientRect();
+  const rightOffset = window.innerWidth - rect.right + 10;
+  const topOffset = rect.top + 45;
+    
+  // Dynamic sizing based on window width
+  const baseWidth = 220;
+  const minWidth = 180;
+  const maxWidth = 300;
+    
+  let sliderWidth = Math.min(
+    Math.max(width * 0.2, minWidth), 
+    maxWidth
+  );
+
+  const baseFontSize = 16;
+  const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
+
+  const paddingVertical = Math.max(height * 0.015, 10);
+  const paddingHorizontal = Math.max(width * 0.02, 12);
+
   // Reposicionar e redimensionar os sliders
   if (this.unfoldSliderContainer) {
-    const sliderWidth = Math.min(width * 0.2, 220);
-    const sliderPadding = `${Math.max(height * 0.01, 8)}px`;
-
     Object.assign(this.unfoldSliderContainer.style, {
-      right: "40px", // Distância fixa da borda direita
-      top: "45px",   // Distância fixa do topo
+      right: `${rightOffset}px`,
+      top: `${topOffset}px`,
       width: `${sliderWidth}px`,
-      padding: sliderPadding,
+      padding: `${paddingVertical}px ${paddingHorizontal}px`,
+      fontSize: `${fontSize}px`,
+      borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+    });
+
+            // Update all slider thumbs
+    const sliders = this.unfoldSliderContainer.querySelectorAll('.custom-slider');
+      sliders.forEach(slider => {
+      const thumbSize = Math.max(sliderWidth * 0.11, 20);
+      slider.style.setProperty('--thumb-size', `${thumbSize}px`);
     });
   }
 

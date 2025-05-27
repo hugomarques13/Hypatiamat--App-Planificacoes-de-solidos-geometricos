@@ -98,26 +98,37 @@ export default class QuizScene extends Phaser.Scene {
         this.uiGroup.add(questionBox);
         this.uiGroup.add(questionText);
 
-        // Opções
+        // Opções - Configurações melhoradas para legibilidade
         this.optionButtons = [];
+        const optionSpacing = 100; // Mais espaço entre opções
+        const startY = 220; // Posição inicial mais alta
+        const buttonScale = 0.6; // Botões um pouco maiores
+        const fontSize = '24px'; // Fonte maior
 
         questionObj.options.forEach((option, index) => {
-            const y = 250 + index * 80;  // mais próximo entre opções
+            const y = startY + index * optionSpacing;
 
             const optionBg = this.add.image(512, y, 'bt_butaoVazio')
-                .setScale(0.5)  // escala menor que antes, diminui botão
+                .setScale(buttonScale)
                 .setInteractive({ useHandCursor: true });
 
             const optionText = this.add.text(512, y, option, {
-                fontSize: '20px',  // fonte um pouco menor para caber melhor
+                fontSize: fontSize,
                 fontFamily: 'Snap ITC',
                 color: '#000',
                 align: 'center',
-                wordWrap: { width: 400 }
+                wordWrap: { width: 450 } // Largura maior para o texto
             }).setOrigin(0.5);
 
-            optionBg.on('pointerover', () => optionBg.setScale(0.55));
-            optionBg.on('pointerout', () => optionBg.setScale(0.5));
+            // Efeitos de hover mais suaves
+            optionBg.on('pointerover', () => {
+                optionBg.setScale(buttonScale * 1.05);
+                optionText.setStyle({ fontSize: '26px' }); // Texto cresce no hover
+            });
+            optionBg.on('pointerout', () => {
+                optionBg.setScale(buttonScale);
+                optionText.setStyle({ fontSize: fontSize });
+            });
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
@@ -125,13 +136,15 @@ export default class QuizScene extends Phaser.Scene {
             this.uiGroup.add(optionText);
         });
 
-        // Progresso (ex: 2/9)
+        // Progresso (ex: 2/9) - Melhor posicionado
         if (this.progressoText) this.progressoText.destroy();
 
-        this.progressoText = this.add.text(512, 580, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
-            fontSize: '24px',
+        this.progressoText = this.add.text(512, 550, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
+            fontSize: '28px',
             fontFamily: 'Snap ITC',
-            color: '#000'
+            color: '#000',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            padding: { x: 20, y: 10 }
         }).setOrigin(0.5);
     }
 
@@ -139,21 +152,29 @@ export default class QuizScene extends Phaser.Scene {
         const correct = this.questions[this.currentQuestionIndex].correctAnswer;
 
         if (selected === correct) {
-            bg.setTint(0x8BC34A);
+            bg.setTint(0x8BC34A); // Verde para resposta correta
+            text.setStyle({ color: '#fff' }); // Texto branco para melhor contraste
         } else {
-            bg.setTint(0xF44336);
+            bg.setTint(0xF44336); // Vermelho para resposta errada
+            text.setStyle({ color: '#fff' });
 
+            // Destacar a resposta correta
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {
                     opt.bg.setTint(0x8BC34A);
+                    opt.text.setStyle({ color: '#fff' });
                 }
             });
         }
 
+        // Desativar interação após resposta
         this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
-        this.time.delayedCall(1000, () => {
-            this.optionButtons.forEach(opt => opt.bg.clearTint());
+        this.time.delayedCall(1500, () => {
+            this.optionButtons.forEach(opt => {
+                opt.bg.clearTint();
+                opt.text.setStyle({ color: '#000' });
+            });
             this.nextQuestion();
         });
     }

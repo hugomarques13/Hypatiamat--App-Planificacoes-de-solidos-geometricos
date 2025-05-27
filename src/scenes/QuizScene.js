@@ -200,7 +200,7 @@ export default class QuizScene extends Phaser.Scene {
                 fontFamily: 'Snap ITC',
                 color: '#fff',
                 align: 'center'
-            }).setStroke('#000000', 3.5).setOrigin(0.5);
+            }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
 
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);

@@ -99,6 +99,8 @@ export default class Cone extends Phaser.Scene {
     this.scene3D = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+
+    // Continue with rest of your create() method
     this.initMouseControls();
 
     // Create materials with edge lines
@@ -117,6 +119,17 @@ export default class Cone extends Phaser.Scene {
         transparent: true, 
         opacity: 0.6 
       }),
+      // Add edge materials
+      lateralEdges: new THREE.LineBasicMaterial({ 
+        color: 0x000000, 
+        linewidth: 2,
+        visible: true
+      }),
+      baseEdges: new THREE.LineBasicMaterial({ 
+        color: 0x000000, 
+        linewidth: 2,
+        visible: true
+      })
     };
 
     this.isSliding = false;
@@ -134,7 +147,7 @@ export default class Cone extends Phaser.Scene {
 
     window.addEventListener('resize', () => this.onWindowResize());
   }
-
+ 
 createConeGeometry() {
     const radius = this.radius;
     const height = this.coneHeight;
@@ -142,7 +155,7 @@ createConeGeometry() {
     const slantHeight = Math.sqrt(radius * radius + height * height);
     const sectorAngle = (2 * Math.PI * radius) / slantHeight;
 
-    // Clear existing geometry if it exists
+    // Clear existing geometry
     if (this.lateralPivot) {
         this.coneGroup.remove(this.lateralPivot);
         this.coneGroup.remove(this.basePivot);
@@ -151,206 +164,216 @@ createConeGeometry() {
     // --- Lateral Surface ---
     this.lateralPivot = new THREE.Group();
     
-    // Create geometry
-    const lateralGeometry = new THREE.BufferGeometry();
-    const segments = slices; // +1 to close the cone
-    
-    // Create vertices for both folded and unfolded states
-    const positions = new Float32Array(segments * 3 * 2); // 3 coords per vertex, 2 states
+    // Create geometry with both folded and unfolded positions
+    const geometry = new THREE.BufferGeometry();
+    const vertexCount = slices + 2; // apex + base vertices (including duplicate for seam)
+    const positions = new Float32Array(vertexCount * 3 * 2); // folded and unfolded
     const indices = [];
     this.vertexData = [];
-    
-    // Center point (apex of the cone)
-    const centerIndex = 0;
-    positions[centerIndex * 3 + 0] = 0; // x - folded
-    positions[centerIndex * 3 + 1] = height; // y - folded
-    positions[centerIndex * 3 + 2] = 0; // z - folded
-    
-    // Unfolded position will be above the base
-    positions[centerIndex * 3 + 0 + segments * 3] = 0; // x - unfolded
-    positions[centerIndex * 3 + 1 + segments * 3] = slantHeight; // y - unfolded (vertical position)
-    positions[centerIndex * 3 + 2 + segments * 3] = 0; // z - unfolded
 
-    const vX = 0;
-    const vY = slantHeight;
+    // Apex (V point) - index 0
+    positions[0] = radius; // x
+    positions[1] = height; // y
+    positions[2] = 0; // z
     
-    // Add vertex data for center point
+    // Unfolded position (center of sector)
+    positions[vertexCount * 3 + 0] = 0;
+    positions[vertexCount * 3 + 1] = slantHeight;
+    positions[vertexCount * 3 + 2] = 0;
+
     this.vertexData.push({
-        original: new THREE.Vector3(0, height, 0),
-        target: new THREE.Vector3(vX, vY, -radius) // Positioned above base
+        original: new THREE.Vector3(radius, height, 0),
+        target: new THREE.Vector3(0, slantHeight, 0)
     });
 
-    // Create vertices around the base
-    for (let i = 1; i <= segments; i++) {
-        const angle = (i-1) / slices * Math.PI * 2;
-        const u = (i-1) / slices;
-        
-        // Folded position (cone)
-        const foldedX = radius * Math.cos(angle);
-        const foldedY = 0;
-        const foldedZ = radius * Math.sin(angle);
+    // Generate base vertices - we'll reuse these for the base circle
+    const baseVertices = [];
+    for (let i = 0; i <= slices; i++) {
+        const angle = (i / slices) * Math.PI * 2; // Full circle
+        const idx = i + 1; // +1 because apex is index 0
 
-        let proportion = (angle + Math.PI/2)/(Math.PI*2);
+        // Folded positions (base circle)
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        positions[idx * 3 + 0] = x + radius;
+        positions[idx * 3 + 1] = 0;
+        positions[idx * 3 + 2] = z;
+        baseVertices.push(x, 0, z); // Store for base circle
 
-        const unfoldedAngle = proportion * sectorAngle;
-        
-        // Unfolded position (sector) - rotated to be vertical
-        const unfoldedX = vX + (slantHeight*Math.sin(unfoldedAngle)); // Switched x/z for vertical orientation
-        const unfoldedY = vY + (slantHeight*Math.cos(unfoldedAngle)); // Vertical position
-        const unfoldedZ = -radius;
-        
-        // Set positions in the buffer
-        const vi = i * 3;
-        positions[vi + 0] = foldedX;
-        positions[vi + 1] = foldedY;
-        positions[vi + 2] = foldedZ;
-        
-        positions[vi + 0 + segments * 3] = unfoldedX;
-        positions[vi + 1 + segments * 3] = unfoldedY;
-        positions[vi + 2 + segments * 3] = unfoldedZ;
-        
-        // Create triangles
-        if (i > 1) {
-            indices.push(centerIndex, i-1, i);
-        }
-        
-        // Store vertex data for animation
+        // Unfolded positions (sector)
+        const unfoldedAngle = (i / slices) * sectorAngle - sectorAngle/2;
+
+        const unfoldedX = -slantHeight * Math.sin(unfoldedAngle);
+        const unfoldedY = Math.abs((slantHeight * Math.cos(unfoldedAngle)) - slantHeight);
+
+        positions[(vertexCount + idx) * 3 + 0] = 0;
+        positions[(vertexCount + idx) * 3 + 1] = unfoldedY;
+        positions[(vertexCount + idx) * 3 + 2] = unfoldedX;
+
         this.vertexData.push({
-            original: new THREE.Vector3(foldedX, foldedY, foldedZ),
-            target: new THREE.Vector3(unfoldedX, unfoldedY, unfoldedZ)
+            original: new THREE.Vector3(x + radius, 0, z),
+            target: new THREE.Vector3(0, 
+                             unfoldedY, unfoldedX)
         });
+
+        // Create triangles
+        if (i < slices) {
+            indices.push(0, idx, idx + 1); // apex -> current point -> next point
+        }
     }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+
+    // --- Base Surface ---
+    this.basePivot = new THREE.Group();
+    const baseGeometry = new THREE.BufferGeometry();
     
-    // Close the cone
-    indices.push(centerIndex, segments, 1);
+    // Use exactly the same vertices as the lateral surface's base
+    baseGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(baseVertices), 3));
     
-    // Set the geometry attributes
-    lateralGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    lateralGeometry.setIndex(indices);
+    // Create base circle indices (center at index 0)
+    const baseIndices = [];
+    const centerIndex = 0;
+    for (let i = 1; i <= slices; i++) {
+        baseIndices.push(centerIndex, i, i + 1 > slices ? 1 : i + 1);
+    }
+    baseGeometry.setIndex(baseIndices);
     
-    // Create the lateral mesh
-    this.lateralMesh = new THREE.Mesh(lateralGeometry, this.materials.lateral);
-    
-    // Create edge lines for lateral surface
-    const lateralEdges = new THREE.EdgesGeometry(lateralGeometry);
-    const lateralLineMaterial = new THREE.LineBasicMaterial({ 
-        color: 0x000000, 
-        linewidth: 2,
-        visible: false
-    });
-    this.lateralLines = new THREE.LineSegments(lateralEdges, lateralLineMaterial);
-    
-    // Create a container group for mesh and lines
+    this.lateralMesh = new THREE.Mesh(geometry, this.materials.lateral);
+    this.baseMesh = new THREE.Mesh(baseGeometry, this.materials.base);
+
+    const edges = new THREE.EdgesGeometry(geometry);
+    this.lateralLines = new THREE.LineSegments(
+        edges,
+        new THREE.LineBasicMaterial({ 
+            color: 0x000000, 
+            linewidth: 2,
+        })
+    );
+
+    // Base edges (unchanged)
+    const baseEdges = new THREE.EdgesGeometry(baseGeometry);
+    this.baseLines = new THREE.LineSegments(
+        baseEdges,
+        new THREE.LineBasicMaterial({ 
+            color: 0x000000, 
+            linewidth: 2,
+        })
+    );
+    // Group setup with proper pivot point
     this.lateralGroup = new THREE.Group();
     this.lateralGroup.add(this.lateralMesh);
     this.lateralGroup.add(this.lateralLines);
-    
-    // Position the lateral group
     this.lateralPivot.add(this.lateralGroup);
-    this.coneGroup.add(this.lateralPivot);
-
-    // --- Base Circle ---
-    this.basePivot = new THREE.Group();
-    this.basePivot.position.set(0, 0, -radius);
-
-    const baseGeometry = new THREE.CircleGeometry(radius, 64);
-    this.baseMesh = new THREE.Mesh(baseGeometry, this.materials.base);
+    this.lateralGroup.rotation.y = -Math.PI/2;
     
-    // Create edge lines for base
-    const baseEdges = new THREE.EdgesGeometry(baseGeometry);
-    const baseLineMaterial = new THREE.LineBasicMaterial({ 
-        color: 0x000000, 
-        linewidth: 2,
-        visible: true
-    });
-    this.baseLines = new THREE.LineSegments(baseEdges, baseLineMaterial);
-    
-    // Create container group for base
+    // Base group setup - pivot at edge of base
     this.baseGroup = new THREE.Group();
     this.baseGroup.add(this.baseMesh);
     this.baseGroup.add(this.baseLines);
+    this.baseGroup.rotation.y = Math.PI/2;
     
-    this.baseGroup.rotation.x = Math.PI / 2;
-    this.baseGroup.position.z = radius;
+    // Position the base mesh so its back edge is at the origin
+    // We need to offset it by the radius along the Z-axis
+    this.baseGroup.position.set(0, 0, radius);
+    
+    // Add to pivot group (which will rotate around the origin)
     this.basePivot.add(this.baseGroup);
+    this.coneGroup.add(this.lateralPivot);
     this.coneGroup.add(this.basePivot);
+
+    // Initial rotation (flat)
+    this.basePivot.rotation.x = 0;
+
+    this.updateUnfoldAnimation();
 }
 
 updateUnfoldAnimation() {
     const p = this.unfoldProgress;
-    const lateralGeometry = this.lateralMesh.geometry;
-    const positionAttribute = lateralGeometry.getAttribute('position');
+    const geometry = this.lateralMesh.geometry;
+    const positionAttribute = geometry.getAttribute('position');
     const positions = positionAttribute.array;
-    
-    // Interpolate vertex positions for all vertices
-    for (let i = 0; i < this.vertexData.length; i++) {
-        const vertex = this.vertexData[i];
-        const vi = i * 3;
+    const vertexCount = this.slices + 2;
+
+    // 1. Update vertex positions with Y locked to 0 for base vertices
+    for (let i = 0; i < vertexCount; i++) {
+        const foldedIdx = i * 3;
+        const isBaseVertex = i > 0; // All vertices except apex
         
-        positions[vi + 0] = vertex.original.x * (1 - p) + vertex.target.x * p;
-        positions[vi + 1] = vertex.original.y * (1 - p) + vertex.target.y * p;
-        positions[vi + 2] = vertex.original.z * (1 - p) + vertex.target.z * p;
+        // Keep base vertices at Y=0 during animation
+        positions[foldedIdx] = this.vertexData[i].original.x * (1 - p) + this.vertexData[i].target.x * p;
+        positions[foldedIdx + 1] = this.vertexData[i].original.y * (1 - p) + this.vertexData[i].target.y * p;
+        positions[foldedIdx + 2] = this.vertexData[i].original.z * (1 - p) + this.vertexData[i].target.z * p;
     }
-    
     positionAttribute.needsUpdate = true;
 
-    // Update edge lines
-    this.lateralLines.geometry.dispose();
-    this.lateralLines.geometry = new THREE.EdgesGeometry(lateralGeometry);
+    const circleEdges = [];
+    
+    for (let i = 0; i < this.slices + 2; i++) {
+        const current = i;
+        let next = i + 1;
 
-    // Filter edges to show only the important ones
-    const edgesGeometry = this.lateralLines.geometry;
-    const positions2 = edgesGeometry.attributes.position;
-    const newPositions = [];
-    const slantHeight = Math.sqrt(this.radius * this.radius + this.coneHeight * this.coneHeight);
-    const edgeTolerance = 0.01 * slantHeight;
-
-    for (let i = 0; i < positions2.count; i += 2) {
-        const x1 = positions2.getX(i);
-        const y1 = positions2.getY(i);
-        const z1 = positions2.getZ(i);
-        const x2 = positions2.getX(i + 1);
-        const y2 = positions2.getY(i + 1);
-        const z2 = positions2.getZ(i + 1);
-        
-        // Check if this is a radial edge (connected to apex)
-        const isRadialEdge1 = Math.abs(y1 - this.coneHeight * (1 - p) - slantHeight * p) < edgeTolerance;
-        const isRadialEdge2 = Math.abs(y2 - this.coneHeight * (1 - p) - slantHeight * p) < edgeTolerance;
-        
-        // Check if this is a base edge (y ≈ 0)
-        const isBaseEdge = Math.abs(y1) < edgeTolerance && Math.abs(y2) < edgeTolerance;
-        
-        if ((isRadialEdge1 || isRadialEdge2) || isBaseEdge) {
-            newPositions.push(x1, y1, z1, x2, y2, z2);
+        if (i == this.slices+1) {
+          next = 0
         }
+        
+        circleEdges.push(
+            positions[current * 3], positions[current * 3 + 1], positions[current * 3 + 2],
+            positions[next * 3], positions[next * 3 + 1], positions[next * 3 + 2]
+        );
     }
-    
-    // Create filtered geometry
-    const filteredGeometry = new THREE.BufferGeometry();
-    filteredGeometry.setAttribute(
+
+    if (!this.lateralLines) {
+        this.lateralLines = new THREE.LineSegments(
+            new THREE.BufferGeometry(),
+            new THREE.LineBasicMaterial({
+                color: 0x000000,
+                linewidth: 3,
+                visible: true
+            })
+        );
+        this.lateralGroup.add(this.lateralLines);
+    }
+
+    this.lateralLines.geometry.setAttribute(
         'position',
-        new THREE.Float32BufferAttribute(newPositions, 3)
+        new THREE.Float32BufferAttribute(circleEdges, 3)
     );
-    
-    this.lateralLines.geometry.dispose();
-    this.lateralLines.geometry = filteredGeometry;
+    this.lateralLines.geometry.attributes.position.needsUpdate = true;
+    this.lateralLines.geometry.setDrawRange(0, circleEdges.length/3);
 
-    // Always show lines
-    this.lateralLines.material.visible = true;
-    this.baseLines.material.visible = true;
+    if (!this.baseLines) {
+        this.baseLines = new THREE.LineSegments(
+            new THREE.EdgesGeometry(this.baseMesh.geometry),
+            new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 3 })
+        );
+        this.baseGroup.add(this.baseLines);
+    }
 
-    // Animate base
-    this.basePivot.rotation.x = p * Math.PI / 2;
-    
-    this.updateFaceVisibility();
+
+    if (p > 0.01) {
+      this.lateralLines.material.visible = true;
+    } else {
+      this.lateralLines.material.visible = false;
+    }
+
+    this.basePivot.rotation.x = Math.PI/2 * p;
+
+    this.renderer.render(this.scene3D, this.camera);
 }
-  updateFaceVisibility() {
+updateFaceVisibility() {
     // When fully folded or mostly folded, make faces semi-transparent
     const opacity = this.unfoldProgress < 0.95 ? 0.6 : 1.0;
     
     this.materials.lateral.opacity = opacity;
     this.materials.base.opacity = opacity;
-  }
+    
+    // Always show edges
+    this.materials.lateralEdges.visible = true;
+    this.materials.baseEdges.visible = true;
+}
 
   createUnfoldSlider() {
     this.unfoldSliderContainer = document.createElement("div");

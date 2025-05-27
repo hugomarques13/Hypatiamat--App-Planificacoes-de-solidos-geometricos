@@ -108,7 +108,7 @@ export default class QuizScene extends Phaser.Scene {
             color: '#fff',
             align: 'center',
             wordWrap: { width: 600 }
-        }).setOrigin(0.5);
+        }).setStroke('#000000', 3.5).setOrigin(0.5);
 
         this.uiGroup.add(questionBox);
         this.uiGroup.add(questionText);
@@ -128,7 +128,7 @@ export default class QuizScene extends Phaser.Scene {
                 color: '#fff',
                 align: 'center',
                 wordWrap: { width: 350 }
-            }).setOrigin(0.5);
+            }).setStroke('#000000', 3.5).setOrigin(0.5);
 
             optionBg.on('pointerover', () => optionBg.setScale(0.22));
             optionBg.on('pointerout', () => optionBg.setScale(0.20));
@@ -145,7 +145,7 @@ export default class QuizScene extends Phaser.Scene {
             fontSize: '24px',
             fontFamily: 'Snap ITC',
             color: '#fff'
-        }).setOrigin(0.5);
+        }).setStroke('#000000', 3.5).setOrigin(0.5);
 
         this.uiGroup.add(this.progressoText);
     }
@@ -200,7 +200,7 @@ export default class QuizScene extends Phaser.Scene {
                 fontFamily: 'Snap ITC',
                 color: '#fff',
                 align: 'center'
-            }).setOrigin(0.5);
+            }).setStroke('#000000', 3.5).setOrigin(0.5);
 
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);

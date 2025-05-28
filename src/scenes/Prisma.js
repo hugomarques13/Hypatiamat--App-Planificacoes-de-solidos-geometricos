@@ -23,6 +23,9 @@ export default class Prisma extends Phaser.Scene {
   }
 
   create() {
+
+    this.game.renderer.antialias = false;
+
     this.add.image(512, 300, 'background').setScale(0.8);
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
@@ -86,6 +89,10 @@ export default class Prisma extends Phaser.Scene {
     this.threeCanvas.style.left = "0"
     this.threeCanvas.style.zIndex = "0"
     this.threeCanvas.style.pointerEvents = "none";
+
+    this.threeCanvas.style.imageRendering = "pixelated";
+    this.threeCanvas.style.imageRendering = "crisp-edges";
+
     document.body.appendChild(this.threeCanvas)
 
     this.renderer = new THREE.WebGLRenderer({

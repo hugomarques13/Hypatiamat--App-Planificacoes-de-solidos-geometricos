@@ -102,6 +102,7 @@ export default class Prisma extends Phaser.Scene {
     this.orbit = { radius: 8, theta: Math.PI / 8, phi: Math.PI / 3.8 }
 
     this.prismGroup = new THREE.Group()
+    this.prismGroup.position.y = -1;
     this.scene3D.add(this.prismGroup)
 
     this.unfoldProgress = 0;

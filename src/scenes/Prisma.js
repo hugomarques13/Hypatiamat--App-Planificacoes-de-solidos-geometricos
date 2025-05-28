@@ -864,7 +864,7 @@ checkFaceVisibility() {
       6: "Hexagonal",
       7: "Heptagonal",
       8: "Octogonal",
-      9: "Nonagonal",
+      9: "Eneagonal",
       10: "Decagonal"
     };
 
@@ -877,7 +877,7 @@ checkFaceVisibility() {
 
     this.titleText = this.add.text(this.scale.width / 2, 10, fullTitle, {
       fontFamily: 'Snap ITC',
-      fontSize: '50px',
+      fontSize: '40px',
       color: '#ffffff',
       fontStyle: 'bold',
       align: 'center',

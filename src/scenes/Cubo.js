@@ -26,7 +26,7 @@ export default class Cubo extends Phaser.Scene {
 
     const titleText = this.add.text(this.scale.width / 2, 20, 'Cubo', {
       fontFamily: 'Snap ITC',
-      fontSize: '50px',
+      fontSize: '40px',
       color: '#ffffff',
       fontStyle: 'bold'
     }).setOrigin(0.5, 0);

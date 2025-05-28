@@ -2,7 +2,6 @@ export default class Cone extends Phaser.Scene {
   constructor() {
     super({ key: 'Cone' });
     this.unfoldProgress = 0;
-    this.orbit = { radius: 6, theta: Math.PI / 35, phi: Math.PI / 3 };
     this.isSliding = false;
     this.coneHeight = 2;
     this.minHeight = 0.5;
@@ -110,6 +109,8 @@ export default class Cone extends Phaser.Scene {
     });
     this.scene3D = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    this.orbit = { radius: 6, theta: Math.PI / 35, phi: Math.PI / 3 };
 
     this.initMouseControls();
 

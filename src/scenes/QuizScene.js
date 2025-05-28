@@ -88,7 +88,7 @@ export default class QuizScene extends Phaser.Scene {
 
         this.addHoverEffect(this.btnVoltar);
 
-        this.showQuestion(); // <- agora é seguro usar a fonte
+        this.showQuestion(); // agora é seguro usar a fonte
     }
 
     showQuestion() {
@@ -101,7 +101,10 @@ export default class QuizScene extends Phaser.Scene {
         const questionBox = this.add.image(512, 120, 'caixatexto')
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
-            
+
+        // Usa filtro linear para suavizar sem pixelizar
+        questionBox.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+
         const questionText = this.add.text(512, 130, questionObj.question, {
             fontSize: '22px',
             fontFamily: 'Snap ITC',
@@ -130,7 +133,6 @@ export default class QuizScene extends Phaser.Scene {
                 wordWrap: { width: 350 }
             }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
 
-            
             this.addHoverEffect(optionBg, optionText);
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 

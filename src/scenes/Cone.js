@@ -32,6 +32,17 @@ export default class Cone extends Phaser.Scene {
     let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
     let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
 
+    const titleText = this.add.text(this.scale.width / 2, 20, 'Cone', {
+      fontFamily: 'Snap ITC',
+      fontSize: '50px',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5, 0);
+
+    titleText.setShadow(2, 2, '#FFA500', 3);
+    titleText.setDepth(1000);
+  
+
     this.addHoverEffect(btnHome);
     this.addHoverEffect(btnVoltar);
     this.addHoverEffect(btnFullScreen);

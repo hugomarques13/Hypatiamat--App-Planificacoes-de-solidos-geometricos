@@ -9,6 +9,7 @@ export default class Piramide extends Phaser.Scene {
     this.piramideHeight = 2;
     this.minHeight = 0.5;
     this.maxHeight = 4;
+    this.titleText = null;
   }
 
   preload() {
@@ -33,6 +34,8 @@ export default class Piramide extends Phaser.Scene {
     this.addHoverEffect(btnFullScreen);
     this.addHoverEffect(btnBack);
     this.addHoverEffect(btnInfo);
+
+    this.updateTitleText();
 
     btnHome.on('pointerup', () => {
       this.cleanupDOM();
@@ -419,6 +422,7 @@ createSliders() {
         this.initUnfoldPlans();
         this.buildFaceGroupsForPlan(this.currentPlan);
         this.updatePrismTransforms();
+        this.updateTitleText();
     });
 
     updateSliderBackground(sidesSlider, this.sides, 3, 10);
@@ -800,5 +804,37 @@ checkFaceVisibility() {
         button.on('pointerout', () => {
             button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
     });
+  }
+
+  updateTitleText() {
+    const typeNames = {
+      3: "Triangular",
+      4: "Quadrangular",
+      5: "Pentagonal",
+      6: "Hexagonal",
+      7: "Heptagonal",
+      8: "Octogonal",
+      9: "Nonagonal",
+      10: "Decagonal"
+    };
+
+    const pyramidType = typeNames[this.sides] || "Poligonal";
+    const fullTitle = "Pirâmide\n" + pyramidType;
+
+    if (this.titleText) {
+      this.titleText.destroy();
+    }
+
+    this.titleText = this.add.text(this.scale.width / 2, 10, fullTitle, {
+      fontFamily: 'Snap ITC',
+      fontSize: '50px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      align: 'center',
+      lineSpacing: -15
+    }).setOrigin(0.5, 0);
+
+    this.titleText.setShadow(2, 2, '#FFA500', 3);
+    this.titleText.setDepth(1000);
   }
 }

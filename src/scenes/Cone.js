@@ -2,7 +2,7 @@ export default class Cone extends Phaser.Scene {
   constructor() {
     super({ key: 'Cone' });
     this.unfoldProgress = 0;
-    this.orbit = { radius: 6, theta: Math.PI / 4, phi: Math.PI / 3 };
+    this.orbit = { radius: 6, theta: Math.PI / 35, phi: Math.PI / 3 };
     this.isSliding = false;
     this.coneHeight = 2;
     this.minHeight = 0.5;

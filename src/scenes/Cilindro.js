@@ -104,7 +104,7 @@ export default class Cilindro extends Phaser.Scene {
       antialias: true
     });
     this.scene3D = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     this.orbit = { radius: 6, theta: Math.PI / 35, phi: Math.PI / 3 };
 

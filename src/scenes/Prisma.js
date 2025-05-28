@@ -97,7 +97,7 @@ export default class Prisma extends Phaser.Scene {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.scene3D = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    this.camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000)
 
     this.orbit = { radius: 8, theta: Math.PI / 8, phi: Math.PI / 3.8 }
 

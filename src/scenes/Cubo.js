@@ -51,20 +51,16 @@ export default class Cubo extends Phaser.Scene {
     });
 
     const toggleFullscreen = () => {
-        // Verifica se já está em fullscreen
         if (document.fullscreenElement) {
-            // Sai do fullscreen (igual ao F11)
             document.exitFullscreen().then(() => {
                 btnFullScreen.setVisible(true);
                 btnBack.setVisible(false);
             });
         } else {
-            // Entra em fullscreen no body (igual ao F11)
             document.body.requestFullscreen().then(() => {
                 btnFullScreen.setVisible(false);
                 btnBack.setVisible(true);
                 
-                // Ajusta o resize após um pequeno delay
                 setTimeout(() => {
                     this.onWindowResize();
                     this.renderer.render(this.scene3D, this.camera);

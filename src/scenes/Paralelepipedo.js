@@ -51,21 +51,22 @@ export default class Paralelepipedo extends Phaser.Scene {
     });
 
     const toggleFullscreen = () => {
-        if (this.scale.isFullscreen) {
-            this.scale.stopFullscreen();
-            btnFullScreen.setVisible(true);
-            btnBack.setVisible(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().then(() => {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            });
         } else {
-            // Reattach Three.js canvas and sliders before going fullscreen
-            document.body.appendChild(this.threeCanvas);
-            if (this.unfoldSliderContainer) document.body.appendChild(this.unfoldSliderContainer);
-            
-            this.scale.startFullscreen();
-            btnFullScreen.setVisible(false);
-            btnBack.setVisible(true);
+            document.body.requestFullscreen().then(() => {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+                
+                setTimeout(() => {
+                    this.onWindowResize();
+                    this.renderer.render(this.scene3D, this.camera);
+                }, 100);
+            });
         }
-        // Force resize after fullscreen change
-        this.onWindowResize();
     };
 
     btnFullScreen.on('pointerup', toggleFullscreen);

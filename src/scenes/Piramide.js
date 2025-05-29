@@ -48,19 +48,22 @@ export default class Piramide extends Phaser.Scene {
     });
 
     const toggleFullscreen = () => {
-        if (this.scale.isFullscreen) {
-            this.scale.stopFullscreen();
-            btnFullScreen.setVisible(true);
-            btnBack.setVisible(false);
+        if (document.fullscreenElement) {
+            document.exitFullscreen().then(() => {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            });
         } else {
-            document.body.appendChild(this.threeCanvas);
-            if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
-            
-            this.scale.startFullscreen();
-            btnFullScreen.setVisible(false);
-            btnBack.setVisible(true);
+            document.body.requestFullscreen().then(() => {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+                
+                setTimeout(() => {
+                    this.onWindowResize();
+                    this.renderer.render(this.scene3D, this.camera);
+                }, 100);
+            });
         }
-        this.onWindowResize();
     };
 
     btnFullScreen.on('pointerup', toggleFullscreen);

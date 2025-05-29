@@ -161,7 +161,6 @@ export default class QuizScene extends Phaser.Scene {
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
 
-        // Usa filtro linear para suavizar sem pixelizar
         questionBox.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
 
         const questionText = this.add.text(512, 130, questionObj.question, {

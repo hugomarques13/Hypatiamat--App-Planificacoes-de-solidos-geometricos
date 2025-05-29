@@ -149,7 +149,13 @@ export default class Cone extends Phaser.Scene {
     this.createSliders();
     this.onWindowResize();
 
-    window.addEventListener('resize', () => this.onWindowResize());
+      window.addEventListener("resize", () => {
+        setTimeout(() => this.onWindowResize(), 100);
+      });
+
+      window.addEventListener("orientationchange", () => {
+        setTimeout(() => this.onWindowResize(), 150);
+      });
   }
  
   createConeGeometry() {
@@ -547,75 +553,78 @@ export default class Cone extends Phaser.Scene {
   }
 
   onWindowResize() {
-    // Get the appropriate container for fullscreen
-    const container = this.scale.isFullscreen ? document.fullscreenElement : document.body;
-    
-    // Ensure canvas is in the right container
-    if (this.threeCanvas && this.threeCanvas.parentNode !== container) {
-      container.appendChild(this.threeCanvas);
-    }
+    // Save current camera orbit values before resize
+    const savedOrbit = {
+        radius: this.orbit.radius,
+        theta: this.orbit.theta,
+        phi: this.orbit.phi
+    };
 
-    // Ensure sliders are in the right container
-    if (this.slidersContainer && this.slidersContainer.parentNode !== container) {
-      container.appendChild(this.slidersContainer);
-    }
-
-    const width = container === document.body ? window.innerWidth : container.clientWidth;
-    const height = container === document.body ? window.innerHeight : container.clientHeight;
-
-    if (this.camera) {
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
-    }
-
-    if (this.renderer) {
-      this.renderer.setSize(width, height);
-      this.renderer.domElement.style.width = `${width}px`;
-      this.renderer.domElement.style.height = `${height}px`;
-    }
-
-    // Position sliders correctly
+    // Get the game canvas and its display size
     const canvas = this.sys.game.canvas;
-    const rect = canvas.getBoundingClientRect();
-    const rightOffset = window.innerWidth - rect.right + 10;
-    const topOffset = rect.top + 45;
-    
-    // Dynamic sizing based on window width
-    const baseWidth = 220;
-    const minWidth = 180;
-    const maxWidth = 300;
-    
-    let sliderWidth = Math.min(
-        Math.max(width * 0.2, minWidth), 
-        maxWidth
-    );
-    
-    // Adjust font size based on width
-    const baseFontSize = 16;
-    const fontSize = Math.max(baseFontSize * (sliderWidth / baseWidth), 14);
-    
-    // Calculate responsive padding
-    const paddingVertical = Math.max(height * 0.015, 10);
-    const paddingHorizontal = Math.max(width * 0.02, 12);
+    const canvasBounds = canvas.getBoundingClientRect();
 
-    if (this.slidersContainer) {
-        Object.assign(this.slidersContainer.style, {
-            right: `${rightOffset}px`,
-            top: `${topOffset}px`,
-            width: `${sliderWidth}px`,
-            padding: `${paddingVertical}px ${paddingHorizontal}px`,
-            fontSize: `${fontSize}px`,
-            borderRadius: `${Math.min(sliderWidth * 0.07, 16)}px`
+    // === Three.js Canvas Handling ===
+    if (this.threeCanvas) {
+        // Match Three.js canvas to Phaser canvas size and position
+        Object.assign(this.threeCanvas.style, {
+            width: `${canvasBounds.width}px`,
+            height: `${canvasBounds.height}px`,
+            left: `${canvasBounds.left}px`,
+            top: `${canvasBounds.top}px`,
+            position: 'absolute'
         });
 
-        // Update all slider thumbs
+        // Update renderer and camera
+        this.renderer.setSize(canvasBounds.width, canvasBounds.height);
+        this.camera.aspect = canvasBounds.width / canvasBounds.height;
+        this.camera.updateProjectionMatrix();
+
+        // Restore camera position after resize
+        this.orbit.radius = savedOrbit.radius;
+        this.orbit.theta = savedOrbit.theta;
+        this.orbit.phi = savedOrbit.phi;
+    }
+
+    // === Sliders Positioning - Relative to Game Canvas ===
+    if (this.slidersContainer) {
+        // Proportional values (all based on canvas width)
+        const rightOffset = canvasBounds.width * 0.05;  // 5% from right
+        const topOffset = canvasBounds.height * 0.05;   // 5% from top
+        const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
+        const padding = sliderWidth * 0.08;             // 8% of slider width
+        const fontSize = sliderWidth * 0.07;            // 7% of slider width
+        const thumbSize = sliderWidth * 0.1;            // 10% of slider width
+        const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
+
+        // Apply styles
+        this.slidersContainer.style.position = 'absolute';
+        this.slidersContainer.style.left = `${canvasBounds.left + (canvasBounds.width - sliderWidth - rightOffset)}px`;
+        this.slidersContainer.style.top = `${canvasBounds.top + topOffset}px`;
+        this.slidersContainer.style.width = `${sliderWidth}px`;
+        this.slidersContainer.style.padding = `${padding}px`;
+        this.slidersContainer.style.borderRadius = `${padding}px`;
+        
+        // Update all slider elements
         const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
+        const labels = this.slidersContainer.querySelectorAll('.slider-label');
+        
+        labels.forEach(label => {
+            label.style.fontSize = `${fontSize}px`;
+            label.style.marginBottom = `${padding * 0.75}px`;
+        });
+        
         sliders.forEach(slider => {
-            const thumbSize = Math.max(sliderWidth * 0.11, 20);
+            slider.style.height = `${sliderHeight}px`;
             slider.style.setProperty('--thumb-size', `${thumbSize}px`);
+            slider.style.marginBottom = `${padding}px`;
+            slider.style.borderRadius = `${sliderHeight}px`;
         });
     }
-  }
+
+    // Force a re-render
+    this.renderer?.render(this.scene3D, this.camera);
+}
 
   update() {
     const { radius, theta, phi } = this.orbit;

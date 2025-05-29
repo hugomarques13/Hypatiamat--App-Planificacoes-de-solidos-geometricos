@@ -8,7 +8,6 @@ import Cone from './src/scenes/Cone.js'
 import Cilindro from './src/scenes/Cilindro.js'
 import Quiz from './src/scenes/QuizScene.js'
 
-
 const config = {
     type: Phaser.AUTO,
     width: 1024,
@@ -30,13 +29,11 @@ function updateBorderRadius() {
     // Calculate scale factor
     const scaleFactor = Math.min(
         window.innerWidth / 1024,
-        window.innerHeight  / 600
+        window.innerHeight / 600
     );
     
     // Apply scaled radius
     const scaledRadius = baseRadius * scaleFactor;
-
-    console.log("scaleRadius: ", scaledRadius, "width: ", game.scale.width, "height: ", game.scale.height);
     
     game.canvas.style.borderRadius = `${scaledRadius}px`;
     game.canvas.style.overflow = 'hidden';
@@ -47,13 +44,19 @@ game.events.on('ready', () => {
     updateBorderRadius();
     document.body.style.backgroundColor = 'white';
     
-    // Also update on resize
+    // Update on resize and orientation change
     game.scale.on('resize', updateBorderRadius);
 });
 
-// Handle window resize events
-window.addEventListener('resize', () => {
+// Handle window resize and orientation change events
+function handleViewportChange() {
     if (game.isBooted) {
-      updateBorderRadius();
+        updateBorderRadius();
     }
+}
+
+window.addEventListener('resize', handleViewportChange);
+window.addEventListener('orientationchange', () => {
+    // Add a slightly longer delay for orientation changes
+    setTimeout(handleViewportChange, 150);
 });

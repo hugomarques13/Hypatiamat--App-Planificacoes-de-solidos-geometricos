@@ -74,21 +74,23 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.image(512, 384, 'background').setDepth(-1);
+        this.time.delayedCall(50, () => {
+            this.add.image(512, 384, 'background').setDepth(-1);
 
-        this.uiGroup = this.add.group();
+            this.uiGroup = this.add.group();
 
-        this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
-            .setScale(0.34)
-            .setInteractive({ useHandCursor: true });
+            this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
+                .setScale(0.34)
+                .setInteractive({ useHandCursor: true });
 
-        this.btnVoltar.on('pointerup', () => {
-            this.scene.start('MenuScene');
+            this.btnVoltar.on('pointerup', () => {
+                this.scene.start('MenuScene');
+            });
+
+            this.addHoverEffect(this.btnVoltar);
+
+            this.showQuestion(); // agora é seguro usar a fonte
         });
-
-        this.addHoverEffect(this.btnVoltar);
-
-        this.showQuestion(); // agora é seguro usar a fonte
     }
 
     showQuestion() {

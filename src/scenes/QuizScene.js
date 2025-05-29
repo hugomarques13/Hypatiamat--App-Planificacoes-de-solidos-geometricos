@@ -71,35 +71,24 @@ export default class QuizScene extends Phaser.Scene {
         this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
         this.load.image('bt_voltar', 'assets/bt_voltar.png');
         this.load.image('bt_home', 'assets/bt_home.png');
-
-        this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
     }
 
     create() {
-        WebFont.load({
-            custom: {
-                families: ['Snap ITC'],
-                urls: ['path/para/o/teu/fichero.css'] // se usares @font-face, senão omite
-            },
-            active: () => {
-                // Quando a fonte estiver pronta, continua normalmente
-                this.add.image(512, 384, 'background').setDepth(-1);
+        this.add.image(512, 384, 'background').setDepth(-1);
 
-                 this.uiGroup = this.add.group();
+        this.uiGroup = this.add.group();
 
-                 this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
-                    .setScale(0.34)
-                    .setInteractive({ useHandCursor: true });
+        this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
+            .setScale(0.34)
+            .setInteractive({ useHandCursor: true });
 
-                    this.btnVoltar.on('pointerup', () => {
-                    this.scene.start('MenuScene');
-                });
-
-                 this.addHoverEffect(this.btnVoltar);
-
-                 this.showQuestion(); // <- agora é seguro usar a fonte
-            }
+        this.btnVoltar.on('pointerup', () => {
+            this.scene.start('MenuScene');
         });
+
+        this.addHoverEffect(this.btnVoltar);
+
+        this.showQuestion(); // agora é seguro usar a fonte
     }
 
     showQuestion() {

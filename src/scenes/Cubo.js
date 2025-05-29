@@ -17,11 +17,11 @@ export default class Cubo extends Phaser.Scene {
   }
 
   
-  create() {
+  initScene() {
     this.loadFont('Snap ITC').then(() => {
-      this.initScene();
+      this.create();
     }).catch(() => {
-      this.initScene();
+      this.create();
     });
   }
 
@@ -33,7 +33,7 @@ export default class Cubo extends Phaser.Scene {
       });
   }
 
-  initScene() {
+  create() {
     this.add.image(512, 300, 'background').setScale(0.8);
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);

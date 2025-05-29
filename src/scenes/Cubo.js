@@ -1,4 +1,11 @@
-export default class Cubo extends Phaser.Scene {
+class BaseScene extends Phaser.Scene {
+    create() {
+        // Add background to every scene
+        this.bg = this.add.image(512, 300, 'assets/background.png').setScale(0.8).setDepth(-1);
+    }
+}
+
+export default class Cubo extends BaseScene {
   constructor() {
     super({ key: "Cubo" })
     this.unfoldProgress = 0

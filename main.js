@@ -22,6 +22,14 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+game.events.on('ready', () => {
+  window.dispatchEvent(new Event('phaser-ready'));
+  updateBorderRadius();
+  document.body.style.backgroundColor = 'white';
+  
+  game.scale.on('resize', updateBorderRadius);
+});
+
 function updateBorderRadius() {
     // Base border radius for original size (1024x600)
     const baseRadius = 50;

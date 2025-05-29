@@ -12,12 +12,58 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
   <style>
-    
     body {
       margin: 0;
       padding: 0;
-      justify-content: center;
+      overflow: hidden;
+      position: relative;
       background-color: white;
+    }
+    
+    /* Preload background that shows immediately */
+    #preload-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('assets/background.png') center/cover no-repeat;
+      background-size: 1024px 600px;
+      background-position: center;
+      z-index: 1000;
+      transition: opacity 0.5s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Loading spinner */
+    .loader {
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 5px solid #e07812;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      position: absolute;
+      bottom: 20%;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Hide when game loads */
+    #preload-bg.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Game canvas styling */
+    canvas {
+      position: relative;
+      z-index: 1;
       border-radius: 50px;
       overflow: hidden;
     }
@@ -94,10 +140,28 @@
       transform: scale(1.15);
       box-shadow: 0 0 14px rgba(251, 164, 52, 1);
     }
-
   </style>
 </head>
 <body>
+  <!-- Preload background that shows immediately -->
+  <div id="preload-bg">
+    <div class="loader"></div>
+  </div>
+  
+  <!-- Your game will load here -->
   <script type="module" src="./main.js"></script>
+  
+  <script>
+    // Hide preload background when game is ready
+    window.addEventListener('phaser-ready', () => {
+      const preloadBg = document.getElementById('preload-bg');
+      preloadBg.classList.add('fade-out');
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        preloadBg.remove();
+      }, 500);
+    });
+  </script>
 </body>
 </html>

@@ -51,26 +51,26 @@ export default class Cubo extends Phaser.Scene {
     });
 
     const toggleFullscreen = () => {
-        if (this.scale.isFullscreen) {
-            this.scale.stopFullscreen();
-            btnFullScreen.setVisible(true);
-            btnBack.setVisible(false);
+        // Verifica se já está em fullscreen
+        if (document.fullscreenElement) {
+            // Sai do fullscreen (igual ao F11)
+            document.exitFullscreen().then(() => {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            });
         } else {
-            // Reattach Three.js canvas and sliders before going fullscreen
-            document.body.appendChild(this.threeCanvas);
-            if (this.slidersContainer) document.body.appendChild(this.slidersContainer);
-            
-            this.scale.startFullscreen();
-            btnFullScreen.setVisible(false);
-            btnBack.setVisible(true);
+            // Entra em fullscreen no body (igual ao F11)
+            document.body.requestFullscreen().then(() => {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+                
+                // Ajusta o resize após um pequeno delay
+                setTimeout(() => {
+                    this.onWindowResize();
+                    this.renderer.render(this.scene3D, this.camera);
+                }, 100);
+            });
         }
-
-        setTimeout(() => {
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.render(this.scene3D, this.camera);
-        }, 100);
-        // Force resize after fullscreen change
-        this.onWindowResize();
     };
 
     btnFullScreen.on('pointerup', toggleFullscreen);

@@ -13,6 +13,10 @@ const config = {
     width: 1024,
     height: 600,
     roundPixels: true,
+    parent: 'game-container',
+    dom: {
+        createContainer: true
+    },
     scene: [MenuScene, SelectingSolids, Cubo, Paralelepipedo, Prisma, Piramide, Cone, Cilindro, Quiz],
     scale: {
         mode: Phaser.Scale.FIT,

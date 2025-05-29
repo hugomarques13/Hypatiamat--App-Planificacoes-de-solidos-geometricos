@@ -111,14 +111,13 @@ export default class SelectingSolids extends Phaser.Scene {
     
     }
 
-    // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+            button.setScale(button.scaleX * 1.1);
     });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+            button.setScale(button.scaleX / 1.1);
     });
     }
 }

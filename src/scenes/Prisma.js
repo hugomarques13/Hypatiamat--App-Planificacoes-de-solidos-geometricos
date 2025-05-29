@@ -89,7 +89,6 @@ export default class Prisma extends Phaser.Scene {
       this.onWindowResize();
     });
 
-    // --- THREE Setup ---
     this.threeCanvas = document.createElement("canvas")
     this.threeCanvas.style.position = "absolute"
     this.threeCanvas.style.top = "0"
@@ -121,9 +120,8 @@ export default class Prisma extends Phaser.Scene {
     this.isSliding = false;
     this.currentPlan = "1";
 
-    // Materials with transparency enabled
     this.materials = [];
-    for (let i = 0; i < 12; i++) { // Enough materials for up to 10 sides + top/bottom
+    for (let i = 0; i < 12; i++) {
       const hue = (i * 360 / 12) % 360;
       const color = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
       this.materials.push(
@@ -166,18 +164,17 @@ initUnfoldPlans() {
 
     const topZPosition = -baseRadius * Math.cos(Math.PI/this.sides);
 
-    // Calculate the top face's final rotation
     const topFinalRotation = -(((n - 2) * Math.PI) / n) * 1.5;
  
     const pivotConfigs = {
-        3: { x: 0.5, y: 0 },  // Triangular prism
-        4: { x: 0, y: 1.0 },     // Cube
-        5: { x: 0, y: 0.85 },  // Pentagonal
-        6: { x: 0, y: 0.84 },  // Hexagonal
-        7: { x: 0, y: 0.925 },   // Heptagonal
-        8: { x: 0, y: 1 },   // Octagonal
-        9: { x: 0, y: 1.085 },   // Nonagonal
-        10: { x: 0, y: 1.175 }   // Decagonal
+        3: { x: 0.5, y: 0 },
+        4: { x: 0, y: 1.0 },
+        5: { x: 0, y: 0.85 },
+        6: { x: 0, y: 0.84 },
+        7: { x: 0, y: 0.925 },
+        8: { x: 0, y: 1 },
+        9: { x: 0, y: 1.085 },
+        10: { x: 0, y: 1.175 }
     };
 
     const config = pivotConfigs[n];
@@ -223,16 +220,14 @@ initUnfoldPlans() {
         
         this.unfoldPlans[1].parents[`side${i}`] = null;
 
-        // Calculate the correct unfolded rotation for each side
         const unfoldedRotation = new THREE.Euler(
-            Math.PI/2 + (i % 2 === 0 ? 0 : -Math.PI) , // Rotate to stand upright
-            0, // No rotation around Y axis
-            (i % 2 === 0 ? angle - baseInternalAngle/2 : -(angle - baseInternalAngle/2) + Math.PI) // Alternate rotation for odd/even sides
+            Math.PI/2 + (i % 2 === 0 ? 0 : -Math.PI) ,
+            0,
+            (i % 2 === 0 ? angle - baseInternalAngle/2 : -(angle - baseInternalAngle/2) + Math.PI)
         );
         
         this.unfoldPlans[1].rotations[`side${i}`] = unfoldedRotation;
         
-        // INITIAL folded rotation (unchanged)
         this.unfoldPlans[1].transforms[`side${i}`] = {
             pivot: [0, this.prismHeight/2, 0],
             position: [midX, this.prismHeight/2, midZ],
@@ -254,16 +249,13 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     const baseRadius = 1;
 
     if (name === 'top' || name === 'bottom') {
-        // Create n-sided polygon for top and bottom
         const shape = new THREE.Shape();
         const angleStep = (2 * Math.PI) / this.sides;
         
-        // Start at first point
         const firstX = baseRadius * Math.cos(0);
         const firstZ = baseRadius * Math.sin(0);
         shape.moveTo(firstX, firstZ);
-        
-        // Add remaining points
+
         for (let i = 1; i <= this.sides; i++) {
             const angle = angleStep * i;
             const x = baseRadius * Math.cos(angle);
@@ -273,8 +265,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
         
         geometry = new THREE.ShapeGeometry(shape);
     } else {
-        // Rectangular faces for sides
-        // Calculate side length based on n-sided polygon
         const sideLength = 2 * baseRadius * Math.sin(Math.PI / this.sides);
         geometry = new THREE.PlaneGeometry(sideLength, this.prismHeight);
     }
@@ -282,7 +272,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(pivot);
 
-    // Create edge geometry and line segments
     const edgeGeometry = new THREE.EdgesGeometry(geometry);
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
     const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
@@ -307,7 +296,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
 }
 
   buildFaceGroupsForPlan(planName) {
-    // Clear existing faces
     for (const key in this.faceGroups) {
         const group = this.faceGroups[key];
         group.parent?.remove(group);
@@ -320,7 +308,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     const plan = this.unfoldPlans[planName];
     const { transforms } = plan;
 
-    // Create bottom face
     const bottomGroup = this.createFaceGroup(
         'bottom',
         this.materials[0],
@@ -330,7 +317,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     );
     this.prismGroup.add(bottomGroup);
 
-    // Create top face
     const topGroup = this.createFaceGroup(
         'top',
         this.materials[1],
@@ -340,13 +326,12 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     );
     this.prismGroup.add(topGroup);
 
-    // Create side faces
     for (let i = 0; i < this.sides; i++) {
         const sideName = `side${i}`;
         const sideTransform = transforms[sideName];
         const sideGroup = this.createFaceGroup(
             sideName,
-            this.materials[2 + i], // First two materials are for top and bottom
+            this.materials[2 + i],
             sideTransform.pivot,
             sideTransform.position,
             sideTransform.rotation
@@ -387,7 +372,6 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
       group.quaternion.copy(currentQuat)
     }
 
-    //this.debugFacePositions();
   }
 
   debugFacePositions() {
@@ -411,12 +395,10 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
 }
 
 createSliders() {
-    // Create main container for all sliders
     this.slidersContainer = document.createElement("div");
     this.slidersContainer.classList.add("slider-container");
     document.body.appendChild(this.slidersContainer);
 
-    // Function to update slider gradient (reusable)
     const updateSliderBackground = (slider, value, min = 0, max = 1) => {
       const percentage = ((value - min) / (max - min)) * 100;
       slider.style.background = `linear-gradient(to right,
@@ -526,7 +508,6 @@ createSliders() {
     this.lastMouseY = 0;
     this.lastPinchDistance = 0;
 
-    // --- Mouse Controls ---
     this.onMouseDown = (event) => {
       if (this.isSliding) return;
 
@@ -624,12 +605,10 @@ createSliders() {
 
 
 checkFaceVisibility() {
-    // Get all face names dynamically from faceGroups
     const faces = Object.keys(this.faceGroups);
     
     const faceData = {};
     
-    // First collect all face data
     faces.forEach(face => {
         const position = new THREE.Vector3();
         this.faceGroups[face].getWorldPosition(position);
@@ -637,14 +616,12 @@ checkFaceVisibility() {
         const normal = new THREE.Vector3(0, 0, 1);
         normal.applyQuaternion(this.faceGroups[face].quaternion);
         
-        // Calculate camera direction to face
         const cameraToFace = new THREE.Vector3().subVectors(position, this.camera.position).normalize();
         
-        // Find material index - top is 1, bottom is 0, sides start from 2
         let materialIndex;
         if (face === 'top') materialIndex = 1;
         else if (face === 'bottom') materialIndex = 0;
-        else materialIndex = 2 + parseInt(face.replace('side', '')); // side0 = 2, side1 = 3, etc.
+        else materialIndex = 2 + parseInt(face.replace('side', ''));
         
         faceData[face] = {
             position: position,
@@ -654,7 +631,6 @@ checkFaceVisibility() {
         };
     });
 
-    // Reset all opacities to 1 (opaque)
     faces.forEach(face => {
         if (faceData[face]) {
             this.materials[faceData[face].materialIndex].opacity = 1;
@@ -662,34 +638,29 @@ checkFaceVisibility() {
     });
 
     if (this.unfoldProgress == 0) {
-        // When fully folded, make all faces semi-transparent
         faces.forEach(face => {
             if (faceData[face]) {
                 this.materials[faceData[face].materialIndex].opacity = 0.6;
             }
         });
     } else if (this.unfoldProgress < 0.95) {
-        // Check each face against all others
         for (const face1 in faceData) {
             const data1 = faceData[face1];
             
-            // First check if face is facing away from camera
             const faceToCameraDot = data1.normal.dot(data1.cameraToFace);
             if (faceToCameraDot < 0) {
                 this.materials[data1.materialIndex].opacity = 0.6;
                 continue;
             }
 
-            // Then check if other faces are in front of this one
             for (const face2 in faceData) {
                 if (face1 === face2) continue;
                 
                 const data2 = faceData[face2];
                 const face1ToFace2 = new THREE.Vector3().subVectors(data2.position, data1.position).normalize();
                 
-                // If face2 is in front of face1 (relative to face1's normal)
                 if (face1ToFace2.dot(data1.normal) > 0.3) {
-                    // And if face2 is between camera and face1
+
                     const face2ToFace1 = new THREE.Vector3().subVectors(data1.position, data2.position).normalize();
                     const face2ToCamera = new THREE.Vector3().subVectors(this.camera.position, data2.position).normalize();
                     
@@ -701,7 +672,6 @@ checkFaceVisibility() {
             }
         }
     } else {
-        // When fully unfolded, make all faces opaque
         faces.forEach(face => {
             if (faceData[face]) {
                 this.materials[faceData[face].materialIndex].opacity = 1;
@@ -718,20 +688,16 @@ checkFaceVisibility() {
 
 
 onWindowResize() {
-    // Save current camera orbit values before resize
     const savedOrbit = {
         radius: this.orbit.radius,
         theta: this.orbit.theta,
         phi: this.orbit.phi
     };
 
-    // Get the game canvas and its display size
     const canvas = this.sys.game.canvas;
     const canvasBounds = canvas.getBoundingClientRect();
 
-    // === Three.js Canvas Handling ===
     if (this.threeCanvas) {
-        // Match Three.js canvas to Phaser canvas size and position
         Object.assign(this.threeCanvas.style, {
             width: `${canvasBounds.width}px`,
             height: `${canvasBounds.height}px`,
@@ -740,20 +706,17 @@ onWindowResize() {
             position: 'absolute'
         });
 
-        // Update renderer and camera
         this.renderer.setSize(canvasBounds.width, canvasBounds.height);
         this.camera.aspect = canvasBounds.width / canvasBounds.height;
         this.camera.updateProjectionMatrix();
 
-        // Restore camera position after resize
         this.orbit.radius = savedOrbit.radius;
         this.orbit.theta = savedOrbit.theta;
         this.orbit.phi = savedOrbit.phi;
     }
 
-    // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {
-        // Proportional values (all based on canvas width)
+
         const rightOffset = canvasBounds.width * 0.05;  // 5% from right
         const topOffset = canvasBounds.height * 0.05;   // 5% from top
         const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
@@ -762,7 +725,6 @@ onWindowResize() {
         const thumbSize = sliderWidth * 0.1;            // 10% of slider width
         const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
 
-        // Apply styles
         this.slidersContainer.style.position = 'absolute';
         this.slidersContainer.style.left = `${canvasBounds.left + (canvasBounds.width - sliderWidth - rightOffset)}px`;
         this.slidersContainer.style.top = `${canvasBounds.top + topOffset}px`;
@@ -770,7 +732,6 @@ onWindowResize() {
         this.slidersContainer.style.padding = `${padding}px`;
         this.slidersContainer.style.borderRadius = `${padding}px`;
         
-        // Update all slider elements
         const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
         const labels = this.slidersContainer.querySelectorAll('.slider-label');
         
@@ -787,12 +748,10 @@ onWindowResize() {
         });
     }
 
-    // Update title text position
     if (this.titleText) {
         this.titleText.setPosition(this.scale.width / 2, 10);
     }
 
-    // Force a re-render
     this.renderer?.render(this.scene3D, this.camera);
 }
 
@@ -805,14 +764,12 @@ onWindowResize() {
     this.camera.position.set(x, y, z);
     this.camera.lookAt(0, 0, 0);
     
-    // Update face visibility before rendering
     this.checkFaceVisibility();
     
     this.renderer.render(this.scene3D, this.camera);
   }
 
    cleanupDOM() {
-    // Remove Three.js canvas
     if (this.threeCanvas?.parentNode) {
       this.threeCanvas.remove();
       this.threeCanvas = null;
@@ -823,7 +780,6 @@ onWindowResize() {
       this.slidersContainer = null;
     }
 
-    // Mouse listeners
     window.removeEventListener("mousedown", this.onMouseDown);
     window.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("mousemove", this.onMouseMove);
@@ -834,14 +790,13 @@ onWindowResize() {
     window.removeEventListener("touchend", this.onTouchEnd)
   }
 
-  // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+            button.setScale(button.scaleX * 1.1);
     });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+            button.setScale(button.scaleX / 1.1);
     });
   }
 

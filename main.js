@@ -14,7 +14,7 @@ const config = {
     width: 1024,
     height: 600,
     roundPixels: true,
-    scene: [MenuScene, SelectingSolids,Cubo,Paralelepipedo,Prisma,Piramide,Cone, Cilindro, Quiz],
+    scene: [MenuScene, SelectingSolids, Cubo, Paralelepipedo, Prisma, Piramide, Cone, Cilindro, Quiz],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -23,8 +23,37 @@ const config = {
 
 const game = new Phaser.Game(config);
 
+function updateBorderRadius() {
+    // Base border radius for original size (1024x600)
+    const baseRadius = 50;
+    
+    // Calculate scale factor
+    const scaleFactor = Math.min(
+        window.innerWidth / 1024,
+        window.innerHeight  / 600
+    );
+    
+    // Apply scaled radius
+    const scaledRadius = baseRadius * scaleFactor;
+
+    console.log("scaleRadius: ", scaledRadius, "width: ", game.scale.width, "height: ", game.scale.height);
+    
+    game.canvas.style.borderRadius = `${scaledRadius}px`;
+    game.canvas.style.overflow = 'hidden';
+}
+
+// Call initially when game is ready
 game.events.on('ready', () => {
-  game.canvas.style.borderRadius = '50px';
-  game.canvas.style.overflow = 'hidden';
-  document.body.style.backgroundColor = 'white';
+    updateBorderRadius();
+    document.body.style.backgroundColor = 'white';
+    
+    // Also update on resize
+    game.scale.on('resize', updateBorderRadius);
+});
+
+// Handle window resize events
+window.addEventListener('resize', () => {
+    if (game.isBooted) {
+      updateBorderRadius();
+    }
 });

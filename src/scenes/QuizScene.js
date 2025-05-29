@@ -71,6 +71,8 @@ export default class QuizScene extends Phaser.Scene {
         this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
         this.load.image('bt_voltar', 'assets/bt_voltar.png');
         this.load.image('bt_home', 'assets/bt_home.png');
+        this.load.image('bt_screenback', 'assets/bt_screenback.png');
+        this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
     }
 
     create() {
@@ -91,6 +93,35 @@ export default class QuizScene extends Phaser.Scene {
 
     initScene() {
             this.add.image(512, 384, 'background').setDepth(-1);
+            
+            let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
+            let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
+
+            const toggleFullscreen = () => {
+                if (this.scale.isFullscreen) {
+                    this.scale.stopFullscreen();
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                } else {
+                    this.scale.startFullscreen();
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                }
+            };
+
+            btnFullScreen.on('pointerup', toggleFullscreen);
+            btnBack.on('pointerup', toggleFullscreen);
+
+            this.scale.on('fullscreenchange', () => {
+                if (this.scale.isFullscreen) {
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                } else {
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                }
+            });
+
 
             this.uiGroup = this.add.group();
 

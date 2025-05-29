@@ -16,23 +16,6 @@ export default class Cubo extends Phaser.Scene {
     this.load.image('bt_voltar', 'assets/bt_voltar.png');
   }
 
-  
-  initScene() {
-    this.loadFont('Snap ITC').then(() => {
-      this.create();
-    }).catch(() => {
-      this.create();
-    });
-  }
-
-  loadFont(fontName) {
-    return new Promise((resolve) => {
-      if (!document.fonts) return resolve();
-            
-      document.fonts.load(`20px "${fontName}"`).then(resolve).catch(resolve);
-      });
-  }
-
   create() {
     this.add.image(512, 300, 'background').setScale(0.8);
     let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);

@@ -17,144 +17,147 @@ export default class Cubo extends Phaser.Scene {
   }
 
   create() {
+    // Configuração inicial
     this.add.image(512, 300, 'background').setScale(0.8);
-    let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
-    let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
-    let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
-    let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
-    let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
+    
+    // Carrega a fonte (opcional, pode remover se não for crítica)
+    const fontPromise = document.fonts ? document.fonts.load('20px "Snap ITC"') : Promise.resolve();
+    
+    fontPromise.finally(() => {
+        // Criação dos botões
+        let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
+        let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
+        let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
+        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
+        let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
 
-    const titleText = this.add.text(this.scale.width / 2, 20, 'Cubo', {
-      fontFamily: 'Snap ITC',
-      fontSize: '40px',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    }).setOrigin(0.5, 0);
+        // Texto com a fonte
+        const titleText = this.add.text(this.scale.width / 2, 20, 'Cubo', {
+            fontFamily: 'Snap ITC',
+            fontSize: '40px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5, 0);
+        
+        titleText.setShadow(2, 2, '#FFA500', 3);
+        titleText.setDepth(1000);
 
-    titleText.setShadow(2, 2, '#FFA500', 3);
-    titleText.setDepth(1000);
+        // Efeitos hover
+        [btnHome, btnVoltar, btnFullScreen, btnBack, btnInfo].forEach(btn => {
+            this.addHoverEffect(btn);
+        });
 
-    this.addHoverEffect(btnHome);
-    this.addHoverEffect(btnVoltar);
-    this.addHoverEffect(btnFullScreen);
-    this.addHoverEffect(btnBack);
-    this.addHoverEffect(btnInfo);
+        // Eventos dos botões
+        btnHome.on('pointerup', () => {
+            this.cleanupDOM();
+            this.scene.start('MenuScene');
+        });
 
-    btnHome.on('pointerup', () => {
-      this.cleanupDOM();
-      this.scene.start('MenuScene');
-    });
+        btnVoltar.on('pointerup', () => {
+            this.cleanupDOM();
+            this.scene.start('SelectingSolids');
+        });
 
-    btnVoltar.on('pointerup', () => {
-      this.cleanupDOM();
-      this.scene.start('SelectingSolids');
-    });
+        // Configuração do fullscreen
+        this.isFullscreen = !!document.fullscreenElement;
+        btnFullScreen.setVisible(!this.isFullscreen);
+        btnBack.setVisible(this.isFullscreen);
 
-  
-    this.isFullscreen = !!document.fullscreenElement;
-    btnFullScreen.setVisible(!this.isFullscreen);
-    btnBack.setVisible(this.isFullscreen);
+        const toggleFullscreen = () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().then(() => {
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                });
+            } else {
+                document.body.requestFullscreen().then(() => {
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                    setTimeout(() => {
+                        this.onWindowResize();
+                        this.renderer.render(this.scene3D, this.camera);
+                    }, 100);
+                });
+            }
+        };
 
+        btnFullScreen.on('pointerup', toggleFullscreen);
+        btnBack.on('pointerup', toggleFullscreen);
 
-    const toggleFullscreen = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen().then(() => {
-                btnFullScreen.setVisible(true);
-                btnBack.setVisible(false);
-            });
-        } else {
-            document.body.requestFullscreen().then(() => {
+        // Event listeners
+        this.events.on('pause', () => {
+            this.isFullscreen = !!document.fullscreenElement;
+        });
+
+        this.scale.on('fullscreenchange', () => {
+            if (this.scale.isFullscreen) {
                 btnFullScreen.setVisible(false);
                 btnBack.setVisible(true);
-                
-                setTimeout(() => {
-                    this.onWindowResize();
-                    this.renderer.render(this.scene3D, this.camera);
-                }, 100);
-            });
-        }
-    };
+            } else {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            }
+            this.onWindowResize();
+        });
 
-    btnFullScreen.on('pointerup', toggleFullscreen);
-    btnBack.on('pointerup', toggleFullscreen);
+        // --- Configuração THREE.js ---
+        this.threeCanvas = document.createElement("canvas");
+        this.threeCanvas.style.position = "absolute";
+        this.threeCanvas.style.top = "0";
+        this.threeCanvas.style.left = "0";
+        this.threeCanvas.style.zIndex = "0";
+        this.threeCanvas.style.pointerEvents = "none";
+        document.body.appendChild(this.threeCanvas);
 
-    this.events.on('pause', () => {
-      this.isFullscreen = !!document.fullscreenElement;
+        this.renderer = new THREE.WebGLRenderer({
+            canvas: this.threeCanvas,
+            alpha: true,
+            antialias: true,
+        });
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setClearColor(0xffffff, 0);
+
+        this.scene3D = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // Restante da configuração 3D...
+        this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 };
+        this.cubeGroup = new THREE.Group();
+        this.scene3D.add(this.cubeGroup);
+        this.unfoldProgress = 0;
+        this.isSliding = false;
+        this.currentPlan = "1";
+
+        // Materiais
+        this.materials = [
+            new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
+            new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
+            new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
+            new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
+            new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }),
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 1 })
+        ];
+
+        this.faceGroups = {};
+        this.originalRotations = {};
+        this.initUnfoldPlans();
+        this.buildFaceGroupsForPlan(this.currentPlan);
+        this.createSliders();
+        this.initMouseControls();
+
+        // Eventos de redimensionamento
+        this.lastResizeHeight = window.innerHeight;
+        window.addEventListener("resize", () => {
+            setTimeout(() => this.onWindowResize(), 100);
+        });
+
+        window.addEventListener("orientationchange", () => {
+            setTimeout(() => this.onWindowResize(), 150);
+        });
+
+        this.onWindowResize(); // Layout inicial
     });
-
-    this.scale.on('fullscreenchange', () => {
-      if (this.scale.isFullscreen) {
-        btnFullScreen.setVisible(false);
-        btnBack.setVisible(true);
-      } else {
-        btnFullScreen.setVisible(true);
-        btnBack.setVisible(false);
-      }
-      // Resize after fullscreen change
-      this.onWindowResize();
-    });
-
-    // --- THREE Setup ---
-    this.threeCanvas = document.createElement("canvas")
-    this.threeCanvas.style.position = "absolute"
-    this.threeCanvas.style.top = "0"
-    this.threeCanvas.style.left = "0"
-    this.threeCanvas.style.zIndex = "0"
-    this.threeCanvas.style.pointerEvents = "none";
-    document.body.appendChild(this.threeCanvas)
-
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.threeCanvas,
-      alpha: true,
-      antialias: true,
-    });
-
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
-    this.renderer.setClearColor(0xffffff, 0)
-
-    this.scene3D = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-
-    this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 }
-
-    this.cubeGroup = new THREE.Group()
-    this.scene3D.add(this.cubeGroup)
-
-    this.unfoldProgress = 0;
-    this.isSliding = false;
-    this.currentPlan = "1";
-
-    // Materials with transparency enabled
-    this.materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Red
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Green
-      new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Blue
-      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Yellow
-      new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Pink
-      new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, transparent: true, opacity: 1 })  // Cyan
-    ]
-
-    this.faceGroups = {}
-    this.originalRotations = {}
-
-    this.initUnfoldPlans()
-    this.buildFaceGroupsForPlan(this.currentPlan)
-
-    this.createSliders()
-    this.initMouseControls()
-
-    
-    this.lastResizeHeight = window.innerHeight;
-
-    window.addEventListener("resize", () => {
-      setTimeout(() => this.onWindowResize(), 100);
-    });
-
-    window.addEventListener("orientationchange", () => {
-      setTimeout(() => this.onWindowResize(), 150);
-    });
-
-    this.onWindowResize(); // Initial layout
   }
 
   initUnfoldPlans() {

@@ -589,13 +589,13 @@ export default class Paralelepipedo extends Phaser.Scene {
     // === Sliders Positioning - Relative to Game Canvas ===
     if (this.unfoldSliderContainer) {
         // Proportional values (all based on canvas width)
-        const rightOffset = canvasBounds.width * 0.05;  // 5% from right
-        const topOffset = canvasBounds.height * 0.05;   // 5% from top
-        const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
-        const padding = sliderWidth * 0.08;             // 8% of slider width
-        const fontSize = sliderWidth * 0.07;            // 7% of slider width
-        const thumbSize = sliderWidth * 0.1;            // 10% of slider width
-        const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
+        const rightOffset = canvasBounds.width * 0.05;
+        const topOffset = canvasBounds.height * 0.05;
+        const sliderWidth = canvasBounds.width * 0.2;
+        const padding = sliderWidth * 0.08;
+        const fontSize = sliderWidth * 0.07;
+        const thumbSize = sliderWidth * 0.1;
+        const sliderHeight = sliderWidth * 0.04;
 
         // Apply styles
         this.unfoldSliderContainer.style.position = 'absolute';
@@ -668,11 +668,11 @@ export default class Paralelepipedo extends Phaser.Scene {
   // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+            button.setScale(button.scaleX * 1.1);
     });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+            button.setScale(button.scaleX / 1.1);
     });
   }
 }

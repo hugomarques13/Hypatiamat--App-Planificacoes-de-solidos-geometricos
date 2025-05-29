@@ -121,14 +121,13 @@ export default class Cilindro extends Phaser.Scene {
 
     this.initMouseControls();
 
-    // Create materials with edge lines
     this.materials = {
       lateral: new THREE.MeshBasicMaterial({ 
         color: 0xff0000, 
         side: THREE.DoubleSide, 
         transparent: true, 
         opacity: 0.6,
-        depthWrite: false,  // Important for overlapping transparency
+        depthWrite: false,
         blending: THREE.NormalBlending
       }),
       top: new THREE.MeshBasicMaterial({ 
@@ -202,7 +201,7 @@ export default class Cilindro extends Phaser.Scene {
   this.lateralGroup.position.x = 0;
   this.lateralPivot.add(this.lateralGroup);
   this.lateralPivot.position.set(0, 0, 0);
-  this.lateralPivot.rotation.y = -Math.PI/2; // Start folded (rolled up)
+  this.lateralPivot.rotation.y = -Math.PI/2;
   this.cylinderGroup.add(this.lateralPivot);
 
   // Store original and target positions for animation
@@ -246,7 +245,6 @@ export default class Cilindro extends Phaser.Scene {
   const topGeometry = new THREE.CircleGeometry(radius, 64);
   this.topMesh = new THREE.Mesh(topGeometry, this.materials.top);
   
-  // Create edge lines for top face (always visible)
   const topEdges = new THREE.EdgesGeometry(topGeometry);
   const topLineMaterial = new THREE.LineBasicMaterial({ 
     color: 0x000000, 
@@ -341,7 +339,6 @@ updateUnfoldAnimation() {
       );
     }
 
-    // Create filtered geometry
     const filteredGeometry = new THREE.BufferGeometry();
     filteredGeometry.setAttribute(
       'position',
@@ -352,7 +349,6 @@ updateUnfoldAnimation() {
     this.lateralLines.geometry = filteredGeometry;
   }
 
-  // Always show lines (visibility controlled elsewhere)
   this.lateralLines.material.visible = true;
   this.topLines.material.visible = true;
   this.bottomLines.material.visible = true;
@@ -365,7 +361,6 @@ updateUnfoldAnimation() {
 }
   
   updateFaceVisibility() {
-    // When fully folded or mostly folded, make faces semi-transparent
     const opacity = this.unfoldProgress < 0.95 ? 0.6 : 1.0;
     
     this.materials.lateral.opacity = opacity;
@@ -374,14 +369,12 @@ updateUnfoldAnimation() {
   }
 
   createSliders() {
-    // Criar container principal para todos os sliders
     this.slidersContainer = document.createElement("div");
     this.slidersContainer.classList.add("slider-container");
     this.slidersContainer.style.top = "40px";
     this.slidersContainer.style.right = "40px";
     document.body.appendChild(this.slidersContainer);
 
-    // Função para criar gradiente do slider (reutilizável)
     const updateSliderBackground = (slider, value, min = 0, max = 1) => {
       const percentage = ((value - min) / (max - min)) * 100;
       slider.style.background = `linear-gradient(to right,
@@ -608,14 +601,14 @@ updateUnfoldAnimation() {
 
     // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {
-        // Proportional values (all based on canvas width)
-        const rightOffset = canvasBounds.width * 0.05;  // 5% from right
-        const topOffset = canvasBounds.height * 0.05;   // 5% from top
-        const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
-        const padding = sliderWidth * 0.08;             // 8% of slider width
-        const fontSize = sliderWidth * 0.07;            // 7% of slider width
-        const thumbSize = sliderWidth * 0.1;            // 10% of slider width
-        const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
+        // Proportional values
+        const rightOffset = canvasBounds.width * 0.05;
+        const topOffset = canvasBounds.height * 0.05;
+        const sliderWidth = canvasBounds.width * 0.2;
+        const padding = sliderWidth * 0.08;
+        const fontSize = sliderWidth * 0.07;
+        const thumbSize = sliderWidth * 0.1;
+        const sliderHeight = sliderWidth * 0.04;
 
         // Apply styles
         this.slidersContainer.style.position = 'absolute';
@@ -658,8 +651,8 @@ updateUnfoldAnimation() {
 
   resetToDefaults() {
     this.unfoldProgress = 0;
-    this.cylinderHeight = 2; // valor inicial
-    this.radius = 1; // valor inicial
+    this.cylinderHeight = 2;
+    this.radius = 1;
     this.isSliding = false;
   }
 

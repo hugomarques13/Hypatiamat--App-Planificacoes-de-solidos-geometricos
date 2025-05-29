@@ -198,7 +198,7 @@ export default class Cone extends Phaser.Scene {
     positions[1] = height;
     positions[2] = 0;
     
-    // Unfolded position (center of sector)
+    // Unfolded position
     positions[vertexCount * 3 + 0] = 0;
     positions[vertexCount * 3 + 1] = slantHeight;
     positions[vertexCount * 3 + 2] = 0;
@@ -214,7 +214,7 @@ export default class Cone extends Phaser.Scene {
         const angle = (i / slices) * Math.PI * 2;
         const idx = i + 1;
 
-        // Folded positions (base circle)
+        // Folded positions
         const x = radius * Math.cos(angle);
         const z = radius * Math.sin(angle);
         
@@ -223,7 +223,7 @@ export default class Cone extends Phaser.Scene {
         positions[idx * 3 + 2] = z;
         baseVertices.push(x, 0, z);
 
-        // Unfolded positions (sector)
+        // Unfolded positions
         const unfoldedAngle = (i / slices) * sectorAngle - sectorAngle/2;
         const unfoldedX = -slantHeight * Math.sin(unfoldedAngle);
         const unfoldedY = Math.abs(slantHeight * Math.cos(unfoldedAngle) - slantHeight);
@@ -601,13 +601,13 @@ export default class Cone extends Phaser.Scene {
     // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {
         // Proportional values (all based on canvas width)
-        const rightOffset = canvasBounds.width * 0.05;  // 5% from right
-        const topOffset = canvasBounds.height * 0.05;   // 5% from top
-        const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
-        const padding = sliderWidth * 0.08;             // 8% of slider width
-        const fontSize = sliderWidth * 0.07;            // 7% of slider width
-        const thumbSize = sliderWidth * 0.1;            // 10% of slider width
-        const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
+        const rightOffset = canvasBounds.width * 0.05;
+        const topOffset = canvasBounds.height * 0.05;
+        const sliderWidth = canvasBounds.width * 0.2;
+        const padding = sliderWidth * 0.08;
+        const fontSize = sliderWidth * 0.07;
+        const thumbSize = sliderWidth * 0.1;
+        const sliderHeight = sliderWidth * 0.04;
 
         // Apply styles
         this.slidersContainer.style.position = 'absolute';

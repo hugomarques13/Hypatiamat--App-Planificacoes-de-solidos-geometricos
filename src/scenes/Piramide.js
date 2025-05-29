@@ -205,7 +205,7 @@ initUnfoldPlans() {
             pivot: [0, 0, 0],
             position: [midX, 0, midZ],
             rotation: [
-                xAngle, // Corrected X rotation
+                xAngle,
                 yRotation,
                 0,
                 'YZX'
@@ -231,7 +231,7 @@ createFaceGroup(name, material, pivotArr, positionArr, rotationArr) {
     const baseRadius = 1;
 
     if (name === 'bottom') {
-        // Create n-sided polygon for bottom (same as before)
+        // Create n-sided polygon for bottom
         const shape = new THREE.Shape();
         const angleStep = (2 * Math.PI) / this.sides;
         
@@ -321,7 +321,7 @@ buildFaceGroupsForPlan(planName) {
     );
     this.prismGroup.add(bottomGroup);
 
-    // Create side faces (no top face for pyramid)
+    // Create side faces
     for (let i = 0; i < this.sides; i++) {
         const sideName = `side${i}`;
         const sideTransform = transforms[sideName];
@@ -375,7 +375,7 @@ createSliders() {
     this.slidersContainer.classList.add("slider-container");
     document.body.appendChild(this.slidersContainer);
 
-    // Function to update slider gradient (reusable)
+    // Function to update slider gradient
     const updateSliderBackground = (slider, value, min = 0, max = 1) => {
         const percentage = ((value - min) / (max - min)) * 100;
         slider.style.background = `linear-gradient(to right,
@@ -602,7 +602,7 @@ checkFaceVisibility() {
         // Find material index - top is 1, bottom is 0, sides start from 2
         let materialIndex;
         if (face === 'bottom') materialIndex = 0;
-        else materialIndex = 1 + parseInt(face.replace('side', '')); // side0 = 2, side1 = 3, etc.
+        else materialIndex = 1 + parseInt(face.replace('side', ''));
         
         faceData[face] = {
             position: position,
@@ -712,13 +712,13 @@ checkFaceVisibility() {
     // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {
         // Proportional values (all based on canvas width)
-        const rightOffset = canvasBounds.width * 0.05;  // 5% from right
-        const topOffset = canvasBounds.height * 0.05;   // 5% from top
-        const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
-        const padding = sliderWidth * 0.08;             // 8% of slider width
-        const fontSize = sliderWidth * 0.07;            // 7% of slider width
-        const thumbSize = sliderWidth * 0.1;            // 10% of slider width
-        const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
+        const rightOffset = canvasBounds.width * 0.05;
+        const topOffset = canvasBounds.height * 0.05;
+        const sliderWidth = canvasBounds.width * 0.2;
+        const padding = sliderWidth * 0.08;
+        const fontSize = sliderWidth * 0.07;
+        const thumbSize = sliderWidth * 0.1;
+        const sliderHeight = sliderWidth * 0.04;
 
         // Apply styles
         this.slidersContainer.style.position = 'absolute';
@@ -795,11 +795,11 @@ checkFaceVisibility() {
   // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+            button.setScale(button.scaleX * 1.1);
     });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+            button.setScale(button.scaleX / 1.1);
     });
   }
 

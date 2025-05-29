@@ -24,10 +24,8 @@ const config = {
 const game = new Phaser.Game(config);
 
 function updateBorderRadius() {
-    // Base border radius for original size (1024x600)
     const baseRadius = 50;
     
-    // Calculate scale factor
     const scaleFactor = Math.min(
         window.innerWidth / 1024,
         window.innerHeight / 600
@@ -40,12 +38,10 @@ function updateBorderRadius() {
     game.canvas.style.overflow = 'hidden';
 }
 
-// Call initially when game is ready
 game.events.on('ready', () => {
     updateBorderRadius();
     document.body.style.backgroundColor = 'white';
     
-    // Update on resize and orientation change
     game.scale.on('resize', updateBorderRadius);
 });
 
@@ -58,6 +54,5 @@ function handleViewportChange() {
 
 window.addEventListener('resize', handleViewportChange);
 window.addEventListener('orientationchange', () => {
-    // Add a slightly longer delay for orientation changes
     setTimeout(handleViewportChange, 150);
 });

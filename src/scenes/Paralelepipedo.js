@@ -50,6 +50,10 @@ export default class Paralelepipedo extends Phaser.Scene {
       this.scene.start('SelectingSolids');
     });
 
+    this.isFullscreen = !!document.fullscreenElement;
+    btnFullScreen.setVisible(!this.isFullscreen);
+    btnBack.setVisible(this.isFullscreen);
+    
     const toggleFullscreen = () => {
         if (document.fullscreenElement) {
             document.exitFullscreen().then(() => {
@@ -71,6 +75,10 @@ export default class Paralelepipedo extends Phaser.Scene {
 
     btnFullScreen.on('pointerup', toggleFullscreen);
     btnBack.on('pointerup', toggleFullscreen);
+
+    this.events.on('pause', () => {
+      this.isFullscreen = !!document.fullscreenElement;
+    });
 
     this.scale.on('fullscreenchange', () => {
       if (this.scale.isFullscreen) {

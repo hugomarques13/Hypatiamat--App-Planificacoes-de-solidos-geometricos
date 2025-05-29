@@ -97,20 +97,32 @@ export default class QuizScene extends Phaser.Scene {
             let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
             let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
 
+            this.isFullscreen = !!document.fullscreenElement;
+            btnFullScreen.setVisible(!this.isFullscreen);
+            btnBack.setVisible(this.isFullscreen);
+
             const toggleFullscreen = () => {
-                if (this.scale.isFullscreen) {
-                    this.scale.stopFullscreen();
-                    btnFullScreen.setVisible(true);
-                    btnBack.setVisible(false);
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().then(() => {
+                        this.isFullscreen = false;
+                        btnFullScreen.setVisible(true);
+                        btnBack.setVisible(false);
+                    });
                 } else {
-                    this.scale.startFullscreen();
-                    btnFullScreen.setVisible(false);
-                    btnBack.setVisible(true);
+                    document.body.requestFullscreen().then(() => {
+                        this.isFullscreen = true;
+                        btnFullScreen.setVisible(false);
+                        btnBack.setVisible(true);
+                    });
                 }
             };
 
             btnFullScreen.on('pointerup', toggleFullscreen);
             btnBack.on('pointerup', toggleFullscreen);
+
+            this.events.on('pause', () => {
+                this.isFullscreen = !!document.fullscreenElement;
+            });
 
             this.scale.on('fullscreenchange', () => {
                 if (this.scale.isFullscreen) {

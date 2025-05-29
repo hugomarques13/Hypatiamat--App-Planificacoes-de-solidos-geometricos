@@ -33,6 +33,10 @@ export default class MenuScene extends Phaser.Scene {
         let infoImg = this.add.image(512,360, 'info-img').setScale(0.65).setVisible(false);
         let btnFechar = this.add.image(725, 150, 'bt_fechar').setScale(0.8).setInteractive().setVisible(false);
 
+        this.isFullscreen = !!document.fullscreenElement;
+        btnFullScreen.setVisible(!this.isFullscreen);
+        btnBack.setVisible(this.isFullscreen);
+
         const toggleFullscreen = () => {
             if (document.fullscreenElement) {
                 document.exitFullscreen().then(() => {
@@ -51,6 +55,10 @@ export default class MenuScene extends Phaser.Scene {
 
         btnFullScreen.on('pointerup', toggleFullscreen);
         btnBack.on('pointerup', toggleFullscreen);
+
+        this.events.on('pause', () => {
+            this.isFullscreen = !!document.fullscreenElement;
+        });
 
         this.scale.on('fullscreenchange', () => {
             if (this.scale.isFullscreen) {

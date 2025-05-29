@@ -74,13 +74,19 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     create() {
-        if (document.fonts) {
-            document.fonts.load('20px "Snap ITC"').then(() => {
-                this.initScene();
-            });
-        } else {
-            this.time.delayedCall(500, this.initScene, [], this);
-        }
+        this.loadFont('Snap ITC').then(() => {
+            this.initScene();
+        }).catch(() => {
+            this.initScene();
+        });
+    }
+
+    loadFont(fontName) {
+        return new Promise((resolve) => {
+            if (!document.fonts) return resolve();
+            
+            document.fonts.load(`20px "${fontName}"`).then(resolve).catch(resolve);
+        });
     }
 
     initScene() {

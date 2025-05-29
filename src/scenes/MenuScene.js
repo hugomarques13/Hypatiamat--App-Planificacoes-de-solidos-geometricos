@@ -63,22 +63,26 @@ export default class MenuScene extends Phaser.Scene {
         });
 
         btn2.on('pointerup', () => {
-            this.scene.stop('MenuScene');   // <- Para garantir que o Menu é parado
+            this.scene.stop('MenuScene');
             this.scene.start('QuizScene');
         });
 
         btnCredits.on('pointerup', () => {
-            creditosImg.setVisible(true);
-            btnFechar.setVisible(true);
-            btn1.setVisible(false);
-            btn2.setVisible(false);
+            if(infoImg.visible == false) {
+                creditosImg.setVisible(true);
+                btnFechar.setVisible(true);
+                btn1.setVisible(false);
+                btn2.setVisible(false); 
+            }
         });
 
         btnInfo.on('pointerup', () => {
-            infoImg.setVisible(true);
-            btnFechar.setVisible(true);
-            btn1.setVisible(false);
-            btn2.setVisible(false);
+            if(creditosImg.visible == false) {
+                infoImg.setVisible(true);
+                btnFechar.setVisible(true);
+                btn1.setVisible(false);
+                btn2.setVisible(false);
+            }
         });
         
 
@@ -102,7 +106,6 @@ export default class MenuScene extends Phaser.Scene {
         this.addHoverEffect(btnFechar);
     }
 
-    // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
             button.setScale(button.scaleX * 1.1);

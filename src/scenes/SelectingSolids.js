@@ -36,14 +36,18 @@ export default class SelectingSolids extends Phaser.Scene {
         let btnHome = this.add.image(45, 555, 'bt_home').setScale(0.65).setInteractive();
 
         const toggleFullscreen = () => {
-            if (this.scale.isFullscreen) {
-                this.scale.stopFullscreen();
-                btnFullScreen.setVisible(true);
-                btnBack.setVisible(false);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().then(() => {
+                    this.isFullscreen = false;
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                });
             } else {
-                this.scale.startFullscreen();
-                btnFullScreen.setVisible(false);
-                btnBack.setVisible(true);
+                document.body.requestFullscreen().then(() => {
+                    this.isFullscreen = true;
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                });
             }
         };
 

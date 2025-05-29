@@ -34,14 +34,18 @@ export default class MenuScene extends Phaser.Scene {
         let btnFechar = this.add.image(725, 150, 'bt_fechar').setScale(0.8).setInteractive().setVisible(false);
 
         const toggleFullscreen = () => {
-            if (this.scale.isFullscreen) {
-                this.scale.stopFullscreen();
-                btnFullScreen.setVisible(true);
-                btnBack.setVisible(false);
+            if (document.fullscreenElement) {
+                document.exitFullscreen().then(() => {
+                    this.isFullscreen = false;
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                });
             } else {
-                this.scale.startFullscreen();
-                btnFullScreen.setVisible(false);
-                btnBack.setVisible(true);
+                document.body.requestFullscreen().then(() => {
+                    this.isFullscreen = true;
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                });
             }
         };
 

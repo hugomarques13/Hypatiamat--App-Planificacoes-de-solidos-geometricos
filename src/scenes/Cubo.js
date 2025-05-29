@@ -90,7 +90,7 @@ export default class Cubo extends Phaser.Scene {
         btnFullScreen.setVisible(true);
         btnBack.setVisible(false);
       }
-      // Resize after fullscreen change
+
       this.onWindowResize();
     });
 
@@ -124,7 +124,6 @@ export default class Cubo extends Phaser.Scene {
     this.isSliding = false;
     this.currentPlan = "1";
 
-    // Materials with transparency enabled
     this.materials = [
       new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Red
       new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Green
@@ -154,7 +153,7 @@ export default class Cubo extends Phaser.Scene {
       setTimeout(() => this.onWindowResize(), 150);
     });
 
-    this.onWindowResize(); // Initial layout
+    this.onWindowResize();
   }
 
   initUnfoldPlans() {
@@ -433,12 +432,10 @@ export default class Cubo extends Phaser.Scene {
     const position = new THREE.Vector3(...positionArr);
     const rotation = new THREE.Euler(...rotationArr);
 
-    // Create the face mesh
     const geometry = new THREE.PlaneGeometry(1, 1);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(pivot);
 
-    // Create edge geometry and line segments
     const edgeGeometry = new THREE.EdgesGeometry(geometry);
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
     const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
@@ -446,7 +443,7 @@ export default class Cubo extends Phaser.Scene {
 
     const group = new THREE.Group();
     group.add(mesh);
-    group.add(edges); // Add edges to the group
+    group.add(edges);
 
     const rotatedPivot = pivot.clone().applyEuler(rotation);
     const adjustedPosition = position.sub(rotatedPivot);
@@ -713,7 +710,6 @@ export default class Cubo extends Phaser.Scene {
       const faces = ['front', 'back', 'left', 'right', 'top', 'bottom'];
       const faceData = {};
       
-      // First collect all face data
       faces.forEach(face => {
           if (this.faceGroups[face]) {
               const position = new THREE.Vector3();
@@ -722,7 +718,6 @@ export default class Cubo extends Phaser.Scene {
               const normal = new THREE.Vector3(0, 0, 1);
               normal.applyQuaternion(this.faceGroups[face].quaternion);
               
-              // Calculate camera direction to face
               const cameraToFace = new THREE.Vector3().subVectors(position, this.camera.position).normalize();
               
               faceData[face] = {
@@ -734,7 +729,6 @@ export default class Cubo extends Phaser.Scene {
           }
       });
 
-      // Reset all opacities to 1 (opaque)
       faces.forEach(face => {
           if (faceData[face]) {
               this.materials[faceData[face].index].opacity = 1;
@@ -751,27 +745,22 @@ export default class Cubo extends Phaser.Scene {
 
       } else if (this.unfoldProgress < 0.95) {
 
-        // Check each face against all others
         for (const face1 in faceData) {
             const data1 = faceData[face1];
             
-            // First check if face is facing away from camera
             const faceToCameraDot = data1.normal.dot(data1.cameraToFace);
             if (faceToCameraDot < 0) {
                 this.materials[data1.index].opacity = 0.6;
                 continue;
             }
 
-            // Then check if other faces are in front of this one
             for (const face2 in faceData) {
                 if (face1 === face2) continue;
                 
                 const data2 = faceData[face2];
                 const face1ToFace2 = new THREE.Vector3().subVectors(data2.position, data1.position).normalize();
                 
-                // If face2 is in front of face1 (relative to face1's normal)
                 if (face1ToFace2.dot(data1.normal) > 0.3) {
-                    // And if face2 is between camera and face1
                     const face2ToFace1 = new THREE.Vector3().subVectors(data1.position, data2.position).normalize();
                     const face2ToCamera = new THREE.Vector3().subVectors(this.camera.position, data2.position).normalize();
                     
@@ -799,20 +788,16 @@ export default class Cubo extends Phaser.Scene {
 
 
 onWindowResize() {
-    // Save current camera orbit values before resize
     const savedOrbit = {
         radius: this.orbit.radius,
         theta: this.orbit.theta,
         phi: this.orbit.phi
     };
 
-    // Get the game canvas and its display size
     const canvas = this.sys.game.canvas;
     const canvasBounds = canvas.getBoundingClientRect();
 
-    // === Three.js Canvas Handling ===
     if (this.threeCanvas) {
-        // Match Three.js canvas to Phaser canvas size and position
         Object.assign(this.threeCanvas.style, {
             width: `${canvasBounds.width}px`,
             height: `${canvasBounds.height}px`,
@@ -821,20 +806,16 @@ onWindowResize() {
             position: 'absolute'
         });
 
-        // Update renderer and camera
         this.renderer.setSize(canvasBounds.width, canvasBounds.height);
         this.camera.aspect = canvasBounds.width / canvasBounds.height;
         this.camera.updateProjectionMatrix();
 
-        // Restore camera position after resize
         this.orbit.radius = savedOrbit.radius;
         this.orbit.theta = savedOrbit.theta;
         this.orbit.phi = savedOrbit.phi;
     }
 
-    // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {
-        // Proportional values (all based on canvas width)
         const rightOffset = canvasBounds.width * 0.05;  // 5% from right
         const topOffset = canvasBounds.height * 0.05;   // 5% from top
         const sliderWidth = canvasBounds.width * 0.2;   // 20% of canvas width
@@ -843,7 +824,6 @@ onWindowResize() {
         const thumbSize = sliderWidth * 0.1;            // 10% of slider width
         const sliderHeight = sliderWidth * 0.04;        // 4% of slider width
 
-        // Apply styles
         this.slidersContainer.style.position = 'absolute';
         this.slidersContainer.style.left = `${canvasBounds.left + (canvasBounds.width - sliderWidth - rightOffset)}px`;
         this.slidersContainer.style.top = `${canvasBounds.top + topOffset}px`;
@@ -851,7 +831,6 @@ onWindowResize() {
         this.slidersContainer.style.padding = `${padding}px`;
         this.slidersContainer.style.borderRadius = `${padding}px`;
         
-        // Update all slider elements
         const sliders = this.slidersContainer.querySelectorAll('.custom-slider');
         const labels = this.slidersContainer.querySelectorAll('.slider-label');
         
@@ -868,7 +847,6 @@ onWindowResize() {
         });
     }
 
-    // Force a re-render
     this.renderer?.render(this.scene3D, this.camera);
 }
 
@@ -881,14 +859,12 @@ onWindowResize() {
     this.camera.position.set(x, y, z);
     this.camera.lookAt(0, 0, 0);
     
-    // Update face visibility before rendering
     this.checkFaceVisibility();
     
     this.renderer.render(this.scene3D, this.camera);
   }
 
   cleanupDOM() {
-  // Remove Three.js canvas
   if (this.threeCanvas?.parentNode) {
     this.threeCanvas.remove();
     this.threeCanvas = null;
@@ -899,7 +875,6 @@ onWindowResize() {
     this.slidersContainer = null;
   }
 
-  // Mouse listeners
   window.removeEventListener("mousedown", this.onMouseDown);
   window.removeEventListener("mouseup", this.onMouseUp);
   window.removeEventListener("mousemove", this.onMouseMove);
@@ -910,14 +885,13 @@ onWindowResize() {
   window.removeEventListener("touchend", this.onTouchEnd)
   }
 
-  // Função para adicionar efeito de hover
     addHoverEffect(button) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1); // Aumenta o tamanho do botão
+            button.setScale(button.scaleX * 1.1);
     });
 
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1); // Retorna ao tamanho original
+            button.setScale(button.scaleX / 1.1);
     });
   }
 }

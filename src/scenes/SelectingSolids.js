@@ -1,11 +1,4 @@
-class BaseScene extends Phaser.Scene {
-    create() {
-        // Add background to every scene
-        this.bg = this.add.image(512, 300, 'assets/background.png').setScale(0.8).setDepth(-1);
-    }
-}
-
-export default class SelectingSolids extends BaseScene {
+export default class SelectingSolids extends Phaser.Scene {
     constructor() {
         super({ key: 'SelectingSolids' });
     }

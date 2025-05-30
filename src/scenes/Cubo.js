@@ -14,6 +14,7 @@ export default class Cubo extends Phaser.Scene {
     this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
     this.load.image('bt_info', 'assets/bt_info.png');
     this.load.image('bt_voltar', 'assets/bt_voltar.png');
+    this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
   }
 
   create() {
@@ -49,6 +50,39 @@ export default class Cubo extends Phaser.Scene {
       this.cleanupDOM();
       this.scene.start('SelectingSolids');
     });
+
+  if (this.scene.settings.data?.returnToQuiz) {
+      const quizData = this.scene.settings.data;
+      
+      this.returnButtonContainer = this.add.container(512, 520);
+      
+      const returnBtnBg = this.add.image(0, 0, 'bt_butaoVazio')
+          .setScale(0.23)
+          .setInteractive({ useHandCursor: true });
+      
+      const returnBtnText = this.add.text(0, -4, "Voltar ao Quiz", {
+          fontSize: '20px',
+          fontFamily: 'Snap ITC',
+          color: '#993300',
+          align: 'center'
+      }).setOrigin(0.5);
+      
+      this.addHoverEffect(returnBtnBg, returnBtnText);
+      
+      this.returnButtonContainer.add([returnBtnBg, returnBtnText]);
+      
+      returnBtnBg.on('pointerup', () => {
+          this.cleanupDOM();
+          this.scene.stop();
+          
+          // Restart the QuizScene with preserved data
+          this.scene.start('QuizScene', {
+              currentQuestionIndex: quizData.nextQuestionIndex + 1,
+              score: quizData.currentScore,
+              questions: quizData.questions
+          });
+      });
+    }
 
   
     this.isFullscreen = !!document.fullscreenElement;
@@ -786,6 +820,21 @@ export default class Cubo extends Phaser.Scene {
     return window.innerWidth - rect.right + pixelsFromRight;
   }
 
+    addHoverEffect(button, text = null) {
+        button.on('pointerover', () => {
+            button.setScale(button.scaleX * 1.1);
+            if (text) {
+                text.setFontSize(22);
+            }
+        });
+
+        button.on('pointerout', () => {
+            button.setScale(button.scaleX / 1.1);
+            if (text) {
+                text.setFontSize(20);
+            }
+        });
+    }
 
 onWindowResize() {
     const savedOrbit = {
@@ -864,34 +913,52 @@ onWindowResize() {
     this.renderer.render(this.scene3D, this.camera);
   }
 
-  cleanupDOM() {
-  if (this.threeCanvas?.parentNode) {
-    this.threeCanvas.remove();
-    this.threeCanvas = null;
+ cleanupDOM() {
+    // Remove Three.js canvas
+    if (this.scene.settings.data) {
+        this.scene.settings.data = null;
+    }
+    if (this.threeCanvas?.parentNode) {
+        this.threeCanvas.remove();
+        this.threeCanvas = null;
+    }
+
+    // Remove sliders
+    if (this.slidersContainer?.parentNode) {
+        this.slidersContainer.remove();
+        this.slidersContainer = null;
+    }
+
+    // Clean up Three.js resources
+    if (this.renderer) {
+        this.renderer.dispose();
+        this.renderer = null;
+    }
+    
+    if (this.scene3D) {
+        // Dispose of geometries and materials
+        this.scene3D.traverse(object => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(m => m.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+        });
+        this.scene3D = null;
+    }
+
+    // Remove event listeners
+    window.removeEventListener("mousedown", this.onMouseDown);
+    window.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("mousemove", this.onMouseMove);
+    window.removeEventListener("wheel", this.onMouseWheel);
+
+    window.removeEventListener("touchstart", this.onTouchStart);
+    window.removeEventListener("touchmove", this.onTouchMove);
+    window.removeEventListener("touchend", this.onTouchEnd);
   }
 
-  if (this.slidersContainer?.parentNode) {
-    this.slidersContainer.remove();
-    this.slidersContainer = null;
-  }
-
-  window.removeEventListener("mousedown", this.onMouseDown);
-  window.removeEventListener("mouseup", this.onMouseUp);
-  window.removeEventListener("mousemove", this.onMouseMove);
-  window.removeEventListener("wheel", this.onMouseWheel);
-
-  window.removeEventListener("touchstart", this.onTouchStart)
-  window.removeEventListener("touchmove", this.onTouchMove)
-  window.removeEventListener("touchend", this.onTouchEnd)
-  }
-
-    addHoverEffect(button) {
-        button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1);
-    });
-
-        button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1);
-    });
-  }
 }

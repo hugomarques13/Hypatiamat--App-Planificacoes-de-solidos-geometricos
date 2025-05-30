@@ -3,59 +3,78 @@ export default class QuizScene extends Phaser.Scene {
         super({ key: 'QuizScene' });
     }
 
-    init() {
-        this.currentQuestionIndex = 0;
-        this.score = 0;
-        this.questions = [
+    init(data) {
+        if (data?.returnToQuiz) {
+            this.currentQuestionIndex = data.currentQuestionIndex || 0;
+            this.score = data.score || 0;
+            this.questions = data.questions || this.getDefaultQuestions();
+        } else {
+            // Otherwise, start fresh
+            this.currentQuestionIndex = 0;
+            this.score = 0;
+            this.questions = this.getDefaultQuestions();
+            this.shuffleArray(this.questions);
+            this.questions.forEach(q => this.shuffleArray(q.options));
+        }
+    }
+
+    getDefaultQuestions() {
+        return [
             {
                 question: "Qual destas formas tem 6 faces quadradas?",
                 options: ["Cubo", "Cilindro", "Cone"],
                 correctAnswer: "Cubo",
+                relatedScene: "Cubo",
             },
             {
                 question: "Qual destas formas tem uma base circular e um vértice?",
                 options: ["Cubo", "Cone", "Paralelepípedo"],
                 correctAnswer: "Cone",
+                relatedScene: "Cone",
             },
             {
                 question: "Qual destas formas tem duas bases circulares?",
                 options: ["Cilindro", "Pirâmide", "Prisma"],
                 correctAnswer: "Cilindro",
+                relatedScene: "Cilindro",
             },
             {
                 question: "Quantas arestas tem um cubo?",
                 options: ["8", "6", "12"],
                 correctAnswer: "12",
+                relatedScene: "Cubo",
             },
             {
                 question: "Qual destas formas pode rolar?",
                 options: ["Cubo", "Cilindro", "Pirâmide"],
                 correctAnswer: "Cilindro",
+                relatedScene: "Cilindro",
             },
             {
                 question: "Qual forma corresponde a esta planificação: 1 círculo e 1 lateral curva?",
                 options: ["Cone", "Cubo", "Cilindro"],
                 correctAnswer: "Cone",
+                relatedScene: "Cone",
             },
             {
                 question: "Quantas planificações tem um cubo?",
                 options: ["6", "11", "8"],
                 correctAnswer: "11",
+                relatedScene: "Cubo",
             },
             {
                 question: "Qual destas formas pode ter uma planificação com 2 triângulos e 3 retângulos?",
                 options: ["Cubo", "Pirâmide", "Prisma"],
                 correctAnswer: "Prisma",
+                relatedScene: "Prisma",
             },
             {
                 question: "Qual destas formas tem uma planificação com 6 retângulos?",
                 options: ["Paralelepípedo", "Cilindro", "Pirâmide"],
                 correctAnswer: "Paralelepípedo",
+                relatedScene: "Paralelepipedo",
             }
-        ];
-
-        this.shuffleArray(this.questions);
-        this.questions.forEach(q => this.shuffleArray(q.options));
+        ]
     }
 
     shuffleArray(array) {
@@ -76,10 +95,26 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.on('resume', (sys, data) => {
+            if (data) {
+                this.currentQuestionIndex = data.currentQuestionIndex;
+                this.score = data.score;
+                this.questions = data.questions;
+                this.showQuestion();
+            }
+        });
         this.loadFont('Snap ITC').then(() => {
             this.initScene();
+            
+            // If resuming, show the current question immediately
+            if (this.currentQuestionIndex > 0) {
+                this.showQuestion();
+            }
         }).catch(() => {
             this.initScene();
+            if (this.currentQuestionIndex > 0) {
+                this.showQuestion();
+            }
         });
     }
 
@@ -212,13 +247,13 @@ export default class QuizScene extends Phaser.Scene {
 
     checkAnswer(selected, bg, text) {
         const correct = this.questions[this.currentQuestionIndex].correctAnswer;
+        const relatedScene = this.questions[this.currentQuestionIndex].relatedScene;
 
         if (selected === correct) {
             bg.setTint(0x8BC34A);
             this.score++;
         } else {
             bg.setTint(0xF44336);
-
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {
                     opt.bg.setTint(0x8BC34A);
@@ -228,11 +263,65 @@ export default class QuizScene extends Phaser.Scene {
 
         this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
-        this.time.delayedCall(1000, () => {
-            this.optionButtons.forEach(opt => opt.bg.clearTint());
+        // Create continue and explore buttons
+        this.createActionButtons(relatedScene);
+    }
+
+    createActionButtons(relatedScene) {
+        const centerX = 512;
+        const buttonY = 450;
+        
+        // Continue button
+        const continueBtn = this.add.image(centerX - 100, buttonY, 'bt_butaoVazio')
+            .setScale(0.23)
+            .setInteractive({ useHandCursor: true });
+            
+        const continueText = this.add.text(centerX - 100, buttonY - 4, "Continuar", {
+            fontSize: '20px',
+            fontFamily: 'Snap ITC',
+            color: '#993300',
+            align: 'center'
+        }).setOrigin(0.5);
+        
+        this.addHoverEffect(continueBtn, continueText);
+        continueBtn.on('pointerup', () => {
+            continueBtn.destroy();
+            continueText.destroy();
+            if (this.exploreBtn) this.exploreBtn.destroy();
+            if (this.exploreText) this.exploreText.destroy();
             this.nextQuestion();
         });
+
+        // Explore button (only if there's a related scene)
+        if (relatedScene) {
+            this.exploreBtn = this.add.image(centerX + 100, buttonY, 'bt_butaoVazio')
+                .setScale(0.23)
+                .setInteractive({ useHandCursor: true });
+                
+            this.exploreText = this.add.text(centerX + 100, buttonY - 4, "Explorar", {
+                fontSize: '20px',
+                fontFamily: 'Snap ITC',
+                color: '#993300',
+                align: 'center'
+            }).setOrigin(0.5);
+            
+            this.addHoverEffect(this.exploreBtn, this.exploreText);
+            this.exploreBtn.on('pointerup', () => {
+                // Stop the QuizScene completely (not just pause)
+                this.scene.stop();
+                
+                // Start the related scene with proper data
+                this.scene.start(relatedScene, { 
+                    returnToQuiz: true,
+                    quizScene: 'QuizScene',
+                    nextQuestionIndex: this.currentQuestionIndex,
+                    currentScore: this.score,
+                    questions: this.questions
+                });
+            });
+        }
     }
+
 
     nextQuestion() {
         this.currentQuestionIndex++;
@@ -292,5 +381,12 @@ export default class QuizScene extends Phaser.Scene {
                 text.setFontSize(20);
             }
         });
+    }
+
+    shutdown() {
+        // Clean up any DOM elements or event listeners
+        if (this.uiGroup) {
+            this.uiGroup.clear(true, true);
+        }
     }
 }

@@ -270,7 +270,7 @@ export default class QuizScene extends Phaser.Scene {
     showFinalScore() {
         this.uiGroup.clear(true, true);
 
-        // Caixa popup centralizada
+    
         this.popup = this.add.image(512, 384, 'popup_window')
             .setScale(0.6, 0.6)
             .setOrigin(0.5);

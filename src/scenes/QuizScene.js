@@ -197,8 +197,8 @@ export default class QuizScene extends Phaser.Scene {
         const popupX = 800;  // Podes ajustar a posição X do popup para a direita
         const popupY = middleY;
 
-        const popupScaleX = 0.5;
-        const popupScaleY = 0.6;
+        const popupScaleX = 0.35;
+        const popupScaleY = 0.4;
 
         this.popup = this.add.image(popupX, popupY, 'popup_window')
             .setScale(popupScaleX, popupScaleY)
@@ -211,7 +211,7 @@ export default class QuizScene extends Phaser.Scene {
 
         // Botão Continuar
         this.continueBtn = this.add.image(buttonX, continueY, 'bt_butaoVazio')
-            .setScale(0.23)
+            .setScale(0.18)
             .setInteractive({ useHandCursor: true });
         this.continueText = this.add.text(buttonX, continueY - 4, "Continuar", {
             fontSize: '20px',
@@ -234,7 +234,7 @@ export default class QuizScene extends Phaser.Scene {
         // Botão Explorar (se existir cena relacionada)
         if (relatedScene) {
             this.exploreBtn = this.add.image(buttonX, exploreY, 'bt_butaoVazio')
-                .setScale(0.23)
+                .setScale(0.18)
                 .setInteractive({ useHandCursor: true });
             this.exploreText = this.add.text(buttonX, exploreY - 4, "Explorar", {
                 fontSize: '20px',
@@ -270,10 +270,7 @@ export default class QuizScene extends Phaser.Scene {
     showFinalScore() {
         this.uiGroup.clear(true, true);
 
-    
-        this.popup = this.add.image(512, 384, 'popup_window')
-            .setScale(0.6, 0.6)
-            .setOrigin(0.5);
+        
 
         const scoreText = this.add.text(512, 350, `Resultado final:\n${this.score} / ${this.questions.length}`, {
             fontSize: '20px',

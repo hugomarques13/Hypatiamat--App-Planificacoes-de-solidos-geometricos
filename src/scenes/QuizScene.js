@@ -217,7 +217,7 @@ export default class QuizScene extends Phaser.Scene {
             bg.setTint(0x8BC34A);
             this.score++;
         } else {
-            bg.setTint(0xF44336);
+            bg.setTint(0xF44336).setAlpha(0.85);
 
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {

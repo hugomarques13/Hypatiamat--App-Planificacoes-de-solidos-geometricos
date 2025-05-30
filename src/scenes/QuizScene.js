@@ -260,14 +260,13 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     createActionButtons(relatedScene) {
-        // Popup alinhado à direita (x=800), e verticalmente alinhado ao meio das opções (calculado)
 
         const optionsCount = this.optionButtons.length;
         const firstOptionY = 250;
         const lastOptionY = 250 + (optionsCount - 1) * 100;
         const middleY = (firstOptionY + lastOptionY) / 2;
 
-        const popupX = 800;  // Podes ajustar a posição X do popup para a direita
+        const popupX = 800;
         const popupY = middleY;
 
         const popupScaleX = 0.35;
@@ -304,7 +303,7 @@ export default class QuizScene extends Phaser.Scene {
             this.nextQuestion();
         });
 
-        // Botão Explorar (se existir cena relacionada)
+        // Botão Explorar
         if (relatedScene) {
             this.exploreBtn = this.add.image(buttonX, exploreY, 'bt_butaoVazio')
                 .setScale(0.18)

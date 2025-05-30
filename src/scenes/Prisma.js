@@ -20,6 +20,7 @@ export default class Prisma extends Phaser.Scene {
     this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
     this.load.image('bt_info', 'assets/bt_info.png');
     this.load.image('bt_voltar', 'assets/bt_voltar.png');
+    this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
   }
 
   create() {
@@ -37,6 +38,40 @@ export default class Prisma extends Phaser.Scene {
     this.addHoverEffect(btnInfo);
 
     this.updateTitleText();
+
+    if (this.scene.settings.data?.returnToQuiz) {
+      const quizData = this.scene.settings.data;
+      
+      this.returnButtonContainer = this.add.container(512, 520);
+      
+      const returnBtnBg = this.add.image(0, 0, 'bt_butaoVazio')
+          .setScale(0.23)
+          .setInteractive({ useHandCursor: true });
+      
+      const returnBtnText = this.add.text(0, -4, "Voltar ao Quiz", {
+          fontSize: '20px',
+          fontFamily: 'Snap ITC',
+          color: '#993300',
+          align: 'center'
+      }).setOrigin(0.5);
+      
+      this.addHoverEffect(returnBtnBg, returnBtnText);
+      
+      this.returnButtonContainer.add([returnBtnBg, returnBtnText]);
+      
+      returnBtnBg.on('pointerup', () => {
+          this.cleanupDOM();
+          this.scene.stop();
+          
+          // Restart the QuizScene with preserved data
+          this.scene.start('QuizScene', {
+              returnToQuiz: true,
+              currentQuestionIndex: quizData.nextQuestionIndex + 1,
+              score: quizData.currentScore,
+              questions: quizData.questions
+          });
+      });
+    }
 
     btnHome.on('pointerup', () => {
       this.cleanupDOM();
@@ -770,6 +805,10 @@ onWindowResize() {
   }
 
    cleanupDOM() {
+    if (this.scene.settings.data) {
+        this.scene.settings.data = null;
+    }
+
     if (this.threeCanvas?.parentNode) {
       this.threeCanvas.remove();
       this.threeCanvas = null;

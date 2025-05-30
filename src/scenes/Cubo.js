@@ -12,7 +12,7 @@ export default class Cubo extends Phaser.Scene {
     this.load.image('bt_home', 'assets/bt_home.png');
     this.load.image('bt_screenback', 'assets/bt_screenback.png');
     this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
-    this.load.image('bt_info', 'assets/bt_info.png');
+    //this.load.image('bt_info', 'assets/bt_info.png');
     this.load.image('bt_voltar', 'assets/bt_voltar.png');
     this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
   }
@@ -23,7 +23,7 @@ export default class Cubo extends Phaser.Scene {
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
-    let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
+    //let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
 
     const titleText = this.add.text(this.scale.width / 2, 20, 'Cubo', {
       fontFamily: 'Snap ITC',
@@ -39,7 +39,7 @@ export default class Cubo extends Phaser.Scene {
     this.addHoverEffect(btnVoltar);
     this.addHoverEffect(btnFullScreen);
     this.addHoverEffect(btnBack);
-    this.addHoverEffect(btnInfo);
+    //this.addHoverEffect(btnInfo);
 
     btnHome.on('pointerup', () => {
       this.cleanupDOM();

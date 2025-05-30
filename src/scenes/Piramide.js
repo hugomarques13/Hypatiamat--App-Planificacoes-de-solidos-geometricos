@@ -17,7 +17,7 @@ export default class Piramide extends Phaser.Scene {
     this.load.image('bt_home', 'assets/bt_home.png');
     this.load.image('bt_screenback', 'assets/bt_screenback.png');
     this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
-    this.load.image('bt_info', 'assets/bt_info.png');
+    //this.load.image('bt_info', 'assets/bt_info.png');
     this.load.image('bt_voltar', 'assets/bt_voltar.png');
     this.load.image('bt_butaoVazio', 'assets/bt_butaoVazio.png');
   }
@@ -28,13 +28,13 @@ export default class Piramide extends Phaser.Scene {
     let btnVoltar = this.add.image(125, 556, 'bt_voltar').setScale(0.34).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive({ useHandCursor: true }).setDepth(1000);
     let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive({ useHandCursor: true }).setVisible(false).setDepth(1000);
-    let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
+    //let btnInfo = this.add.image(980, 555, 'bt_info').setScale(0.65).setInteractive({ useHandCursor: true }).setDepth(1000);
 
     this.addHoverEffect(btnHome);
     this.addHoverEffect(btnVoltar);
     this.addHoverEffect(btnFullScreen);
     this.addHoverEffect(btnBack);
-    this.addHoverEffect(btnInfo);
+    //this.addHoverEffect(btnInfo);
 
     this.updateTitleText();
 
@@ -144,9 +144,9 @@ export default class Piramide extends Phaser.Scene {
 
     this.orbit = { radius: 8, theta: Math.PI / 8, phi: Math.PI / 3.8 }
 
-    this.prismGroup = new THREE.Group()
-    this.prismGroup.position.y = -1;
-    this.scene3D.add(this.prismGroup)
+    this.piramideGroup = new THREE.Group()
+    this.piramideGroup.position.y = -1;
+    this.scene3D.add(this.piramideGroup)
 
     this.unfoldProgress = 0;
     this.sides = 5;
@@ -340,7 +340,7 @@ buildFaceGroupsForPlan(planName) {
 
     this.faceGroups = {};
     this.originalRotations = {};
-    this.prismGroup.clear();
+    this.piramideGroup.clear();
 
     const plan = this.unfoldPlans[planName];
     const { transforms } = plan;
@@ -353,7 +353,7 @@ buildFaceGroupsForPlan(planName) {
         transforms.bottom.position,
         transforms.bottom.rotation
     );
-    this.prismGroup.add(bottomGroup);
+    this.piramideGroup.add(bottomGroup);
 
     // Create side faces
     for (let i = 0; i < this.sides; i++) {
@@ -366,7 +366,7 @@ buildFaceGroupsForPlan(planName) {
             sideTransform.position,
             sideTransform.rotation
         );
-        this.prismGroup.add(sideGroup);
+        this.piramideGroup.add(sideGroup);
     }
 
     this.applyParenting(planName);
@@ -382,12 +382,12 @@ buildFaceGroupsForPlan(planName) {
       if (parentName && this.faceGroups[parentName]) {
         this.faceGroups[parentName].add(group)
       } else {
-        this.prismGroup.add(group)
+        this.piramideGroup.add(group)
       }
     }
   }
 
-  updatePrismTransforms() {
+  updatePiramideTransforms() {
       const plan = this.unfoldPlans[this.currentPlan]
       const rotations = plan.rotations
 
@@ -439,7 +439,7 @@ createSliders() {
         const val = parseFloat(e.target.value);
         this.unfoldProgress = val;
         updateSliderBackground(unfoldSlider, val);
-        this.updatePrismTransforms();
+        this.updatePiramideTransforms();
     });
 
     updateSliderBackground(unfoldSlider, 0);
@@ -467,7 +467,7 @@ createSliders() {
         updateSliderBackground(sidesSlider, val, 3, 10);
         this.initUnfoldPlans();
         this.buildFaceGroupsForPlan(this.currentPlan);
-        this.updatePrismTransforms();
+        this.updatePiramideTransforms();
         this.updateTitleText();
     });
 
@@ -495,7 +495,7 @@ createSliders() {
         updateSliderBackground(heightSlider, val, this.minHeight, this.maxHeight);
         this.initUnfoldPlans();
         this.buildFaceGroupsForPlan(this.currentPlan);
-        this.updatePrismTransforms();
+        this.updatePiramideTransforms();
     });
 
     updateSliderBackground(heightSlider, this.piramideHeight, this.minHeight, this.maxHeight);

@@ -77,6 +77,7 @@ export default class Cubo extends Phaser.Scene {
           
           // Restart the QuizScene with preserved data
           this.scene.start('QuizScene', {
+              returnToQuiz: true,
               currentQuestionIndex: quizData.nextQuestionIndex + 1,
               score: quizData.currentScore,
               questions: quizData.questions

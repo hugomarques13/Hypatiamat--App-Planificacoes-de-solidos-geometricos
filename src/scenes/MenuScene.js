@@ -76,7 +76,7 @@ export default class MenuScene extends Phaser.Scene {
 
         btn2.on('pointerup', () => {
             this.scene.stop('MenuScene');
-            this.scene.start('QuizScene');
+            this.scene.start('QuizScene', {});
         });
 
         btnCredits.on('pointerup', () => {

@@ -367,6 +367,64 @@ export default class Cone extends Phaser.Scene {
     this.renderer.render(this.scene3D, this.camera);
   }
 
+  checkSurfaceVisibility() {
+    const surfaces = {
+      lateral: {
+        mesh: this.lateralMesh,
+        material: this.materials.lateral,
+        isDoubleSided: true
+      },
+      base: {
+        mesh: this.baseMesh,
+        material: this.materials.base,
+        isDoubleSided: true
+      }
+    };
+
+    for (const [name, surface] of Object.entries(surfaces)) {
+      if (!surface.mesh) continue;
+
+      // Get world position and normal of the surface
+      const position = new THREE.Vector3();
+      surface.mesh.getWorldPosition(position);
+      
+      let normal;
+      if (name === 'lateral') {
+        // Average normal pointing diagonally outward
+        normal = new THREE.Vector3(0, 0.5, 0.5).normalize();
+        normal.applyQuaternion(this.lateralGroup.quaternion);
+      } else { // base
+        normal = new THREE.Vector3(0, 1, 0);
+        normal.applyQuaternion(this.baseGroup.quaternion);
+      }
+
+      const cameraToSurface = new THREE.Vector3().subVectors(
+        this.camera.position, 
+        position
+      ).normalize();
+      
+      const dotProduct = normal.dot(cameraToSurface);
+      
+      if (surface.isDoubleSided) {
+        // For unfolded state, make everything fully visible
+        if (this.unfoldProgress > 0.95) {
+          surface.material.opacity = 1;
+        } 
+        // For partially unfolded, adjust opacity based on viewing angle
+        else if (this.unfoldProgress > 0.1) {
+          // Use absolute value of dot product since it's double-sided
+          const visibility = 0.4 + 0.6 * (1 - Math.abs(dotProduct));
+          surface.material.opacity = visibility;
+        }
+        // For folded state, make semi-transparent
+        else {
+          surface.material.opacity = 0.6;
+        }
+      }
+    }
+  }
+
+
   createSliders() {
     // Create main container for all sliders
     this.slidersContainer = document.createElement("div");
@@ -645,6 +703,7 @@ export default class Cone extends Phaser.Scene {
     const z = radius * Math.sin(phi) * Math.cos(theta);
     this.camera.position.set(x, y, z);
     this.camera.lookAt(0, 0, 0);
+    this.checkSurfaceVisibility(); 
     this.renderer.render(this.scene3D, this.camera);
   }
 

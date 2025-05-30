@@ -49,7 +49,7 @@ export default class QuizScene extends Phaser.Scene {
             },
             {
                 question: "Qual destas formas tem uma planificação com 6 retângulos?",
-                options: ["Paralelepípedo", "Cubo", "Pirâmide"],
+                options: ["Paralelepípedo", "Cilindro", "Pirâmide"],
                 correctAnswer: "Paralelepípedo",
             }
         ];

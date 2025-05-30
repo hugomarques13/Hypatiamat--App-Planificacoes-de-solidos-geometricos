@@ -359,7 +359,72 @@ updateUnfoldAnimation() {
   
   this.updateFaceVisibility();
 }
-  
+
+checkSurfaceVisibility() {
+  const surfaces = {
+    lateral: {
+      mesh: this.lateralMesh,
+      material: this.materials.lateral,
+      getNormal: () => {
+        const normal = new THREE.Vector3(1, 0, 0);
+        normal.applyQuaternion(this.lateralGroup.quaternion);
+        return normal;
+      }
+    },
+    top: {
+      mesh: this.topMesh,
+      material: this.materials.top,
+      getNormal: () => {
+        const normal = new THREE.Vector3(0, 1, 0);
+        normal.applyQuaternion(this.topGroup.quaternion);
+        return normal;
+      }
+    },
+    bottom: {
+      mesh: this.bottomMesh,
+      material: this.materials.bottom,
+      getNormal: () => {
+        const normal = new THREE.Vector3(0, -1, 0);
+        normal.applyQuaternion(this.bottomGroup.quaternion);
+        return normal;
+      }
+    }
+  };
+
+    for (const [name, surface] of Object.entries(surfaces)) {
+      if (!surface.mesh) continue;
+
+      // Get world position of the surface
+      const position = new THREE.Vector3();
+      surface.mesh.getWorldPosition(position);
+      
+      // Get surface normal
+      const normal = surface.getNormal();
+      
+      // Calculate camera-to-surface vector
+      const cameraToSurface = new THREE.Vector3().subVectors(
+        position, 
+        this.camera.position
+      ).normalize();
+      
+      // Calculate dot product between normal and view direction
+      const dotProduct = normal.dot(cameraToSurface);
+      
+      if (this.unfoldProgress > 0.95) {
+        surface.material.opacity = 1;
+      } 
+      else if (this.unfoldProgress < 0.1) {
+        surface.material.opacity = 0.6;
+      }
+      // For partially unfolded state
+      else {
+        // Calculate visibility based on viewing angle
+        const visibility = 0.4 + 0.6 * (1 - Math.abs(dotProduct));
+        surface.material.opacity = visibility;
+      }
+    }
+  }
+    
   updateFaceVisibility() {
     const opacity = this.unfoldProgress < 0.95 ? 0.6 : 1.0;
     
@@ -646,6 +711,7 @@ updateUnfoldAnimation() {
     const z = radius * Math.sin(phi) * Math.cos(theta);
     this.camera.position.set(x, y, z);
     this.camera.lookAt(0, 0, 0);
+    this.checkSurfaceVisibility(); 
     this.renderer.render(this.scene3D, this.camera);
   }
 

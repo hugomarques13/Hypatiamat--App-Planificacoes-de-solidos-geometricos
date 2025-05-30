@@ -9,7 +9,6 @@ export default class QuizScene extends Phaser.Scene {
             this.score = data.score || 0;
             this.questions = data.questions || this.getDefaultQuestions();
         } else {
-            // Otherwise, start fresh
             this.currentQuestionIndex = 0;
             this.score = 0;
             this.questions = this.getDefaultQuestions();
@@ -71,10 +70,10 @@ export default class QuizScene extends Phaser.Scene {
             {
                 question: "Qual destas formas tem uma planificação com 6 retângulos?",
                 options: ["Paralelepípedo", "Cilindro", "Pirâmide"],
-                correctAnswer: "Paralelepípedo",
+                correctAnswer: "Paralelepipedo",
                 relatedScene: "Paralelepipedo",
             }
-        ]
+        ];
     }
 
     shuffleArray(array) {
@@ -92,112 +91,33 @@ export default class QuizScene extends Phaser.Scene {
         this.load.image('bt_home', 'assets/bt_home.png');
         this.load.image('bt_screenback', 'assets/bt_screenback.png');
         this.load.image('bt_fullscreen', 'assets/bt_fullscreen.png');
+        this.load.image('popup_window', 'assets/popup_window.png');
     }
 
     create() {
-        this.events.on('resume', (sys, data) => {
-            if (data) {
-                this.currentQuestionIndex = data.currentQuestionIndex;
-                this.score = data.score;
-                this.questions = data.questions;
-                this.showQuestion();
-            }
-        });
-        this.loadFont('Snap ITC').then(() => {
-            this.initScene();
-            
-            // If resuming, show the current question immediately
-            if (this.currentQuestionIndex > 0) {
-                this.showQuestion();
-            }
-        }).catch(() => {
-            this.initScene();
-            if (this.currentQuestionIndex > 0) {
-                this.showQuestion();
-            }
-        });
-    }
+        this.add.image(512, 384, 'background').setDepth(-1);
 
-    loadFont(fontName) {
-        return new Promise((resolve) => {
-            if (!document.fonts) return resolve();
-            
-            document.fonts.load(`20px "${fontName}"`).then(resolve).catch(resolve);
-        });
-    }
+        this.uiGroup = this.add.group();
 
-    initScene() {
-            this.add.image(512, 384, 'background').setDepth(-1);
-            
-            let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
-            let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
+        this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
+            .setScale(0.34)
+            .setInteractive({ useHandCursor: true });
+        this.btnVoltar.on('pointerup', () => this.scene.start('MenuScene'));
+        this.addHoverEffect(this.btnVoltar);
 
-            this.isFullscreen = !!document.fullscreenElement;
-            btnFullScreen.setVisible(!this.isFullscreen);
-            btnBack.setVisible(this.isFullscreen);
-
-            const toggleFullscreen = () => {
-                if (document.fullscreenElement) {
-                    document.exitFullscreen().then(() => {
-                        this.isFullscreen = false;
-                        btnFullScreen.setVisible(true);
-                        btnBack.setVisible(false);
-                    });
-                } else {
-                    document.body.requestFullscreen().then(() => {
-                        this.isFullscreen = true;
-                        btnFullScreen.setVisible(false);
-                        btnBack.setVisible(true);
-                    });
-                }
-            };
-
-            btnFullScreen.on('pointerup', toggleFullscreen);
-            btnBack.on('pointerup', toggleFullscreen);
-
-            this.events.on('pause', () => {
-                this.isFullscreen = !!document.fullscreenElement;
-            });
-
-            this.scale.on('fullscreenchange', () => {
-                if (this.scale.isFullscreen) {
-                    btnFullScreen.setVisible(false);
-                    btnBack.setVisible(true);
-                } else {
-                    btnFullScreen.setVisible(true);
-                    btnBack.setVisible(false);
-                }
-            });
-
-
-            this.uiGroup = this.add.group();
-
-            this.btnVoltar = this.add.image(45, 555, 'bt_voltar')
-                .setScale(0.34)
-                .setInteractive({ useHandCursor: true });
-
-            this.btnVoltar.on('pointerup', () => {
-                this.scene.start('MenuScene');
-            });
-
-            this.addHoverEffect(this.btnVoltar);
-
-            this.showQuestion();
+        this.showQuestion();
     }
 
     showQuestion() {
         this.uiGroup.clear(true, true);
-
-        this.btnVoltar.setPosition(45, 555).setVisible(true);
+        this.btnVoltar.setVisible(true);
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
+        // Caixa e texto da pergunta (centrado no meio da tela, no topo)
         const questionBox = this.add.image(512, 120, 'caixatexto')
             .setScale(0.7, 0.65)
             .setOrigin(0.5);
-
-        questionBox.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
-
         const questionText = this.add.text(512, 130, questionObj.question, {
             fontSize: '22px',
             fontFamily: 'Snap ITC',
@@ -206,11 +126,11 @@ export default class QuizScene extends Phaser.Scene {
             wordWrap: { width: 600 }
         }).setOrigin(0.5);
 
-        this.uiGroup.add(questionBox);
-        this.uiGroup.add(questionText);
+        this.uiGroup.addMultiple([questionBox, questionText]);
 
         this.optionButtons = [];
 
+        // Mostrar opções no centro da cena (em x=350, y=250 + 100*index)
         questionObj.options.forEach((option, index) => {
             const y = 250 + index * 100;
 
@@ -227,21 +147,20 @@ export default class QuizScene extends Phaser.Scene {
             }).setOrigin(0.5);
 
             this.addHoverEffect(optionBg, optionText);
+
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
-            this.uiGroup.add(optionBg);
-            this.uiGroup.add(optionText);
+            this.uiGroup.addMultiple([optionBg, optionText]);
         });
 
+        // Texto de progresso
         if (this.progressoText) this.progressoText.destroy();
-
         this.progressoText = this.add.text(512, 560, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
             fontSize: '24px',
             fontFamily: 'Snap ITC',
             color: '#993300'
         }).setOrigin(0.5);
-
         this.uiGroup.add(this.progressoText);
     }
 
@@ -253,7 +172,8 @@ export default class QuizScene extends Phaser.Scene {
             bg.setTint(0x8BC34A);
             this.score++;
         } else {
-            bg.setTint(0xF44336);
+            bg.setTint(0xF44336).setAlpha(0.85);
+
             this.optionButtons.forEach(opt => {
                 if (opt.text.text === correct) {
                     opt.bg.setTint(0x8BC34A);
@@ -263,130 +183,136 @@ export default class QuizScene extends Phaser.Scene {
 
         this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
-        // Create continue and explore buttons
         this.createActionButtons(relatedScene);
     }
 
     createActionButtons(relatedScene) {
-        const centerX = 512;
-        const buttonY = 450;
-        
-        // Continue button
-        const continueBtn = this.add.image(centerX - 100, buttonY, 'bt_butaoVazio')
+        // Popup alinhado à direita (x=800), e verticalmente alinhado ao meio das opções (calculado)
+
+        const optionsCount = this.optionButtons.length;
+        const firstOptionY = 250;
+        const lastOptionY = 250 + (optionsCount - 1) * 100;
+        const middleY = (firstOptionY + lastOptionY) / 2;
+
+        const popupX = 800;  // Podes ajustar a posição X do popup para a direita
+        const popupY = middleY;
+
+        const popupScaleX = 0.5;
+        const popupScaleY = 0.6;
+
+        this.popup = this.add.image(popupX, popupY, 'popup_window')
+            .setScale(popupScaleX, popupScaleY)
+            .setOrigin(0.5);
+
+        const buttonSpacing = 110;
+        const buttonX = popupX;
+        const continueY = popupY - buttonSpacing / 2;
+        const exploreY = popupY + buttonSpacing / 2;
+
+        // Botão Continuar
+        this.continueBtn = this.add.image(buttonX, continueY, 'bt_butaoVazio')
             .setScale(0.23)
             .setInteractive({ useHandCursor: true });
-            
-        const continueText = this.add.text(centerX - 100, buttonY - 4, "Continuar", {
+        this.continueText = this.add.text(buttonX, continueY - 4, "Continuar", {
             fontSize: '20px',
             fontFamily: 'Snap ITC',
             color: '#993300',
             align: 'center'
         }).setOrigin(0.5);
-        
-        this.addHoverEffect(continueBtn, continueText);
-        continueBtn.on('pointerup', () => {
-            continueBtn.destroy();
-            continueText.destroy();
+
+        this.addHoverEffect(this.continueBtn, this.continueText);
+
+        this.continueBtn.on('pointerup', () => {
+            this.popup.destroy();
+            this.continueBtn.destroy();
+            this.continueText.destroy();
             if (this.exploreBtn) this.exploreBtn.destroy();
             if (this.exploreText) this.exploreText.destroy();
             this.nextQuestion();
         });
 
-        // Explore button (only if there's a related scene)
+        // Botão Explorar (se existir cena relacionada)
         if (relatedScene) {
-            this.exploreBtn = this.add.image(centerX + 100, buttonY, 'bt_butaoVazio')
+            this.exploreBtn = this.add.image(buttonX, exploreY, 'bt_butaoVazio')
                 .setScale(0.23)
                 .setInteractive({ useHandCursor: true });
-                
-            this.exploreText = this.add.text(centerX + 100, buttonY - 4, "Explorar", {
+            this.exploreText = this.add.text(buttonX, exploreY - 4, "Explorar", {
                 fontSize: '20px',
                 fontFamily: 'Snap ITC',
                 color: '#993300',
                 align: 'center'
             }).setOrigin(0.5);
-            
+
             this.addHoverEffect(this.exploreBtn, this.exploreText);
+
             this.exploreBtn.on('pointerup', () => {
-                // Stop the QuizScene completely (not just pause)
+                this.popup.destroy();
                 this.scene.stop();
-                
-                // Start the related scene with proper data
-                this.scene.start(relatedScene, { 
+                this.scene.start(relatedScene, {
                     returnToQuiz: true,
-                    quizScene: 'QuizScene',
-                    nextQuestionIndex: this.currentQuestionIndex,
-                    currentScore: this.score,
+                    currentQuestionIndex: this.currentQuestionIndex,
+                    score: this.score,
                     questions: this.questions
                 });
             });
         }
     }
 
-
     nextQuestion() {
         this.currentQuestionIndex++;
-
-        if (this.currentQuestionIndex < this.questions.length) {
-            this.showQuestion();
-        } else {
+        if (this.currentQuestionIndex >= this.questions.length) {
             this.showFinalScore();
+        } else {
+            this.showQuestion();
         }
     }
 
     showFinalScore() {
         this.uiGroup.clear(true, true);
 
-        this.btnVoltar.setVisible(false);
+        // Caixa popup centralizada
+        this.popup = this.add.image(512, 384, 'popup_window')
+            .setScale(0.6, 0.6)
+            .setOrigin(0.5);
 
-        const centerX = 512;
+        const scoreText = this.add.text(512, 350, `Resultado final:\n${this.score} / ${this.questions.length}`, {
+            fontSize: '20px',
+            fontFamily: 'Snap ITC',
+            color: '#993300',
+            align: 'center'
+        }).setOrigin(0.5);
 
-        const scoreBox = this.add.image(centerX, 240, 'caixatexto').setScale(0.6).setOrigin(0.5);
+        const btnX = 512;
+        const btnY = 450;
 
-        const scoreText = this.add.text(centerX, 240 + 7,
-            `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
-            {
-                fontSize: '26px',
-                fontFamily: 'Snap ITC',
-                color: '#993300',
-                align: 'center'
-            }).setOrigin(0.5);
+        const btnContinue = this.add.image(btnX, btnY, 'bt_butaoVazio')
+            .setScale(0.23)
+            .setInteractive({ useHandCursor: true });
 
-        this.uiGroup.add(scoreBox);
-        this.uiGroup.add(scoreText);
+        const btnText = this.add.text(btnX, btnY - 4, 'Voltar ao Menu', {
+            fontSize: '20px',
+            fontFamily: 'Snap ITC',
+            color: '#993300',
+            align: 'center'
+        }).setOrigin(0.5);
 
-        const voltarBtn = this.add.image(centerX, 350, 'bt_home')
-            .setScale(0.65)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerup', () => {
-                this.scene.stop();
-                this.scene.start('MenuScene');
-            });
+        this.addHoverEffect(btnContinue, btnText);
 
-        this.addHoverEffect(voltarBtn);
+        btnContinue.on('pointerup', () => {
+            this.scene.start('MenuScene');
+        });
 
-        this.uiGroup.add(voltarBtn);
+        this.uiGroup.addMultiple([scoreText, btnContinue, btnText]);
     }
 
-    addHoverEffect(button, text = null) {
+    addHoverEffect(button, text) {
         button.on('pointerover', () => {
-            button.setScale(button.scaleX * 1.1);
-            if (text) {
-                text.setFontSize(22);
-            }
+            button.setTint(0xFFB74D);
+            if (text) text.setColor('#ff9900');
         });
-
         button.on('pointerout', () => {
-            button.setScale(button.scaleX / 1.1);
-            if (text) {
-                text.setFontSize(20);
-            }
+            button.clearTint();
+            if (text) text.setColor('#993300');
         });
-    }
-
-    shutdown() {
-        // Clean up any DOM elements or event listeners
-        if (this.uiGroup) {
-            this.uiGroup.clear(true, true);
-        }
     }
 }

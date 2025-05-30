@@ -9,6 +9,7 @@ export default class QuizScene extends Phaser.Scene {
             this.score = data.score || 0;
             this.questions = data.questions || this.getDefaultQuestions();
         } else {
+            // Otherwise, start fresh
             this.currentQuestionIndex = 0;
             this.score = 0;
             this.questions = this.getDefaultQuestions();
@@ -322,8 +323,9 @@ export default class QuizScene extends Phaser.Scene {
                 this.scene.stop();
                 this.scene.start(relatedScene, {
                     returnToQuiz: true,
-                    currentQuestionIndex: this.currentQuestionIndex,
-                    score: this.score,
+                    quizScene: 'QuizScene',
+                    nextQuestionIndex: this.currentQuestionIndex,
+                    currentScore: this.score,
                     questions: this.questions
                 });
             });

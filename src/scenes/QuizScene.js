@@ -4,17 +4,23 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     init(data) {
+        this.totalQuestions = 5;
+
         if (data?.returnToQuiz) {
             this.currentQuestionIndex = data.currentQuestionIndex || 0;
             this.score = data.score || 0;
             this.questions = data.questions || this.getDefaultQuestions();
+            this.questions = this.questions.slice(0, this.totalQuestions);
+            this.returningFromExploration = true;
         } else {
-            // Otherwise, start fresh
             this.currentQuestionIndex = 0;
             this.score = 0;
             this.questions = this.getDefaultQuestions();
             this.shuffleArray(this.questions);
+            this.questions = this.questions.slice(0, this.totalQuestions);
             this.questions.forEach(q => this.shuffleArray(q.options));
+            this.returningFromExploration = false;
+            this.currentQuestionState = null;
         }
     }
 
@@ -71,7 +77,7 @@ export default class QuizScene extends Phaser.Scene {
             {
                 question: "Qual destas formas tem uma planificação com 6 retângulos?",
                 options: ["Paralelepípedo", "Cilindro", "Pirâmide"],
-                correctAnswer: "Paralelepipedo",
+                correctAnswer: "Paralelepípedo",
                 relatedScene: "Paralelepipedo",
             }
         ];
@@ -178,12 +184,99 @@ export default class QuizScene extends Phaser.Scene {
         this.btnVoltar.on('pointerup', () => this.scene.start('MenuScene'));
         this.addHoverEffect(this.btnVoltar);
 
+        // Create popup and buttons once (initially hidden)
+        this.popup = this.add.image(0, 0, 'popup_window')
+            .setScale(0.35, 0.4)
+            .setOrigin(0.5)
+            .setVisible(false);
+
+        this.continueBtn = this.add.image(0, 0, 'bt_butaoVazio')
+            .setScale(0.18)
+            .setInteractive({ useHandCursor: true })
+            .setVisible(false);
+        this.continueText = this.add.text(0, 0, "Continuar", {
+            fontSize: '20px',
+            fontFamily: 'Snap ITC',
+            color: '#993300',
+            align: 'center'
+        }).setOrigin(0.5).setVisible(false);
+        this.addHoverEffect(this.continueBtn, this.continueText);
+
+        this.exploreBtn = this.add.image(0, 0, 'bt_butaoVazio')
+            .setScale(0.18)
+            .setInteractive({ useHandCursor: true })
+            .setVisible(false);
+        this.exploreText = this.add.text(0, 0, "Explorar", {
+            fontSize: '20px',
+            fontFamily: 'Snap ITC',
+            color: '#993300',
+            align: 'center'
+        }).setOrigin(0.5).setVisible(false);
+        this.addHoverEffect(this.exploreBtn, this.exploreText);
+
+        this.continueBtn.on('pointerup', () => {
+            this.hideActionButtons();
+            this.currentQuestionState = null;
+            this.returningFromExploration = false;
+            this.nextQuestion();
+        });
+
+
         this.showQuestion();
+    }
+
+    showActionButtons(relatedScene) {
+        const optionsCount = this.optionButtons.length;
+        const firstOptionY = 250;
+        const lastOptionY = 250 + (optionsCount - 1) * 100;
+        const middleY = (firstOptionY + lastOptionY) / 2;
+
+        const popupX = 800;
+        const popupY = middleY;
+
+        const buttonSpacing = 110;
+        const buttonX = popupX;
+        const continueY = popupY - buttonSpacing / 2;
+        const exploreY = popupY + buttonSpacing / 2;
+
+        // Position elements
+        this.popup.setPosition(popupX, popupY).setVisible(true);
+        this.continueBtn.setPosition(buttonX, continueY).setVisible(true);
+        this.continueText.setPosition(buttonX, continueY - 4).setVisible(true);
+
+        if (relatedScene) {
+            this.exploreBtn.setPosition(buttonX, exploreY).setVisible(true);
+            this.exploreText.setPosition(buttonX, exploreY - 4).setVisible(true);
+            this.exploreBtn.off('pointerup'); // Remove any existing listeners
+            this.exploreBtn.on('pointerup', () => {
+                this.hideActionButtons();
+                this.scene.stop();
+                this.scene.start(relatedScene, {
+                    returnToQuiz: true,
+                    quizScene: 'QuizScene',
+                    nextQuestionIndex: this.currentQuestionIndex,
+                    currentScore: this.score,
+                    questions: this.questions
+                });
+            });
+        } else {
+            this.exploreBtn.setVisible(false);
+            this.exploreText.setVisible(false);
+        }
+    }
+
+    hideActionButtons() {
+        this.popup.setVisible(false);
+        this.continueBtn.setVisible(false);
+        this.continueText.setVisible(false);
+        this.exploreBtn.setVisible(false);
+        this.exploreText.setVisible(false);
     }
 
     showQuestion() {
         this.uiGroup.clear(true, true);
         this.btnVoltar.setVisible(true);
+        this.hideActionButtons();
 
         const questionObj = this.questions[this.currentQuestionIndex];
 
@@ -203,7 +296,7 @@ export default class QuizScene extends Phaser.Scene {
 
         this.optionButtons = [];
 
-        // Mostrar opções no centro da cena (em x=350, y=250 + 100*index)
+        // Mostrar opções no centro da cena
         questionObj.options.forEach((option, index) => {
             const y = 250 + index * 100;
 
@@ -221,11 +314,29 @@ export default class QuizScene extends Phaser.Scene {
 
             this.addHoverEffect(optionBg, optionText);
 
-            optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
+            // Check if we're returning from exploration and this question was already answered
+            if (this.currentQuestionState && this.currentQuestionState.selectedAnswer) {
+                optionBg.disableInteractive();
+                
+                if (option === this.currentQuestionState.correctAnswer) {
+                    optionBg.setTint(0x8BC34A); // Green for correct
+                } else if (option === this.currentQuestionState.selectedAnswer && 
+                          option !== this.currentQuestionState.correctAnswer) {
+                    optionBg.setTint(0xF44336).setAlpha(0.85); // Red for wrong answer
+                }
+            } else {
+                // Only make interactive if not already answered
+                optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
+            }
 
             this.optionButtons.push({ bg: optionBg, text: optionText });
             this.uiGroup.addMultiple([optionBg, optionText]);
         });
+
+        // If returning from exploration and question was answered, show action buttons again
+        if (this.currentQuestionState && this.currentQuestionState.selectedAnswer) {
+            this.showActionButtons(questionObj.relatedScene);
+        }
 
         // Texto de progresso
         if (this.progressoText) this.progressoText.destroy();
@@ -238,6 +349,8 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     checkAnswer(selected, bg, text) {
+        this.lastSelectedAnswer = selected; // Store the selected answer
+        
         const correct = this.questions[this.currentQuestionIndex].correctAnswer;
         const relatedScene = this.questions[this.currentQuestionIndex].relatedScene;
 
@@ -256,83 +369,31 @@ export default class QuizScene extends Phaser.Scene {
 
         this.optionButtons.forEach(opt => opt.bg.disableInteractive());
 
-        this.createActionButtons(relatedScene);
-    }
-
-    createActionButtons(relatedScene) {
-
-        const optionsCount = this.optionButtons.length;
-        const firstOptionY = 250;
-        const lastOptionY = 250 + (optionsCount - 1) * 100;
-        const middleY = (firstOptionY + lastOptionY) / 2;
-
-        const popupX = 800;
-        const popupY = middleY;
-
-        const popupScaleX = 0.35;
-        const popupScaleY = 0.4;
-
-        this.popup = this.add.image(popupX, popupY, 'popup_window')
-            .setScale(popupScaleX, popupScaleY)
-            .setOrigin(0.5);
-
-        const buttonSpacing = 110;
-        const buttonX = popupX;
-        const continueY = popupY - buttonSpacing / 2;
-        const exploreY = popupY + buttonSpacing / 2;
-
-        // Botão Continuar
-        this.continueBtn = this.add.image(buttonX, continueY, 'bt_butaoVazio')
-            .setScale(0.18)
-            .setInteractive({ useHandCursor: true });
-        this.continueText = this.add.text(buttonX, continueY - 4, "Continuar", {
-            fontSize: '20px',
-            fontFamily: 'Snap ITC',
-            color: '#993300',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.addHoverEffect(this.continueBtn, this.continueText);
-
-        this.continueBtn.on('pointerup', () => {
-            this.popup.destroy();
-            this.continueBtn.destroy();
-            this.continueText.destroy();
-            if (this.exploreBtn) this.exploreBtn.destroy();
-            if (this.exploreText) this.exploreText.destroy();
-            this.nextQuestion();
-        });
-
-        // Botão Explorar
-        if (relatedScene) {
-            this.exploreBtn = this.add.image(buttonX, exploreY, 'bt_butaoVazio')
-                .setScale(0.18)
-                .setInteractive({ useHandCursor: true });
-            this.exploreText = this.add.text(buttonX, exploreY - 4, "Explorar", {
-                fontSize: '20px',
-                fontFamily: 'Snap ITC',
-                color: '#993300',
-                align: 'center'
-            }).setOrigin(0.5);
-
-            this.addHoverEffect(this.exploreBtn, this.exploreText);
-
-            this.exploreBtn.on('pointerup', () => {
-                this.popup.destroy();
-                this.scene.stop();
-                this.scene.start(relatedScene, {
-                    returnToQuiz: true,
-                    quizScene: 'QuizScene',
-                    nextQuestionIndex: this.currentQuestionIndex,
-                    currentScore: this.score,
-                    questions: this.questions
-                });
-            });
+        if (!this.currentQuestionState) {
+            this.currentQuestionState = {
+                selectedAnswer: this.lastSelectedAnswer,
+                correctAnswer: correct,
+                optionButtons: this.optionButtons
+            };
         }
+
+        this.showActionButtons(relatedScene);
     }
 
     nextQuestion() {
-        this.currentQuestionIndex++;
+        if (this.returningFromExploration) {
+            // If returning from exploration, we've already answered this question
+            // Just clear the state and move to next question
+            this.currentQuestionIndex++;
+            this.returningFromExploration = false;
+        } else {
+            // Normal case - just increment
+            this.currentQuestionIndex++;
+        }
+        
+        // Always clear the current question state when moving to next question
+        this.currentQuestionState = null;
+        
         if (this.currentQuestionIndex >= this.questions.length) {
             this.showFinalScore();
         } else {
@@ -340,8 +401,9 @@ export default class QuizScene extends Phaser.Scene {
         }
     }
 
-       showFinalScore() {
+    showFinalScore() {
         this.uiGroup.clear(true, true);
+        this.hideActionButtons();
 
         this.btnVoltar.setVisible(false);
 

@@ -76,7 +76,7 @@ export default class Cone extends Phaser.Scene {
           // Restart the QuizScene with preserved data
           this.scene.start('QuizScene', {
               returnToQuiz: true,
-              currentQuestionIndex: quizData.nextQuestionIndex + 1,
+              currentQuestionIndex: quizData.nextQuestionIndex,
               score: quizData.currentScore,
               questions: quizData.questions
           });

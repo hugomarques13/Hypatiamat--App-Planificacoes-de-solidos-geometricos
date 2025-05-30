@@ -166,10 +166,10 @@ export default class QuizScene extends Phaser.Scene {
         const questionText = this.add.text(512, 130, questionObj.question, {
             fontSize: '22px',
             fontFamily: 'Snap ITC',
-            color: '#fff',
+            color: '#993300',
             align: 'center',
             wordWrap: { width: 600 }
-        }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
+        }).setOrigin(0.5);
 
         this.uiGroup.add(questionBox);
         this.uiGroup.add(questionText);
@@ -186,10 +186,10 @@ export default class QuizScene extends Phaser.Scene {
             const optionText = this.add.text(512, y - 4, option, {
                 fontSize: '20px',
                 fontFamily: 'Snap ITC',
-                color: '#fff',
+                color: '#993300',
                 align: 'center',
                 wordWrap: { width: 350 }
-            }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
+            }).setOrigin(0.5);
 
             this.addHoverEffect(optionBg, optionText);
             optionBg.on('pointerup', () => this.checkAnswer(option, optionBg, optionText));
@@ -204,8 +204,8 @@ export default class QuizScene extends Phaser.Scene {
         this.progressoText = this.add.text(512, 560, `${this.currentQuestionIndex + 1}/${this.questions.length}`, {
             fontSize: '24px',
             fontFamily: 'Snap ITC',
-            color: '#fff'
-        }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
+            color: '#993300'
+        }).setOrigin(0.5);
 
         this.uiGroup.add(this.progressoText);
     }
@@ -258,9 +258,9 @@ export default class QuizScene extends Phaser.Scene {
             {
                 fontSize: '26px',
                 fontFamily: 'Snap ITC',
-                color: '#fff',
+                color: '#993300',
                 align: 'center'
-            }).setShadow(2, 2, '#000000', 2).setOrigin(0.5);
+            }).setOrigin(0.5);
 
         this.uiGroup.add(scoreBox);
         this.uiGroup.add(scoreText);

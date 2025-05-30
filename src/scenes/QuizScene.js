@@ -95,7 +95,79 @@ export default class QuizScene extends Phaser.Scene {
     }
 
     create() {
+        this.events.on('resume', (sys, data) => {
+            if (data) {
+                this.currentQuestionIndex = data.currentQuestionIndex;
+                this.score = data.score;
+                this.questions = data.questions;
+                this.showQuestion();
+            }
+        });
+        this.loadFont('Snap ITC').then(() => {
+            this.initScene();
+            
+            // If resuming, show the current question immediately
+            if (this.currentQuestionIndex > 0) {
+                this.showQuestion();
+            }
+        }).catch(() => {
+            this.initScene();
+            if (this.currentQuestionIndex > 0) {
+                this.showQuestion();
+            }
+        });
+    }
+
+    loadFont(fontName) {
+        return new Promise((resolve) => {
+            if (!document.fonts) return resolve();
+            
+            document.fonts.load(`20px "${fontName}"`).then(resolve).catch(resolve);
+        });
+    }
+
+    initScene() {
         this.add.image(512, 384, 'background').setDepth(-1);
+
+        let btnFullScreen = this.add.image(45, 45, 'bt_fullscreen').setScale(0.35).setInteractive();
+        let btnBack = this.add.image(45, 45, 'bt_screenback').setScale(0.35).setInteractive().setVisible(false);
+
+        this.isFullscreen = !!document.fullscreenElement;
+        btnFullScreen.setVisible(!this.isFullscreen);
+        btnBack.setVisible(this.isFullscreen);
+
+        const toggleFullscreen = () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().then(() => {
+                    this.isFullscreen = false;
+                    btnFullScreen.setVisible(true);
+                    btnBack.setVisible(false);
+                });
+            } else {
+                document.body.requestFullscreen().then(() => {
+                    this.isFullscreen = true;
+                    btnFullScreen.setVisible(false);
+                    btnBack.setVisible(true);
+                });
+            }
+        };
+
+        btnFullScreen.on('pointerup', toggleFullscreen);
+        btnBack.on('pointerup', toggleFullscreen);
+
+        this.events.on('pause', () => {
+            this.isFullscreen = !!document.fullscreenElement;
+        });
+
+        this.scale.on('fullscreenchange', () => {
+            if (this.scale.isFullscreen) {
+                btnFullScreen.setVisible(false);
+                btnBack.setVisible(true);
+            } else {
+                btnFullScreen.setVisible(true);
+                btnBack.setVisible(false);
+            }
+        });
 
         this.uiGroup = this.add.group();
 
@@ -267,49 +339,59 @@ export default class QuizScene extends Phaser.Scene {
         }
     }
 
-    showFinalScore() {
+       showFinalScore() {
         this.uiGroup.clear(true, true);
 
-        
+        this.btnVoltar.setVisible(false);
 
-        const scoreText = this.add.text(512, 350, `Resultado final:\n${this.score} / ${this.questions.length}`, {
-            fontSize: '20px',
-            fontFamily: 'Snap ITC',
-            color: '#993300',
-            align: 'center'
-        }).setOrigin(0.5);
+        const centerX = 512;
 
-        const btnX = 512;
-        const btnY = 450;
+        const scoreBox = this.add.image(centerX, 240, 'caixatexto').setScale(0.6).setOrigin(0.5);
 
-        const btnContinue = this.add.image(btnX, btnY, 'bt_butaoVazio')
-            .setScale(0.23)
-            .setInteractive({ useHandCursor: true });
+        const scoreText = this.add.text(centerX, 240 + 7,
+            `Quiz concluído!\nPontuação: ${this.score}/${this.questions.length}`,
+            {
+                fontSize: '26px',
+                fontFamily: 'Snap ITC',
+                color: '#993300',
+                align: 'center'
+            }).setOrigin(0.5);
 
-        const btnText = this.add.text(btnX, btnY - 4, 'Voltar ao Menu', {
-            fontSize: '20px',
-            fontFamily: 'Snap ITC',
-            color: '#993300',
-            align: 'center'
-        }).setOrigin(0.5);
+        this.uiGroup.add(scoreBox);
+        this.uiGroup.add(scoreText);
 
-        this.addHoverEffect(btnContinue, btnText);
+        const voltarBtn = this.add.image(centerX, 350, 'bt_home')
+            .setScale(0.65)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerup', () => {
+                this.scene.stop();
+                this.scene.start('MenuScene');
+            });
 
-        btnContinue.on('pointerup', () => {
-            this.scene.start('MenuScene');
-        });
+        this.addHoverEffect(voltarBtn);
 
-        this.uiGroup.addMultiple([scoreText, btnContinue, btnText]);
+        this.uiGroup.add(voltarBtn);
     }
 
-    addHoverEffect(button, text) {
+    addHoverEffect(button, text = null) {
         button.on('pointerover', () => {
-            button.setTint(0xFFB74D);
-            if (text) text.setColor('#ff9900');
+            button.setScale(button.scaleX * 1.1);
+            if (text) {
+                text.setFontSize(22);
+            }
         });
+
         button.on('pointerout', () => {
-            button.clearTint();
-            if (text) text.setColor('#993300');
+            button.setScale(button.scaleX / 1.1);
+            if (text) {
+                text.setFontSize(20);
+            }
         });
+    }
+
+    shutdown() {
+        if (this.uiGroup) {
+            this.uiGroup.clear(true, true);
+        }
     }
 }

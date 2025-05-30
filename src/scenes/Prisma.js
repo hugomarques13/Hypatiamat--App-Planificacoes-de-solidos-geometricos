@@ -829,15 +829,21 @@ onWindowResize() {
     window.removeEventListener("touchend", this.onTouchEnd)
   }
 
-    addHoverEffect(button) {
+    addHoverEffect(button, text = null) {
         button.on('pointerover', () => {
             button.setScale(button.scaleX * 1.1);
-    });
+            if (text) {
+                text.setFontSize(22);
+            }
+        });
 
         button.on('pointerout', () => {
             button.setScale(button.scaleX / 1.1);
-    });
-  }
+            if (text) {
+                text.setFontSize(20);
+            }
+        });
+    }
 
   updateTitleText() {
     const typeNames = {

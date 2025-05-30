@@ -769,13 +769,19 @@ export default class Cone extends Phaser.Scene {
     window.removeEventListener("touchend", this.onTouchEnd);
   }
 
-  addHoverEffect(button) {
-    button.on('pointerover', () => {
-      button.setScale(button.scaleX * 1.1);
-    });
+  addHoverEffect(button, text = null) {
+      button.on('pointerover', () => {
+          button.setScale(button.scaleX * 1.1);
+          if (text) {
+              text.setFontSize(22);
+          }
+      });
 
-    button.on('pointerout', () => {
-      button.setScale(button.scaleX / 1.1);
-    });
+      button.on('pointerout', () => {
+          button.setScale(button.scaleX / 1.1);
+          if (text) {
+              text.setFontSize(20);
+          }
+      });
   }
 }

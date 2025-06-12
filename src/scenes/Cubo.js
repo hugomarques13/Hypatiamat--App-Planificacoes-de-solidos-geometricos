@@ -148,9 +148,9 @@ export default class Cubo extends Phaser.Scene {
     this.renderer.setClearColor(0xffffff, 0)
 
     this.scene3D = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    this.camera = new THREE.PerspectiveCamera(1, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-    this.orbit = { radius: 5, theta: Math.PI / 8, phi: Math.PI / 2.5 }
+    this.orbit = { radius: 130, theta: Math.PI / 8, phi: Math.PI / 2.5 }
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
@@ -674,8 +674,8 @@ export default class Cubo extends Phaser.Scene {
     this.onMouseWheel = (event) => {
       if (this.isSliding) return;
 
-      this.orbit.radius += event.deltaY * 0.01;
-      this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
+      this.orbit.radius += event.deltaY * 0.1;
+      this.orbit.radius = Math.max(80, Math.min(240, this.orbit.radius));
     };
 
     // --- Touch Controls ---
@@ -710,8 +710,8 @@ export default class Cubo extends Phaser.Scene {
         const newDistance = this.getPinchDistance(event);
         const delta = newDistance - this.lastPinchDistance;
 
-        this.orbit.radius -= delta * 0.01;
-        this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
+        this.orbit.radius -= delta * 0.1;
+        this.orbit.radius = Math.max(80, Math.min(240, this.orbit.radius));
 
         this.lastPinchDistance = newDistance;
       }

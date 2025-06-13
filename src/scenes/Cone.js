@@ -10,6 +10,7 @@ export default class Cone extends Phaser.Scene {
     this.minRadius = 0.5;
     this.maxRadius = 2;
     this.slices = 50;
+    this.viewSize = 6;
   }
 
   preload() {
@@ -155,9 +156,19 @@ export default class Cone extends Phaser.Scene {
       antialias: true
     });
     this.scene3D = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    this.orbit = { radius: 6, theta: Math.PI / 35, phi: Math.PI / 3 };
+    this.viewSize = 6; // Initial view size
+    const aspect = window.innerWidth / window.innerHeight;
+    this.camera = new THREE.OrthographicCamera(
+      -this.viewSize * aspect / 2,
+      this.viewSize * aspect / 2,
+      this.viewSize / 2,
+      -this.viewSize / 2,
+      0.1,
+      1000
+    );
+    this.camera.position.set(5, 5, 5);
+    this.camera.lookAt(0, 0, 0);
+    this.orbit = { radius: 5, theta: Math.PI / 4, phi: Math.PI / 2.5 };
 
     this.initMouseControls();
 
@@ -598,8 +609,21 @@ export default class Cone extends Phaser.Scene {
 
     this.onMouseWheel = (event) => {
       if (this.isSliding) return;
-      this.orbit.radius += event.deltaY * 0.01;
-      this.orbit.radius = Math.max(2, Math.min(10, this.orbit.radius));
+
+      // Adjust view size for zooming
+      this.viewSize += event.deltaY * 0.01;
+      this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+      
+      // Update camera with current aspect ratio
+      const canvas = this.sys.game.canvas;
+      const canvasBounds = canvas.getBoundingClientRect();
+      const aspect = canvasBounds.width / canvasBounds.height;
+      
+      this.camera.left = -this.viewSize * aspect / 2;
+      this.camera.right = this.viewSize * aspect / 2;
+      this.camera.top = this.viewSize / 2;
+      this.camera.bottom = -this.viewSize / 2;
+      this.camera.updateProjectionMatrix();
     };
 
     // Touch event handlers
@@ -629,8 +653,22 @@ export default class Cone extends Phaser.Scene {
       } else if (event.touches.length === 2) {
         const newDistance = this.getPinchDistance(event);
         const delta = newDistance - this.lastPinchDistance;
-        this.orbit.radius -= delta * 0.01;
-        this.orbit.radius = Math.max(2, Math.min(10, this.orbit.radius));
+
+        // Adjust view size based on pinch distance
+        this.viewSize = this.lastViewSize - delta * 0.01;
+        this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+        
+        // Update camera projection
+        const canvas = this.sys.game.canvas;
+        const canvasBounds = canvas.getBoundingClientRect();
+        const aspect = canvasBounds.width / canvasBounds.height;
+        
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
+        this.camera.updateProjectionMatrix();
+
         this.lastPinchDistance = newDistance;
       }
     };
@@ -658,38 +696,28 @@ export default class Cone extends Phaser.Scene {
   }
 
   onWindowResize() {
-    // Save current camera orbit values before resize
-    const savedOrbit = {
-        radius: this.orbit.radius,
-        theta: this.orbit.theta,
-        phi: this.orbit.phi
-    };
-
-    // Get the game canvas and its display size
+    const savedViewSize = this.viewSize; // Save current zoom level
+    
     const canvas = this.sys.game.canvas;
     const canvasBounds = canvas.getBoundingClientRect();
+    const aspect = canvasBounds.width / canvasBounds.height;
 
-    // === Three.js Canvas Handling ===
     if (this.threeCanvas) {
-        // Match Three.js canvas to Phaser canvas size and position
-        Object.assign(this.threeCanvas.style, {
-            width: `${canvasBounds.width}px`,
-            height: `${canvasBounds.height}px`,
-            left: `${canvasBounds.left}px`,
-            top: `${canvasBounds.top}px`,
-            position: 'absolute'
-        });
+        this.threeCanvas.style.width = `${canvasBounds.width}px`;
+        this.threeCanvas.style.height = `${canvasBounds.height}px`;
+        this.threeCanvas.style.left = `${canvasBounds.left}px`;
+        this.threeCanvas.style.top = `${canvasBounds.top}px`;
 
-        // Update renderer and camera
         this.renderer.setSize(canvasBounds.width, canvasBounds.height);
-        this.camera.aspect = canvasBounds.width / canvasBounds.height;
+        
+        // Update camera with current viewSize and new aspect ratio
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
         this.camera.updateProjectionMatrix();
-
-        // Restore camera position after resize
-        this.orbit.radius = savedOrbit.radius;
-        this.orbit.theta = savedOrbit.theta;
-        this.orbit.phi = savedOrbit.phi;
     }
+
 
     // === Sliders Positioning - Relative to Game Canvas ===
     if (this.slidersContainer) {

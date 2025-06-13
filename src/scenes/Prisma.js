@@ -142,7 +142,6 @@ export default class Prisma extends Phaser.Scene {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.scene3D = new THREE.Scene()
-    this.viewSize = 5; // Initial view size
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.OrthographicCamera(
       -this.viewSize * aspect / 2,

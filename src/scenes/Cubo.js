@@ -5,6 +5,7 @@ export default class Cubo extends Phaser.Scene {
     this.isSliding = false
     this.unfoldPlans = {}
     this.currentPlan = "1"
+    this.viewSize = 5
   }
 
   preload() {
@@ -148,9 +149,23 @@ export default class Cubo extends Phaser.Scene {
     this.renderer.setClearColor(0xffffff, 0)
 
     this.scene3D = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(1, window.innerWidth / window.innerHeight, 0.1, 1000)
+    
+    this.viewSize = 5; // Initial view size
+    const aspect = window.innerWidth / window.innerHeight;
+    this.camera = new THREE.OrthographicCamera(
+      -this.viewSize * aspect / 2,
+      this.viewSize * aspect / 2,
+      this.viewSize / 2,
+      -this.viewSize / 2,
+      0.1,
+      1000
+    );
+    this.camera.position.set(5, 5, 5);
+    this.camera.lookAt(0, 0, 0);
+    this.orbit = { radius: 5, theta: Math.PI / 4, phi: Math.PI / 2.5 };
 
-    this.orbit = { radius: 130, theta: Math.PI / 8, phi: Math.PI / 2.5 }
+    this.camera.position.set(5, 5, 5)
+    this.camera.lookAt(0, 0, 0)
 
     this.cubeGroup = new THREE.Group()
     this.scene3D.add(this.cubeGroup)
@@ -158,6 +173,7 @@ export default class Cubo extends Phaser.Scene {
     this.unfoldProgress = 0;
     this.isSliding = false;
     this.currentPlan = "1";
+    this.viewSize = 5;
 
     this.materials = [
       new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide, transparent: true, opacity: 1 }), // Red
@@ -674,8 +690,20 @@ export default class Cubo extends Phaser.Scene {
     this.onMouseWheel = (event) => {
       if (this.isSliding) return;
 
-      this.orbit.radius += event.deltaY * 0.1;
-      this.orbit.radius = Math.max(80, Math.min(240, this.orbit.radius));
+      // Adjust view size for zooming
+      this.viewSize += event.deltaY * 0.01;
+      this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+      
+      // Update camera with current aspect ratio
+      const canvas = this.sys.game.canvas;
+      const canvasBounds = canvas.getBoundingClientRect();
+      const aspect = canvasBounds.width / canvasBounds.height;
+      
+      this.camera.left = -this.viewSize * aspect / 2;
+      this.camera.right = this.viewSize * aspect / 2;
+      this.camera.top = this.viewSize / 2;
+      this.camera.bottom = -this.viewSize / 2;
+      this.camera.updateProjectionMatrix();
     };
 
     // --- Touch Controls ---
@@ -710,8 +738,20 @@ export default class Cubo extends Phaser.Scene {
         const newDistance = this.getPinchDistance(event);
         const delta = newDistance - this.lastPinchDistance;
 
-        this.orbit.radius -= delta * 0.1;
-        this.orbit.radius = Math.max(80, Math.min(240, this.orbit.radius));
+        // Adjust view size based on pinch distance
+        this.viewSize = this.lastViewSize - delta * 0.01;
+        this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+        
+        // Update camera projection
+        const canvas = this.sys.game.canvas;
+        const canvasBounds = canvas.getBoundingClientRect();
+        const aspect = canvasBounds.width / canvasBounds.height;
+        
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
+        this.camera.updateProjectionMatrix();
 
         this.lastPinchDistance = newDistance;
       }
@@ -838,32 +878,28 @@ export default class Cubo extends Phaser.Scene {
     }
 
 onWindowResize() {
-    const savedOrbit = {
-        radius: this.orbit.radius,
-        theta: this.orbit.theta,
-        phi: this.orbit.phi
-    };
-
+    const savedViewSize = this.viewSize; // Save current zoom level
+    
     const canvas = this.sys.game.canvas;
     const canvasBounds = canvas.getBoundingClientRect();
+    const aspect = canvasBounds.width / canvasBounds.height;
 
     if (this.threeCanvas) {
-        Object.assign(this.threeCanvas.style, {
-            width: `${canvasBounds.width}px`,
-            height: `${canvasBounds.height}px`,
-            left: `${canvasBounds.left}px`,
-            top: `${canvasBounds.top}px`,
-            position: 'absolute'
-        });
+        this.threeCanvas.style.width = `${canvasBounds.width}px`;
+        this.threeCanvas.style.height = `${canvasBounds.height}px`;
+        this.threeCanvas.style.left = `${canvasBounds.left}px`;
+        this.threeCanvas.style.top = `${canvasBounds.top}px`;
 
         this.renderer.setSize(canvasBounds.width, canvasBounds.height);
-        this.camera.aspect = canvasBounds.width / canvasBounds.height;
+        
+        // Update camera with current viewSize and new aspect ratio
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
         this.camera.updateProjectionMatrix();
-
-        this.orbit.radius = savedOrbit.radius;
-        this.orbit.theta = savedOrbit.theta;
-        this.orbit.phi = savedOrbit.phi;
     }
+
 
     if (this.slidersContainer) {
         const rightOffset = canvasBounds.width * 0.05;  // 5% from right

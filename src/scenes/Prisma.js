@@ -11,6 +11,7 @@ export default class Prisma extends Phaser.Scene {
     this.minHeight = 0.5;
     this.maxHeight = 4;
     this.titleText = null;
+    this.viewSize = 6;
   }
 
   preload() {
@@ -141,9 +142,19 @@ export default class Prisma extends Phaser.Scene {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
 
     this.scene3D = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000)
-
-    this.orbit = { radius: 8, theta: Math.PI / 8, phi: Math.PI / 3.8 }
+    this.viewSize = 5; // Initial view size
+    const aspect = window.innerWidth / window.innerHeight;
+    this.camera = new THREE.OrthographicCamera(
+      -this.viewSize * aspect / 2,
+      this.viewSize * aspect / 2,
+      this.viewSize / 2,
+      -this.viewSize / 2,
+      0.1,
+      1000
+    );
+    this.camera.position.set(5, 5, 5);
+    this.camera.lookAt(0, 0, 0);
+    this.orbit = { radius: 5, theta: Math.PI / 4, phi: Math.PI / 2.5 };
 
     this.prismGroup = new THREE.Group()
     this.prismGroup.position.y = -1;
@@ -154,6 +165,7 @@ export default class Prisma extends Phaser.Scene {
     this.prismHeight = 2;
     this.isSliding = false;
     this.currentPlan = "1";
+    this.viewSize = 6;
 
     this.materials = [];
     for (let i = 0; i < 12; i++) {
@@ -572,8 +584,20 @@ createSliders() {
     this.onMouseWheel = (event) => {
       if (this.isSliding) return;
 
-      this.orbit.radius += event.deltaY * 0.01;
-      this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
+      // Adjust view size for zooming
+      this.viewSize += event.deltaY * 0.01;
+      this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+      
+      // Update camera with current aspect ratio
+      const canvas = this.sys.game.canvas;
+      const canvasBounds = canvas.getBoundingClientRect();
+      const aspect = canvasBounds.width / canvasBounds.height;
+      
+      this.camera.left = -this.viewSize * aspect / 2;
+      this.camera.right = this.viewSize * aspect / 2;
+      this.camera.top = this.viewSize / 2;
+      this.camera.bottom = -this.viewSize / 2;
+      this.camera.updateProjectionMatrix();
     };
 
     // --- Touch Controls ---
@@ -608,8 +632,20 @@ createSliders() {
         const newDistance = this.getPinchDistance(event);
         const delta = newDistance - this.lastPinchDistance;
 
-        this.orbit.radius -= delta * 0.01;
-        this.orbit.radius = Math.max(1, Math.min(10, this.orbit.radius));
+        // Adjust view size based on pinch distance
+        this.viewSize = this.lastViewSize - delta * 0.01;
+        this.viewSize = Math.max(1, Math.min(20, this.viewSize));
+        
+        // Update camera projection
+        const canvas = this.sys.game.canvas;
+        const canvasBounds = canvas.getBoundingClientRect();
+        const aspect = canvasBounds.width / canvasBounds.height;
+        
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
+        this.camera.updateProjectionMatrix();
 
         this.lastPinchDistance = newDistance;
       }
@@ -723,31 +759,26 @@ checkFaceVisibility() {
 
 
 onWindowResize() {
-    const savedOrbit = {
-        radius: this.orbit.radius,
-        theta: this.orbit.theta,
-        phi: this.orbit.phi
-    };
-
+    const savedViewSize = this.viewSize; // Save current zoom level
+    
     const canvas = this.sys.game.canvas;
     const canvasBounds = canvas.getBoundingClientRect();
+    const aspect = canvasBounds.width / canvasBounds.height;
 
     if (this.threeCanvas) {
-        Object.assign(this.threeCanvas.style, {
-            width: `${canvasBounds.width}px`,
-            height: `${canvasBounds.height}px`,
-            left: `${canvasBounds.left}px`,
-            top: `${canvasBounds.top}px`,
-            position: 'absolute'
-        });
+        this.threeCanvas.style.width = `${canvasBounds.width}px`;
+        this.threeCanvas.style.height = `${canvasBounds.height}px`;
+        this.threeCanvas.style.left = `${canvasBounds.left}px`;
+        this.threeCanvas.style.top = `${canvasBounds.top}px`;
 
         this.renderer.setSize(canvasBounds.width, canvasBounds.height);
-        this.camera.aspect = canvasBounds.width / canvasBounds.height;
+        
+        // Update camera with current viewSize and new aspect ratio
+        this.camera.left = -this.viewSize * aspect / 2;
+        this.camera.right = this.viewSize * aspect / 2;
+        this.camera.top = this.viewSize / 2;
+        this.camera.bottom = -this.viewSize / 2;
         this.camera.updateProjectionMatrix();
-
-        this.orbit.radius = savedOrbit.radius;
-        this.orbit.theta = savedOrbit.theta;
-        this.orbit.phi = savedOrbit.phi;
     }
 
     if (this.slidersContainer) {
@@ -791,19 +822,18 @@ onWindowResize() {
 }
 
   update() {
-    const { radius, theta, phi } = this.orbit;
-    const x = radius * Math.sin(phi) * Math.sin(theta);
-    const y = radius * Math.cos(phi);
-    const z = radius * Math.sin(phi) * Math.cos(theta);
+      const { radius, theta, phi } = this.orbit;
+      const x = radius * Math.sin(phi) * Math.sin(theta);
+      const y = radius * Math.cos(phi);
+      const z = radius * Math.sin(phi) * Math.cos(theta);
 
-    this.camera.position.set(x, y, z);
-    this.camera.lookAt(0, 0, 0);
-    
-    this.checkFaceVisibility();
-    
-    this.renderer.render(this.scene3D, this.camera);
+      this.camera.position.set(x, y, z);
+      this.camera.lookAt(0, 0, 0);
+      
+      this.checkFaceVisibility();
+      
+      this.renderer.render(this.scene3D, this.camera);
   }
-
    cleanupDOM() {
     if (this.scene.settings.data) {
         this.scene.settings.data = null;

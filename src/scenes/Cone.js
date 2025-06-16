@@ -465,7 +465,7 @@ export default class Cone extends Phaser.Scene {
         }
         // For folded state, make semi-transparent
         else {
-          surface.material.opacity = 0.6;
+          surface.material.opacity = 1;
         }
       }
     }

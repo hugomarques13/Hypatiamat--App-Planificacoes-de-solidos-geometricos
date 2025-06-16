@@ -240,18 +240,18 @@ export default class Cone extends Phaser.Scene {
     this.vertexData = [];
 
     // Apex (V point) - index 0
-    positions[0] = radius;
+    positions[0] = 0;
     positions[1] = height;
     positions[2] = 0;
     
     // Unfolded position
-    positions[vertexCount * 3 + 0] = 0;
+    positions[vertexCount * 3 + 0] = -radius;
     positions[vertexCount * 3 + 1] = slantHeight;
     positions[vertexCount * 3 + 2] = 0;
 
     this.vertexData.push({
-        original: new THREE.Vector3(radius, height, 0),
-        target: new THREE.Vector3(0, slantHeight, 0)
+        original: new THREE.Vector3(0, height, 0),
+        target: new THREE.Vector3(-radius, slantHeight, 0)
     });
 
     // Generate base vertices
@@ -264,7 +264,7 @@ export default class Cone extends Phaser.Scene {
         const x = radius * Math.cos(angle);
         const z = radius * Math.sin(angle);
         
-        positions[idx * 3 + 0] = x + radius;
+        positions[idx * 3 + 0] = x;
         positions[idx * 3 + 1] = 0;
         positions[idx * 3 + 2] = z;
         baseVertices.push(x, 0, z);
@@ -274,13 +274,13 @@ export default class Cone extends Phaser.Scene {
         const unfoldedX = -slantHeight * Math.sin(unfoldedAngle);
         const unfoldedY = Math.abs(slantHeight * Math.cos(unfoldedAngle) - slantHeight);
 
-        positions[(vertexCount + idx) * 3 + 0] = 0;
+        positions[(vertexCount + idx) * 3 + 0] = -radius;
         positions[(vertexCount + idx) * 3 + 1] = unfoldedY;
         positions[(vertexCount + idx) * 3 + 2] = unfoldedX;
 
         this.vertexData.push({
-            original: new THREE.Vector3(x + radius, 0, z),
-            target: new THREE.Vector3(0, unfoldedY, unfoldedX)
+            original: new THREE.Vector3(x, 0, z),
+            target: new THREE.Vector3(-radius, unfoldedY, unfoldedX)
         });
 
         // Create triangles
@@ -294,6 +294,7 @@ export default class Cone extends Phaser.Scene {
 
     // --- Base Surface ---
     this.basePivot = new THREE.Group();
+    this.basePivot.position.set(0, 0, -this.radius); // Pivot point here
     const baseGeometry = new THREE.BufferGeometry();
     baseGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(baseVertices), 3));
     

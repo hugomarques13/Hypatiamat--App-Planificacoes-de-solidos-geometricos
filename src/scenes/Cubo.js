@@ -310,23 +310,23 @@ export default class Cubo extends Phaser.Scene {
       5: {
         parents: {
           top: 'right',
-          front: 'right',
+          front: 'left',
           back: null,
-          left: null,
+          left: 'back',
           right: null
         },
         rotations: {
-          front: new THREE.Euler(0, Math.PI, 0),
+          front: new THREE.Euler(0, 0, 0),
           back: new THREE.Euler(-Math.PI / 2, Math.PI, 0),
-          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          left: new THREE.Euler(-Math.PI, 0, -Math.PI),
           right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
           top: new THREE.Euler(Math.PI, 0, 0)
         },
         transforms: {
           bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
-          front:  { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
+          front:  { pivot: [-0.5, 0, 0], position: [-d*2, 0, d], rotation: [0, Math.PI/2, 0] },
           back:   { pivot: [0, 0.5, 0], position: [0, 0, -d], rotation: [0, Math.PI, 0] },
-          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          left:   { pivot: [-0.5, 0, 0], position: [d, d, -d], rotation: [0, -Math.PI / 2, 0] },
           right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
@@ -342,7 +342,7 @@ export default class Cubo extends Phaser.Scene {
         rotations: {
           front: new THREE.Euler(Math.PI / 2, 0, 0),
           back: new THREE.Euler(-Math.PI / 2, Math.PI, 0),
-          left: new THREE.Euler(-Math.PI, Math.PI, 0),
+          left: new THREE.Euler(-Math.PI, 0, -Math.PI),
           right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
           top: new THREE.Euler(Math.PI, 0, 0)
         },
@@ -350,7 +350,7 @@ export default class Cubo extends Phaser.Scene {
           bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
           front:  { pivot: [0, 0.5, 0], position: [0, 0, d], rotation: [0, 0, 0] },
           back:   { pivot: [0, 0.5, 0], position: [0, 0, -d], rotation: [0, Math.PI, 0] },
-          left:   { pivot: [0, 0.5, 0], position: [0, -d * 2, d], rotation: [Math.PI/2 , Math.PI, 0] },
+          left:   { pivot: [0.5, 0, 0], position: [0, -d * 2, d], rotation: [Math.PI/2 , Math.PI, 0] },
           right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
@@ -358,23 +358,23 @@ export default class Cubo extends Phaser.Scene {
       7:{
         parents: {
           top: 'right',
-          front: 'right',
-          back: 'left',
-          left: null,
+          front: null,
+          back: null,
+          left: 'front',
           right: null
         },
         rotations: {
-          front: new THREE.Euler(0, Math.PI, 0),
-          back: new THREE.Euler(0, -Math.PI, 0),
-          left: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
+          front: new THREE.Euler(Math.PI / 2, 0, 0),
+          back: new THREE.Euler(-Math.PI / 2, Math.PI, 0),
+          left: new THREE.Euler(-Math.PI, 0, -Math.PI),
           right: new THREE.Euler(Math.PI / 2, 0, -Math.PI / 2),
           top: new THREE.Euler(Math.PI, 0, 0)
         },
         transforms: {
           bottom: { pivot: [0, 0, 0], position: [0, -d, 0], rotation: [Math.PI / 2, 0, 0] },
-          front:  { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
-          back:   { pivot: [0.5, -0.5, 0], position: [-d, d, -d], rotation: [0, Math.PI/2, 0] },
-          left:   { pivot: [0, 0.5, 0], position: [-d, 0, 0], rotation: [0, -Math.PI / 2, 0] },
+          front:  { pivot: [0, 0.5, 0], position: [0, 0, d], rotation: [0, 0, 0] },
+          back:   { pivot: [0, 0.5, 0], position: [0, 0, -d], rotation: [0, Math.PI, 0] },
+          left:   { pivot: [0.5, 0, 0], position: [-d, d, -d], rotation: [0, Math.PI / 2, 0] },
           right:  { pivot: [0, 0.5, 0], position: [d, 0, 0], rotation: [0, Math.PI / 2, 0] },
           top:    { pivot: [0, -0.5, 0], position: [0, d * 2, -d], rotation: [Math.PI / 2, 0, 0] }
         }
